@@ -230,6 +230,16 @@ export function newCampaign(content: ContentBundle): StepResult {
 
 const reject = (state: CampaignState, error: string): StepResult => ({ state, events: [], error });
 
+/** Названия мотивов для сообщений игроку (доска мотивов: Д/И/К/С). */
+export const AXIS_NAME_RU: Record<MiceAxis, string> = {
+  money: 'деньги',
+  ideology: 'идеология',
+  compromise: 'компромат',
+  ego: 'самолюбие',
+};
+
+const opTitle = (content: ContentBundle, id: string) => content.ops.find((o) => o.op_id === id)?.title.ru ?? id;
+
 /**
  * Главная функция движка: применяет действие игрока и возвращает новое состояние и события.
  * Исходное состояние не меняется. Неверное действие возвращает `error` по-русски.
@@ -245,7 +255,7 @@ export function dispatch(state: CampaignState, content: ContentBundle, action: A
       const next = NEXT_PHASE[s.phase];
       if (!next) return reject(state, 'Ночью неделя завершается донесением в Центр');
       if (s.phase === 'evening' && s.planned_ops.length) {
-        return reject(state, `Не разыграны операции: ${s.planned_ops.join(', ')}`);
+        return reject(state, `Не разыграны операции: ${s.planned_ops.map((id) => opTitle(content, id)).join(', ')}`);
       }
       tx.setPhase(next);
       break;
@@ -260,14 +270,14 @@ export function dispatch(state: CampaignState, content: ContentBundle, action: A
     case 'plan_op': {
       if (s.phase !== 'day') return reject(state, `Операции планируют днём, а сейчас ${phaseRu}`);
       if (!availableOps(s, content).some((o) => o.op_id === action.op_id)) {
-        return reject(state, `Операция «${action.op_id}» сейчас недоступна`);
+        return reject(state, `Операция «${opTitle(content, action.op_id)}» сейчас недоступна`);
       }
       if (s.planned_ops.length >= content.balance.ops.per_week) {
         return reject(state, `На неделю можно запланировать не больше ${content.balance.ops.per_week} операций`);
       }
       const route = analyzeRoute(content, action.route);
       if (route.blocking.length) {
-        return reject(state, 'Маршрут SDR — это три разные бытовые точки на карте');
+        return reject(state, 'Проверочный маршрут — это три разные бытовые точки на карте');
       }
       const op = content.ops.find((o) => o.op_id === action.op_id)!;
       const stops = action.route.map((id) => siteById(content, id)!);
@@ -335,13 +345,13 @@ export function dispatch(state: CampaignState, content: ContentBundle, action: A
       if (s.phase !== 'evening') return reject(state, `Вербовочные беседы проводятся вечером, а сейчас ${phaseRu}`);
       const target = content.targets.find((t) => t.target_id === action.target_id);
       const ts = s.targets[action.target_id];
-      if (!target || !ts) return reject(state, `Нет цели «${action.target_id}»`);
+      if (!target || !ts) return reject(state, 'Такой цели нет');
       if (ts.recruited || ts.lost) return reject(state, 'С этой целью работа уже закончена');
       if (!ts.unlocked) return reject(state, 'Цель ещё не установлена: не хватает улик');
 
       if (action.result === 'success') {
         const missing = target.approach.key_axes.filter((a) => !ts.discovered_axes.includes(a));
-        if (missing.length) return reject(state, `Не вскрыты ведущие оси MICE: ${missing.join(', ')}`);
+        if (missing.length) return reject(state, `Не вскрыты ведущие мотивы: ${missing.map((a) => AXIS_NAME_RU[a]).join(', ')}`);
         ts.recruited = true;
         tx.emit({ type: 'target_recruited', target_id: target.target_id });
         if (currentActDef(s, content)?.goal.recruit_any_of.includes(target.target_id)) s.goal_reached = true;

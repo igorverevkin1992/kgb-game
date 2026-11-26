@@ -47,7 +47,7 @@
   "analyst.title": "Rezidentura analyst's summary",
   "analyst.stamp": "For official use only",
   "analyst.trust": "Centre's trust",
-  "analyst.fund": "Special fund: ${usd}",
+  "analyst.fund": "Special fund: {usd}",
   "analyst.journal": "Log",
   "event.cable_delivered": "Document received: \"{name}\"",
   "event.clue_found": "New clue: \"{name}\"",
@@ -88,7 +88,7 @@
   "cipher.from": "FROM:",
   "cipher.empty": "The tape is empty.",
   "cipher.trust": "Centre's trust: {trust}%",
-  "finance.balance": "Special fund balance: ${usd}",
+  "finance.balance": "Special fund balance: {usd}",
   "finance.threshold": "CTR reporting threshold (Form 4789): $10,000 in cash per day.",
   "dialog.empty": "No conversation tapes yet.",
   "counterintel.empty": "The card index is empty. The List arrives in Act III.",
@@ -163,5 +163,13 @@
   "risk.mole_hunt.at100": "At 100%: Langley narrows the circle, the mole is arrested",
   "risk.treasury.at100": "At 100%: a financial audit, the Langley mole hunt speeds up twofold",
   "risk.moscow_pressure.at100": "At 100%: the resident is recalled to Moscow",
-  "ending.load": "Load a checkpoint or save"
+  "ending.load": "Load a checkpoint or save",
+  "mice.axis.money": "Money",
+  "mice.axis.ideology": "Ideology",
+  "mice.axis.compromise": "Compromise",
+  "mice.axis.ego": "Ego",
+  "mice.axis.money.short": "M",
+  "mice.axis.ideology.short": "I",
+  "mice.axis.compromise.short": "C",
+  "mice.axis.ego.short": "E"
 }

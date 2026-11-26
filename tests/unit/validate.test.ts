@@ -111,7 +111,7 @@ describe('валидатор контента', () => {
   it('SDR: две приметы с одинаковым текстом — ложный повтор, ошибка', () => {
     const entries = content();
     const cues = file(entries, 'map/cues.json').data as Json[];
-    cues.find((c) => c.tag === 'dark_blue_ford_ltd')!.text.ru = 'Светло-синий седан Ford LTD';
+    cues.find((c) => c.tag === 'dark_blue_ford_ltd')!.text.ru = 'Светло-синий седан «Форд ЛТД»';
     const report = validateContent(entries);
     expect(report.errors).toContainEqual(expect.objectContaining({ rule: 'sdr', message: expect.stringContaining('ложный повтор') }));
   });
@@ -133,7 +133,7 @@ describe('валидатор контента', () => {
     const map = file(entries, 'map/sites.json').data as Json;
     for (const site of map.sites) if (site.role === 'stop') site.district = site.pos.x > 30 ? 'georgetown' : 'arlington';
     const report = validateContent(entries);
-    expect(report.errors).toContainEqual(expect.objectContaining({ rule: 'sdr', message: expect.stringContaining('правильный маршрут') }));
+    expect(report.errors).toContainEqual(expect.objectContaining({ rule: 'sdr', message: expect.stringContaining('правильный проверочный маршрут') }));
   });
 
   it('SDR: ссылка на несуществующую точку карты', () => {

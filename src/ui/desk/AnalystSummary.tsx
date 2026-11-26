@@ -1,5 +1,6 @@
 import { RISKS, riskLevels, type GameEvent } from '../../engine/campaign';
 import type { I18nKey } from '../../i18n';
+import { formatUsd } from '../format';
 import { content, useDeskStore, useLocalized, useT } from '../store';
 
 /** Человекочитаемая строка журнала. null — событие слишком мелкое для журнала. */
@@ -55,6 +56,7 @@ function useEventText() {
 export function AnalystSummary() {
   const t = useT();
   const game = useDeskStore((s) => s.game);
+  const lang = useDeskStore((s) => s.lang);
   const close = useDeskStore((s) => s.toggleAnalyst);
   const eventText = useEventText();
   const levels = riskLevels(game, content);
@@ -92,7 +94,7 @@ export function AnalystSummary() {
             </dd>
           </div>
         </dl>
-        <p className="analyst__fund">{t('analyst.fund', { usd: game.fund_usd.toLocaleString('en-US') })}</p>
+        <p className="analyst__fund">{t('analyst.fund', { usd: formatUsd(game.fund_usd, lang) })}</p>
 
         <h3>{t('analyst.journal')}</h3>
         <ol className="analyst__journal" data-testid="journal">

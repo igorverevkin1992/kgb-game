@@ -1,8 +1,14 @@
 [
   {
     "clue_id": "clue_vargas_bank_position",
-    "source": { "channel": "document", "from": "cable_a1_w1_file_vargas" },
-    "title": { "ru": "Кассир федеральных счетов", "en": "Teller for federal accounts" },
+    "source": {
+      "channel": "document",
+      "from": "cable_a1_w1_file_vargas"
+    },
+    "title": {
+      "ru": "Кассир федеральных счетов",
+      "en": "Teller for federal accounts"
+    },
     "text": {
       "ru": "Варгас ведёт кассовые операции отделения, которое обслуживает ипотеки служащих федеральных ведомств в Арлингтоне. Через её руки проходят формы о крупных наличных вкладах.",
       "en": "Vargas runs cash operations at the branch that services mortgages of federal employees in Arlington. Large cash deposit reports pass through her hands."
@@ -11,65 +17,127 @@
   },
   {
     "clue_id": "clue_vargas_mortgage_desk",
-    "source": { "channel": "field", "from": "op_a1_recon_first_virginia" },
-    "title": { "ru": "Окно № 2", "en": "Window No. 2" },
+    "source": {
+      "channel": "field",
+      "from": "op_a1_recon_first_virginia"
+    },
+    "title": {
+      "ru": "Окно № 2",
+      "en": "Window No. 2"
+    },
     "text": {
-      "ru": "За окном № 2 — женщина лет сорока с табличкой «E. Vargas». Мужчина в галстуке с эмблемой ЦРУ на зажиме оформляет у неё ипотечный платёж и называет её по имени.",
+      "ru": "За окном № 2 — женщина лет сорока с табличкой «Э. Варгас». Мужчина в галстуке с эмблемой ЦРУ на зажиме оформляет у неё ипотечный платёж и называет её по имени.",
       "en": "Behind window No. 2: a woman of about forty with a name plate \"E. Vargas\". A man with a CIA tie clip makes a mortgage payment and calls her by her first name."
     },
     "reveals": []
   },
   {
     "clue_id": "clue_vargas_hospital_calls",
-    "source": { "channel": "field", "from": "op_a1_recon_first_virginia" },
-    "title": { "ru": "Звонок в обеденный перерыв", "en": "A call at lunch break" },
+    "source": {
+      "channel": "field",
+      "from": "op_a1_recon_first_virginia"
+    },
+    "title": {
+      "ru": "Звонок в обеденный перерыв",
+      "en": "A call at lunch break"
+    },
     "text": {
       "ru": "В перерыв Варгас звонит из автомата у банка. Слышно: «…я понимаю, что счёт просрочен. Не выписывайте её, пожалуйста, я найду деньги».",
       "en": "At lunch Vargas calls from the payphone outside the bank. Overheard: \"…I understand the bill is overdue. Please don't discharge her, I'll find the money.\""
     },
-    "reveals": [{ "target_id": "tar_vargas_ellen", "axis": "money" }]
+    "reveals": [
+      {
+        "target_id": "tar_vargas_ellen",
+        "axis": "money"
+      }
+    ]
   },
   {
     "clue_id": "clue_vargas_clinic_debt",
-    "source": { "channel": "document", "from": "cable_a1_w2_credit_vargas" },
-    "title": { "ru": "Долг клинике в Бетесде", "en": "Debt to a Bethesda clinic" },
+    "source": {
+      "channel": "document",
+      "from": "cable_a1_w2_credit_vargas"
+    },
+    "title": {
+      "ru": "Долг клинике в Бетесде",
+      "en": "Debt to a Bethesda clinic"
+    },
     "text": {
       "ru": "Просроченный долг 11 400 долларов за лечение матери, два отказа в кредите за год. Деньги нужны срочно, а законного способа их получить у Варгас нет.",
       "en": "An overdue $11,400 debt for her mother's treatment, two loan refusals in a year. She needs money urgently and has no legal way to get it."
     },
-    "reveals": [{ "target_id": "tar_vargas_ellen", "axis": "money" }]
+    "reveals": [
+      {
+        "target_id": "tar_vargas_ellen",
+        "axis": "money"
+      }
+    ]
   },
   {
     "clue_id": "clue_vargas_drawer_memo",
-    "source": { "channel": "document", "from": "cable_a1_w3_tech_report" },
-    "title": { "ru": "Неотправленная записка", "en": "The unsent memo" },
+    "source": {
+      "channel": "document",
+      "from": "cable_a1_w3_tech_report"
+    },
+    "title": {
+      "ru": "Неотправленная записка",
+      "en": "The unsent memo"
+    },
     "text": {
       "ru": "Черновик записки о недостаче 340 долларов в её кассе, переписанный трижды и так и не отправленный. Варгас скрывает недостачу от управляющего.",
       "en": "A draft memo about a $340 shortage in her drawer, rewritten three times and never sent. Vargas is hiding the shortage from her manager."
     },
-    "reveals": [{ "target_id": "tar_vargas_ellen", "axis": "compromise" }]
+    "reveals": [
+      {
+        "target_id": "tar_vargas_ellen",
+        "axis": "compromise"
+      }
+    ]
   },
   {
     "clue_id": "clue_vargas_closing_recount",
-    "source": { "channel": "field", "from": "op_a1_closing_time_vargas" },
-    "title": { "ru": "Пересчёт после закрытия", "en": "Recount after closing" },
+    "source": {
+      "channel": "field",
+      "from": "op_a1_closing_time_vargas"
+    },
+    "title": {
+      "ru": "Пересчёт после закрытия",
+      "en": "Recount after closing"
+    },
     "text": {
       "ru": "Жалюзи опущены, но свет горит. Варгас одна пересчитывает кассу, достаёт из сумочки несколько купюр и кладёт в лоток.",
       "en": "The blinds are down but the lights are on. Vargas recounts her drawer alone, takes a few bills from her purse and puts them in the tray."
     },
-    "reveals": [{ "target_id": "tar_vargas_ellen", "axis": "compromise" }]
+    "reveals": [
+      {
+        "target_id": "tar_vargas_ellen",
+        "axis": "compromise"
+      }
+    ]
   },
   {
     "clue_id": "clue_vargas_named_by_calloway",
-    "source": { "channel": "agent", "from": "tar_calloway_martin" },
-    "title": { "ru": "Со слов Кэллоуэя", "en": "According to Calloway" },
+    "source": {
+      "channel": "agent",
+      "from": "tar_calloway_martin"
+    },
+    "title": {
+      "ru": "Со слов Кэллоуэя",
+      "en": "According to Calloway"
+    },
     "text": {
-      "ru": "Кэллоуэй: «Элен из First Virginia заходит по пятницам. Последний месяц пьёт в долг и говорит, что если ревизия найдёт дыру в кассе, её уволят раньше, чем она оплатит клинику».",
+      "ru": "Кэллоуэй: «Элен из «Ферст Вирджиния» заходит по пятницам. Последний месяц пьёт в долг и говорит, что если ревизия найдёт дыру в кассе, её уволят раньше, чем она оплатит клинику».",
       "en": "Calloway: \"Ellen from First Virginia comes in on Fridays. This month she drinks on credit and says if the audit finds the hole in her drawer, they'll fire her before she pays the clinic.\""
     },
     "reveals": [
-      { "target_id": "tar_vargas_ellen", "axis": "money" },
-      { "target_id": "tar_vargas_ellen", "axis": "compromise" }
+      {
+        "target_id": "tar_vargas_ellen",
+        "axis": "money"
+      },
+      {
+        "target_id": "tar_vargas_ellen",
+        "axis": "compromise"
+      }
     ]
   }
 ]

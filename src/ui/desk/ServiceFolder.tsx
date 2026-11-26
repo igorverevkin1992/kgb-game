@@ -139,14 +139,7 @@ function SettingsTab() {
   const update = useDeskStore((s) => s.updateSettings);
   return (
     <section className="service__settings" data-testid="settings">
-      <h3>{t('settings.lang')}</h3>
-      <div className="service__choices">
-        {(['ru', 'en'] as const).map((lang) => (
-          <button key={lang} type="button" data-testid={`lang-${lang}`} aria-pressed={settings.lang === lang} onClick={() => update({ lang })}>
-            {lang === 'ru' ? 'Русский' : 'English'}
-          </button>
-        ))}
-      </div>
+      {/* Переключатель языка вернётся вместе с английской версией (см. docs/plan.md). */}
       <h3>{t('settings.textScale')}</h3>
       <div className="service__choices">
         {TEXT_SCALES.map((scale) => (

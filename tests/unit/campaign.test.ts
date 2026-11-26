@@ -121,7 +121,7 @@ describe('три недели с разными решениями', () => {
 
     // Компромат ещё не вскрыт — успешной вербовки быть не может.
     const premature = dispatch(state, content, { type: 'recruitment', target_id: 'tar_vargas_ellen', result: 'success' });
-    expect(premature.error).toMatch(/compromise/);
+    expect(premature.error).toMatch(/компромат/);
     expect(premature.state).toBe(state);
 
     ({ state } = play(state, [
@@ -323,7 +323,7 @@ describe('маршрут SDR', () => {
       [GOOD_ROUTE[0]!, GOOD_ROUTE[1]!, 'site_nowhere'],
     ];
     for (const route of bad) {
-      expect(dispatch(s, content, { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route }).error).toMatch(/Маршрут SDR/);
+      expect(dispatch(s, content, { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route }).error).toMatch(/Проверочный маршрут/);
     }
   });
 

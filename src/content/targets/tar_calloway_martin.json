@@ -2,22 +2,44 @@
   "target_id": "tar_calloway_martin",
   "tier": 1,
   "act": 1,
-  "name": { "ru": "Мартин Кэллоуэй", "en": "Martin Calloway" },
+  "name": {
+    "ru": "Мартин Кэллоуэй",
+    "en": "Martin Calloway"
+  },
   "role": {
-    "ru": "Управляющий винным клубом и баром The Potomac Cellar, Джорджтаун",
+    "ru": "Управляющий винным клубом и баром «Потомак селлар», Джорджтаун",
     "en": "Manager of The Potomac Cellar wine club and bar, Georgetown"
   },
   "affiliation": "POTOMAC_CELLAR",
-  "access_tags": ["se_division_habits", "state_dept_regulars"],
+  "access_tags": [
+    "se_division_habits",
+    "state_dept_regulars"
+  ],
   "unlock": {
     "clues_required": 2,
-    "clue_ids": ["clue_calloway_post_review", "clue_calloway_bar_regulars", "clue_calloway_named_by_vargas"]
+    "clue_ids": [
+      "clue_calloway_post_review",
+      "clue_calloway_bar_regulars",
+      "clue_calloway_named_by_vargas"
+    ]
   },
   "mice_profile": {
-    "money": { "true_value": 64, "trigger": "rent_arrears" },
-    "ideology": { "true_value": 20, "trigger": null },
-    "compromise": { "true_value": 25, "trigger": null },
-    "ego": { "true_value": 80, "trigger": "unfinished_dissertation" }
+    "money": {
+      "true_value": 64,
+      "trigger": "rent_arrears"
+    },
+    "ideology": {
+      "true_value": 20,
+      "trigger": null
+    },
+    "compromise": {
+      "true_value": 25,
+      "trigger": null
+    },
+    "ego": {
+      "true_value": 80,
+      "trigger": "unfinished_dissertation"
+    }
   },
   "approach": {
     "flag_mode": "false_flag",
@@ -25,7 +47,13 @@
       "ru": "Торговый атташе нейтральной европейской страны",
       "en": "Trade attaché of a neutral European country"
     },
-    "key_axes": ["ego", "money"]
+    "key_axes": [
+      "ego",
+      "money"
+    ]
   },
-  "initial_state": { "rapport": 10, "paranoia": 20 }
+  "initial_state": {
+    "rapport": 10,
+    "paranoia": 20
+  }
 }

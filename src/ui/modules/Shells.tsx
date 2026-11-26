@@ -9,6 +9,7 @@ import type { MiceAxis } from '../../schemas';
 import type { I18nKey } from '../../i18n';
 import { RecorderArt } from '../art/DeskArt';
 import { content, useDeskStore, useLocalized, useT } from '../store';
+import { formatUsd } from '../format';
 import './modules.css';
 
 const PLAN_STEP: Record<ModuleId, number> = { map: 4, mice: 5, cipher: 6, dialog: 7, finance: 8, counterintel: 13 };
@@ -52,7 +53,7 @@ export function MiceModule() {
                     const k = axisKnowledge(game, content, tg.target_id, axis);
                     return (
                       <div key={axis} className={`dossier__axis dossier__axis--${k}`}>
-                        <dt>{axis[0]!.toUpperCase()}</dt>
+                        <dt title={t(`mice.axis.${axis}` as I18nKey)}>{t(`mice.axis.${axis}.short` as I18nKey)}</dt>
                         <dd>{t(`mice.${k}` as I18nKey)}</dd>
                       </div>
                     );
@@ -96,11 +97,12 @@ export function CipherModule() {
 
 export function FinanceModule() {
   const t = useT();
+  const lang = useDeskStore((s) => s.lang);
   const game = useDeskStore((s) => s.game);
   return (
     <Shell id="finance">
       <div className="ledger-page" data-testid="ledger">
-        <p>{t('finance.balance', { usd: game.fund_usd.toLocaleString('en-US') })}</p>
+        <p>{t('finance.balance', { usd: formatUsd(game.fund_usd, lang) })}</p>
         <p className="shell__note">{t('finance.threshold')}</p>
       </div>
     </Shell>

@@ -1,183 +1,386 @@
 {
   "districts": {
-    "dc_northwest": { "ru": "Северо-запад округа Колумбия", "en": "Northwest D.C." },
-    "georgetown": { "ru": "Джорджтаун", "en": "Georgetown" },
-    "bethesda": { "ru": "Бетесда", "en": "Bethesda" },
-    "mclean": { "ru": "Маклин", "en": "McLean" },
-    "arlington": { "ru": "Арлингтон", "en": "Arlington" },
-    "alexandria": { "ru": "Александрия", "en": "Alexandria" },
-    "vienna": { "ru": "Вена", "en": "Vienna" },
-    "leesburg": { "ru": "Лисберг", "en": "Leesburg" }
+    "dc_northwest": {
+      "ru": "Северо-запад округа Колумбия",
+      "en": "Northwest D.C."
+    },
+    "georgetown": {
+      "ru": "Джорджтаун",
+      "en": "Georgetown"
+    },
+    "bethesda": {
+      "ru": "Бетесда",
+      "en": "Bethesda"
+    },
+    "mclean": {
+      "ru": "Маклин",
+      "en": "McLean"
+    },
+    "arlington": {
+      "ru": "Арлингтон",
+      "en": "Arlington"
+    },
+    "alexandria": {
+      "ru": "Александрия",
+      "en": "Alexandria"
+    },
+    "vienna": {
+      "ru": "Вена",
+      "en": "Vienna"
+    },
+    "leesburg": {
+      "ru": "Лисберг",
+      "en": "Leesburg"
+    }
   },
   "sites": [
     {
       "site_id": "site_mount_alto",
-      "name": { "ru": "Маунт-Алто, посольство СССР", "en": "Mount Alto, Soviet Embassy" },
+      "name": {
+        "ru": "Маунт-Алто, посольство СССР",
+        "en": "Mount Alto, Soviet Embassy"
+      },
       "kind": "embassy",
       "role": "landmark",
       "district": "dc_northwest",
-      "pos": { "x": 32, "y": 16 }
+      "pos": {
+        "x": 32,
+        "y": 16
+      }
     },
     {
       "site_id": "site_fbi_post_wisconsin",
-      "name": { "ru": "Пост ФБР, 2619 Висконсин-авеню", "en": "FBI post, 2619 Wisconsin Avenue" },
+      "name": {
+        "ru": "Пост ФБР, 2619 Висконсин-авеню",
+        "en": "FBI post, 2619 Wisconsin Avenue"
+      },
       "kind": "fbi",
       "role": "landmark",
       "district": "dc_northwest",
-      "pos": { "x": 32.7, "y": 16.5 }
+      "pos": {
+        "x": 32.7,
+        "y": 16.5
+      }
     },
     {
       "site_id": "site_cia_langley",
-      "name": { "ru": "Лэнгли, штаб-квартира ЦРУ", "en": "Langley, CIA headquarters" },
+      "name": {
+        "ru": "Лэнгли, штаб-квартира ЦРУ",
+        "en": "Langley, CIA headquarters"
+      },
       "kind": "cia",
       "role": "landmark",
       "district": "mclean",
-      "pos": { "x": 25.4, "y": 14.2 }
+      "pos": {
+        "x": 25.4,
+        "y": 14.2
+      }
     },
     {
       "site_id": "site_first_virginia_wilson",
-      "name": { "ru": "First Virginia Bank, Уилсон-бульвар", "en": "First Virginia Bank, Wilson Boulevard" },
+      "name": {
+        "ru": "«Ферст Вирджиния бэнк», Уилсон-бульвар",
+        "en": "First Virginia Bank, Wilson Boulevard"
+      },
       "kind": "bank",
       "role": "target",
       "district": "arlington",
-      "pos": { "x": 30.3, "y": 19.3 }
+      "pos": {
+        "x": 30.3,
+        "y": 19.3
+      }
     },
     {
       "site_id": "site_potomac_cellar",
-      "name": { "ru": "The Potomac Cellar, M-стрит", "en": "The Potomac Cellar, M Street" },
+      "name": {
+        "ru": "«Потомак селлар», М-стрит",
+        "en": "The Potomac Cellar, M Street"
+      },
       "kind": "bar",
       "role": "target",
       "district": "georgetown",
-      "pos": { "x": 32.9, "y": 18.1 }
+      "pos": {
+        "x": 32.9,
+        "y": 18.1
+      }
     },
     {
       "site_id": "site_foxstone_park",
-      "name": { "ru": "Парк Фокстон, мостик через Вулфтрэп-Крик", "en": "Foxstone Park, footbridge over Wolftrap Creek" },
+      "name": {
+        "ru": "Парк Фокстон, мостик через Вулфтрэп-Крик",
+        "en": "Foxstone Park, footbridge over Wolftrap Creek"
+      },
       "kind": "park",
       "role": "target",
       "district": "vienna",
-      "pos": { "x": 19.6, "y": 17.6 }
+      "pos": {
+        "x": 19.6,
+        "y": 17.6
+      }
     },
-
     {
       "site_id": "site_peoples_drug_connecticut",
-      "name": { "ru": "Аптека Peoples Drug, Коннектикут-авеню", "en": "Peoples Drug, Connecticut Avenue" },
+      "name": {
+        "ru": "Аптека «Пиплс драг», Коннектикут-авеню",
+        "en": "Peoples Drug, Connecticut Avenue"
+      },
       "kind": "pharmacy",
       "role": "stop",
       "district": "dc_northwest",
-      "pos": { "x": 34.2, "y": 14.6 },
-      "cover_reason": { "ru": "Купить лекарства от давления", "en": "Buy blood pressure pills" },
-      "ambient_tags": ["nurse_white_coat", "bus_stop_queue"]
+      "pos": {
+        "x": 34.2,
+        "y": 14.6
+      },
+      "cover_reason": {
+        "ru": "Купить лекарства от давления",
+        "en": "Buy blood pressure pills"
+      },
+      "ambient_tags": [
+        "nurse_white_coat",
+        "bus_stop_queue"
+      ]
     },
     {
       "site_id": "site_georgetown_post_office",
-      "name": { "ru": "Почтовое отделение Джорджтауна", "en": "Georgetown post office" },
+      "name": {
+        "ru": "Почтовое отделение Джорджтауна",
+        "en": "Georgetown post office"
+      },
       "kind": "post_office",
       "role": "stop",
       "district": "georgetown",
-      "pos": { "x": 32.3, "y": 17.6 },
-      "cover_reason": { "ru": "Отправить посылку в Москву", "en": "Send a parcel to Moscow" },
-      "ambient_tags": ["mailman_cart", "students_backpacks"]
+      "pos": {
+        "x": 32.3,
+        "y": 17.6
+      },
+      "cover_reason": {
+        "ru": "Отправить посылку в Москву",
+        "en": "Send a parcel to Moscow"
+      },
+      "ambient_tags": [
+        "mailman_cart",
+        "students_backpacks"
+      ]
     },
     {
       "site_id": "site_wisconsin_bookshop",
-      "name": { "ru": "Книжный магазин на Висконсин-авеню", "en": "Bookshop on Wisconsin Avenue" },
+      "name": {
+        "ru": "Книжный магазин на Висконсин-авеню",
+        "en": "Bookshop on Wisconsin Avenue"
+      },
       "kind": "bookshop",
       "role": "stop",
       "district": "georgetown",
-      "pos": { "x": 31.6, "y": 16.9 },
-      "cover_reason": { "ru": "Посмотреть новинки", "en": "Browse the new arrivals" },
-      "ambient_tags": ["professor_tweed", "bike_rack"]
+      "pos": {
+        "x": 31.6,
+        "y": 16.9
+      },
+      "cover_reason": {
+        "ru": "Посмотреть новинки",
+        "en": "Browse the new arrivals"
+      },
+      "ambient_tags": [
+        "professor_tweed",
+        "bike_rack"
+      ]
     },
     {
       "site_id": "site_m_street_tobacconist",
-      "name": { "ru": "Табачная лавка на M-стрит", "en": "Tobacconist on M Street" },
+      "name": {
+        "ru": "Табачная лавка на М-стрит",
+        "en": "Tobacconist on M Street"
+      },
       "kind": "tobacconist",
       "role": "stop",
       "district": "georgetown",
-      "pos": { "x": 33.4, "y": 18.3 },
-      "cover_reason": { "ru": "Трубочный табак для посла", "en": "Pipe tobacco for the ambassador" },
-      "ambient_tags": ["tourists_camera", "limo_driver"]
+      "pos": {
+        "x": 33.4,
+        "y": 18.3
+      },
+      "cover_reason": {
+        "ru": "Трубочный табак для посла",
+        "en": "Pipe tobacco for the ambassador"
+      },
+      "ambient_tags": [
+        "tourists_camera",
+        "limo_driver"
+      ]
     },
     {
       "site_id": "site_lee_highway_cleaners",
-      "name": { "ru": "Химчистка на Ли-хайвей", "en": "Dry cleaner on Lee Highway" },
+      "name": {
+        "ru": "Химчистка на Ли-хайвей",
+        "en": "Dry cleaner on Lee Highway"
+      },
       "kind": "cleaners",
       "role": "stop",
       "district": "arlington",
-      "pos": { "x": 29.3, "y": 18.5 },
-      "cover_reason": { "ru": "Сдать костюм в чистку", "en": "Drop off a suit" },
-      "ambient_tags": ["laundry_van", "old_man_newspaper"]
+      "pos": {
+        "x": 29.3,
+        "y": 18.5
+      },
+      "cover_reason": {
+        "ru": "Сдать костюм в чистку",
+        "en": "Drop off a suit"
+      },
+      "ambient_tags": [
+        "laundry_van",
+        "old_man_newspaper"
+      ]
     },
     {
       "site_id": "site_safeway_clarendon",
-      "name": { "ru": "Safeway, Кларендон", "en": "Safeway, Clarendon" },
+      "name": {
+        "ru": "Универсам «Сейфуэй», Кларендон",
+        "en": "Safeway, Clarendon"
+      },
       "kind": "grocery",
       "role": "stop",
       "district": "arlington",
-      "pos": { "x": 31.0, "y": 19.9 },
-      "cover_reason": { "ru": "Купить продукты на неделю", "en": "Groceries for the week" },
-      "ambient_tags": ["mother_stroller", "teen_shopping_carts"]
+      "pos": {
+        "x": 31.0,
+        "y": 19.9
+      },
+      "cover_reason": {
+        "ru": "Купить продукты на неделю",
+        "en": "Groceries for the week"
+      },
+      "ambient_tags": [
+        "mother_stroller",
+        "teen_shopping_carts"
+      ]
     },
     {
       "site_id": "site_exxon_glebe_road",
-      "name": { "ru": "Заправка Exxon на Глиб-роуд", "en": "Exxon station on Glebe Road" },
+      "name": {
+        "ru": "Заправка «Эксон» на Глиб-роуд",
+        "en": "Exxon station on Glebe Road"
+      },
       "kind": "gas_station",
       "role": "stop",
       "district": "arlington",
-      "pos": { "x": 29.1, "y": 20.8 },
-      "cover_reason": { "ru": "Заправить служебный «Шевроле»", "en": "Refuel the embassy Chevrolet" },
-      "ambient_tags": ["mechanic_overalls", "pickup_truck"]
+      "pos": {
+        "x": 29.1,
+        "y": 20.8
+      },
+      "cover_reason": {
+        "ru": "Заправить служебный «Шевроле»",
+        "en": "Refuel the embassy Chevrolet"
+      },
+      "ambient_tags": [
+        "mechanic_overalls",
+        "pickup_truck"
+      ]
     },
     {
       "site_id": "site_bethesda_hardware",
-      "name": { "ru": "Хозяйственный магазин, Бетесда", "en": "Hardware store, Bethesda" },
+      "name": {
+        "ru": "Хозяйственный магазин, Бетесда",
+        "en": "Hardware store, Bethesda"
+      },
       "kind": "hardware",
       "role": "stop",
       "district": "bethesda",
-      "pos": { "x": 29.7, "y": 12.3 },
-      "cover_reason": { "ru": "Купить лампочки и изоленту", "en": "Buy light bulbs and tape" },
-      "ambient_tags": ["contractor_ladder", "dog_on_leash"]
+      "pos": {
+        "x": 29.7,
+        "y": 12.3
+      },
+      "cover_reason": {
+        "ru": "Купить лампочки и изоленту",
+        "en": "Buy light bulbs and tape"
+      },
+      "ambient_tags": [
+        "contractor_ladder",
+        "dog_on_leash"
+      ]
     },
     {
       "site_id": "site_mclean_bank",
-      "name": { "ru": "Отделение банка, Маклин", "en": "Bank branch, McLean" },
+      "name": {
+        "ru": "Отделение банка, Маклин",
+        "en": "Bank branch, McLean"
+      },
       "kind": "bank",
       "role": "stop",
       "district": "mclean",
-      "pos": { "x": 26.4, "y": 15.9 },
-      "cover_reason": { "ru": "Обналичить чек", "en": "Cash a cheque" },
-      "ambient_tags": ["security_guard", "line_of_clerks"]
+      "pos": {
+        "x": 26.4,
+        "y": 15.9
+      },
+      "cover_reason": {
+        "ru": "Обналичить чек",
+        "en": "Cash a cheque"
+      },
+      "ambient_tags": [
+        "security_guard",
+        "line_of_clerks"
+      ]
     },
     {
       "site_id": "site_vienna_cleaners",
-      "name": { "ru": "Прачечная у станции, Вена", "en": "Laundromat by the station, Vienna" },
+      "name": {
+        "ru": "Прачечная у станции, Вена",
+        "en": "Laundromat by the station, Vienna"
+      },
       "kind": "cleaners",
       "role": "stop",
       "district": "vienna",
-      "pos": { "x": 20.3, "y": 18.7 },
-      "cover_reason": { "ru": "Забрать бельё", "en": "Pick up the laundry" },
-      "ambient_tags": ["commuter_crowd", "gardener_mower"]
+      "pos": {
+        "x": 20.3,
+        "y": 18.7
+      },
+      "cover_reason": {
+        "ru": "Забрать бельё",
+        "en": "Pick up the laundry"
+      },
+      "ambient_tags": [
+        "commuter_crowd",
+        "gardener_mower"
+      ]
     },
     {
       "site_id": "site_alexandria_market",
-      "name": { "ru": "Рынок на Кинг-стрит, Александрия", "en": "King Street market, Alexandria" },
+      "name": {
+        "ru": "Рынок на Кинг-стрит, Александрия",
+        "en": "King Street market, Alexandria"
+      },
       "kind": "grocery",
       "role": "stop",
       "district": "alexandria",
-      "pos": { "x": 33.6, "y": 24.6 },
-      "cover_reason": { "ru": "Свежая рыба к ужину", "en": "Fresh fish for dinner" },
-      "ambient_tags": ["street_musician", "fish_vendor"]
+      "pos": {
+        "x": 33.6,
+        "y": 24.6
+      },
+      "cover_reason": {
+        "ru": "Свежая рыба к ужину",
+        "en": "Fresh fish for dinner"
+      },
+      "ambient_tags": [
+        "street_musician",
+        "fish_vendor"
+      ]
     },
     {
       "site_id": "site_leesburg_antiques",
-      "name": { "ru": "Антикварная лавка, Лисберг", "en": "Antiques shop, Leesburg" },
+      "name": {
+        "ru": "Антикварная лавка, Лисберг",
+        "en": "Antiques shop, Leesburg"
+      },
       "kind": "antiques",
       "role": "stop",
       "district": "leesburg",
-      "pos": { "x": 3, "y": 11.5 },
-      "cover_reason": { "ru": "Подарок жене посла", "en": "A gift for the ambassador's wife" },
-      "ambient_tags": ["horse_trailer", "farm_stand"]
+      "pos": {
+        "x": 3,
+        "y": 11.5
+      },
+      "cover_reason": {
+        "ru": "Подарок жене посла",
+        "en": "A gift for the ambassador's wife"
+      },
+      "ambient_tags": [
+        "horse_trailer",
+        "farm_stand"
+      ]
     }
   ]
 }

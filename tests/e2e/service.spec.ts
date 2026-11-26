@@ -62,18 +62,16 @@ test('«Железный занавес»: ручные сохранения и 
   await expect(page.getByTestId('saves')).toContainText('чекпоинтов нет');
 });
 
-test('настройки: язык и размер текста запоминаются', async ({ page }) => {
+test('настройки: размер текста запоминается; переключателя языка пока нет', async ({ page }) => {
   await openGame(page, '?new');
   await page.keyboard.press('Escape');
   await page.getByTestId('service-tab-settings').click();
+  await expect(page.getByTestId('lang-en')).toHaveCount(0);
   await page.getByTestId('text-scale-130').click();
-  await page.getByTestId('lang-en').click();
-  await expect(page.getByTestId('service-folder')).toContainText('Text size');
   await page.screenshot({ path: 'test-results/screens/service-settings.png' });
 
   await page.reload();
   await page.getByTestId('calendar').waitFor();
-  await expect(page.getByRole('heading', { name: 'Line KR: Washington, 1985' })).toBeVisible();
   const scale = await page.locator('main.room').evaluate((el) => getComputedStyle(el).getPropertyValue('--text-scale').trim());
   expect(scale).toBe('1.3');
   await page.getByTestId('desk-object-inbox').click();

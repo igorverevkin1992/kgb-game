@@ -1,62 +1,128 @@
 [
   {
     "clue_id": "clue_calloway_post_review",
-    "source": { "channel": "document", "from": "cable_a1_w1_post_clipping" },
-    "title": { "ru": "Управляющий цитирует Монтескьё", "en": "The manager quotes Montesquieu" },
+    "source": {
+      "channel": "document",
+      "from": "cable_a1_w1_post_clipping"
+    },
+    "title": {
+      "ru": "Управляющий цитирует Монтескьё",
+      "en": "The manager quotes Montesquieu"
+    },
     "text": {
-      "ru": "Колумнист Post описывает Кэллоуэя как человека, который читает лекции посетителям и явно считает себя умнее своего заведения. Среди завсегдатаев — люди из Госдепа и Лэнгли.",
+      "ru": "Колумнист «Вашингтон пост» описывает Кэллоуэя как человека, который читает лекции посетителям и явно считает себя умнее своего заведения. Среди завсегдатаев — люди из Госдепа и Лэнгли.",
       "en": "The Post columnist describes Calloway as a man who lectures his patrons and clearly thinks himself smarter than his establishment. Regulars include State Department and Langley people."
     },
-    "reveals": [{ "target_id": "tar_calloway_martin", "axis": "ego" }]
+    "reveals": [
+      {
+        "target_id": "tar_calloway_martin",
+        "axis": "ego"
+      }
+    ]
   },
   {
     "clue_id": "clue_calloway_bar_regulars",
-    "source": { "channel": "field", "from": "op_a1_recon_potomac_cellar" },
-    "title": { "ru": "«Они держат меня за официанта»", "en": "\"They take me for a waiter\"" },
+    "source": {
+      "channel": "field",
+      "from": "op_a1_recon_potomac_cellar"
+    },
+    "title": {
+      "ru": "«Они держат меня за официанта»",
+      "en": "\"They take me for a waiter\""
+    },
     "text": {
       "ru": "За стойкой Кэллоуэй жалуется бармену: «Ребята из Вирджинии слушают меня про Брежнева час, а потом оставляют четвертак на чай. Я писал об этом диссертацию, чёрт возьми».",
       "en": "At the bar Calloway complains to the bartender: \"The Virginia boys listen to me on Brezhnev for an hour, then leave a quarter tip. I wrote a dissertation on this, damn it.\""
     },
-    "reveals": [{ "target_id": "tar_calloway_martin", "axis": "ego" }]
+    "reveals": [
+      {
+        "target_id": "tar_calloway_martin",
+        "axis": "ego"
+      }
+    ]
   },
   {
     "clue_id": "clue_calloway_vgu_profile",
-    "source": { "channel": "document", "from": "cable_a1_w2_vgu_note" },
-    "title": { "ru": "Незащищённая диссертация", "en": "The undefended dissertation" },
+    "source": {
+      "channel": "document",
+      "from": "cable_a1_w2_vgu_note"
+    },
+    "title": {
+      "ru": "Незащищённая диссертация",
+      "en": "The undefended dissertation"
+    },
     "text": {
       "ru": "Кэллоуэй не защитил диссертацию о советской внешней политике после конфликта с руководителем. Непризнанный специалист по СССР за барной стойкой.",
       "en": "Calloway never defended his dissertation on Soviet foreign policy after a clash with his adviser. An unrecognised Sovietologist behind a bar counter."
     },
-    "reveals": [{ "target_id": "tar_calloway_martin", "axis": "ego" }]
+    "reveals": [
+      {
+        "target_id": "tar_calloway_martin",
+        "axis": "ego"
+      }
+    ]
   },
   {
     "clue_id": "clue_calloway_rent_call",
-    "source": { "channel": "document", "from": "cable_a1_w3_intercept" },
-    "title": { "ru": "Три месяца аренды", "en": "Three months of rent" },
+    "source": {
+      "channel": "document",
+      "from": "cable_a1_w3_intercept"
+    },
+    "title": {
+      "ru": "Три месяца аренды",
+      "en": "Three months of rent"
+    },
     "text": {
       "ru": "Владелец помещения грозит юристом: аренда не плачена три месяца. Кэллоуэй выпрашивает отсрочку до праздников.",
       "en": "The landlord threatens a lawyer: rent is three months overdue. Calloway begs for an extension until the holidays."
     },
-    "reveals": [{ "target_id": "tar_calloway_martin", "axis": "money" }]
+    "reveals": [
+      {
+        "target_id": "tar_calloway_martin",
+        "axis": "money"
+      }
+    ]
   },
   {
     "clue_id": "clue_calloway_eviction_notice",
-    "source": { "channel": "field", "from": "op_a1_recon_potomac_cellar" },
-    "title": { "ru": "Уведомление на двери", "en": "Notice on the door" },
+    "source": {
+      "channel": "field",
+      "from": "op_a1_recon_potomac_cellar"
+    },
+    "title": {
+      "ru": "Уведомление на двери",
+      "en": "Notice on the door"
+    },
     "text": {
       "ru": "На служебной двери клуба приколото уведомление о задолженности по аренде с датой выселения через тридцать дней.",
       "en": "A notice of rent arrears is pinned to the club's back door, with an eviction date thirty days away."
     },
-    "reveals": [{ "target_id": "tar_calloway_martin", "axis": "money" }]
+    "reveals": [
+      {
+        "target_id": "tar_calloway_martin",
+        "axis": "money"
+      }
+    ]
   },
   {
     "clue_id": "clue_calloway_named_by_vargas",
-    "source": { "channel": "agent", "from": "tar_vargas_ellen" },
-    "title": { "ru": "Со слов Варгас", "en": "According to Vargas" },
+    "source": {
+      "channel": "agent",
+      "from": "tar_vargas_ellen"
+    },
+    "title": {
+      "ru": "Со слов Варгас",
+      "en": "According to Vargas"
+    },
     "text": {
-      "ru": "Варгас: «Кредит The Potomac Cellar у нас на контроле — два платежа пропущены. Управляющий, Кэллоуэй, приходил просить реструктуризацию и полчаса объяснял управляющему банка, как устроена экономика».",
+      "ru": "Варгас: «Кредит «Потомак селлар» у нас на контроле — два платежа пропущены. Управляющий, Кэллоуэй, приходил просить реструктуризацию и полчаса объяснял управляющему банка, как устроена экономика».",
       "en": "Vargas: \"The Potomac Cellar loan is on our watch list, two payments missed. The manager, Calloway, came in asking to restructure and spent half an hour explaining economics to our branch manager.\""
     },
-    "reveals": [{ "target_id": "tar_calloway_martin", "axis": "money" }]
+    "reveals": [
+      {
+        "target_id": "tar_calloway_martin",
+        "axis": "money"
+      }
+    ]
   }
 ]

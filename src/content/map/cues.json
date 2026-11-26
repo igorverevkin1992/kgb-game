@@ -1,6 +1,6 @@
 [
-  { "tag": "light_blue_ford_ltd", "kind": "tail", "text": { "ru": "Светло-синий седан Ford LTD", "en": "A light-blue Ford LTD sedan" } },
-  { "tag": "dark_blue_ford_ltd", "kind": "noise", "text": { "ru": "Тёмно-синий седан Ford LTD", "en": "A dark-blue Ford LTD sedan" } },
+  { "tag": "light_blue_ford_ltd", "kind": "tail", "text": { "ru": "Светло-синий седан «Форд ЛТД»", "en": "A light-blue Ford LTD sedan" } },
+  { "tag": "dark_blue_ford_ltd", "kind": "noise", "text": { "ru": "Тёмно-синий седан «Форд ЛТД»", "en": "A dark-blue Ford LTD sedan" } },
   { "tag": "red_buick", "kind": "noise", "text": { "ru": "Красный «Бьюик» с вмятиной на крыле", "en": "A red Buick with a dented fender" } },
   { "tag": "brown_cap", "kind": "noise", "text": { "ru": "Мужчина в коричневой кепке", "en": "A man in a brown cap" } },
   { "tag": "green_volvo", "kind": "noise", "text": { "ru": "Зелёный «Вольво»-универсал", "en": "A green Volvo estate" } },
@@ -8,7 +8,7 @@
   { "tag": "delivery_van", "kind": "noise", "text": { "ru": "Фургон доставки без надписей", "en": "An unmarked delivery van" } },
   { "tag": "man_with_terrier", "kind": "noise", "text": { "ru": "Мужчина с терьером на поводке", "en": "A man walking a terrier" } },
   { "tag": "yellow_cab", "kind": "noise", "text": { "ru": "Жёлтое такси с выключенным огоньком", "en": "A yellow cab with its light off" } },
-  { "tag": "man_reading_post", "kind": "noise", "text": { "ru": "Мужчина с раскрытой Washington Post", "en": "A man behind an open Washington Post" } },
+  { "tag": "man_reading_post", "kind": "noise", "text": { "ru": "Мужчина с раскрытой «Вашингтон пост»", "en": "A man behind an open Washington Post" } },
   { "tag": "white_chevy_van", "kind": "noise", "text": { "ru": "Белый фургон «Шевроле»", "en": "A white Chevrolet van" } },
   { "tag": "couple_on_bench", "kind": "noise", "text": { "ru": "Пожилая пара на скамейке", "en": "An elderly couple on a bench" } },
   { "tag": "jogger_sweatshirt", "kind": "noise", "text": { "ru": "Бегун в толстовке Джорджтаунского университета", "en": "A jogger in a Georgetown University sweatshirt" } },

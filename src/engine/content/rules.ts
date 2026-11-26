@@ -17,7 +17,7 @@ const CHANNEL_RU: Record<ClueSource['channel'], string> = {
   document: 'документ',
   field: 'полевая разведка',
 };
-const AXIS_RU = { money: 'Money', ideology: 'Ideology', compromise: 'Compromise', ego: 'Ego' } as const;
+const AXIS_RU = { money: 'Деньги', ideology: 'Идеология', compromise: 'Компромат', ego: 'Самолюбие' } as const;
 
 export const describeSource = (s: ClueSource) => `${CHANNEL_RU[s.channel]} ${s.from}`;
 
@@ -60,7 +60,7 @@ function checkReferences(ctx: Ctx) {
           rule: 'refs',
           id: clue.clue_id,
           where: `${clue.clue_id}.reveals[${i}]`,
-          message: `Улика вскрывает ось MICE у несуществующей цели «${r.target_id}»`,
+          message: `Улика вскрывает мотив у несуществующей цели «${r.target_id}»`,
         });
       }
     });
@@ -70,7 +70,7 @@ function checkReferences(ctx: Ctx) {
         rule: 'refs',
         id: clue.clue_id,
         where: clue.clue_id,
-        message: 'Агент доносит сам на себя: улика от агента вскрывает его же MICE',
+        message: 'Агент доносит сам на себя: улика от агента вскрывает его же мотивы',
       });
     }
   }
@@ -166,7 +166,7 @@ function checkUnlock(ctx: Ctx) {
   }
 }
 
-/** 3. Ведущие оси MICE вскрываются минимум тремя уликами. */
+/** 3. Ведущие мотивы (доска мотивов, MICE) вскрываются минимум тремя уликами. */
 function checkKeyAxes(ctx: Ctx) {
   for (const t of ctx.content.targets) {
     for (const axis of t.approach.key_axes) {
@@ -176,7 +176,7 @@ function checkKeyAxes(ctx: Ctx) {
           rule: 'mice-three-clue',
           id: t.target_id,
           where: `mice_profile.${axis}.trigger`,
-          message: `Ось ${AXIS_RU[axis]} указана ведущей, но у неё нет рычага (trigger: null)`,
+          message: `Мотив «${AXIS_RU[axis]}» указан ведущим, но у него нет рычага (trigger: null)`,
         });
       }
       const revealing = ctx.content.clues.filter((c) => c.reveals.some((r) => r.target_id === t.target_id && r.axis === axis));
@@ -186,7 +186,7 @@ function checkKeyAxes(ctx: Ctx) {
           rule: 'mice-three-clue',
           id: t.target_id,
           where: `approach.key_axes`,
-          message: `«Правило трёх улик»: ведущую ось ${AXIS_RU[axis]} вскрывают ${revealing.length} улик(и), нужно минимум ${THREE_CLUES}`,
+          message: `«Правило трёх улик»: ведущий мотив «${AXIS_RU[axis]}» вскрывают ${revealing.length} улик(и), нужно минимум ${THREE_CLUES}`,
         });
       }
     }
@@ -326,7 +326,7 @@ function checkMapAndSdr(ctx: Ctx) {
       level: 'error',
       rule: 'sdr',
       file: MAP,
-      message: `Бытовые точки внутри 25-мильной зоны есть только в ${goodDistricts.size} районах — правильный маршрут SDR построить нельзя`,
+      message: `Бытовые точки внутри 25-мильной зоны есть только в ${goodDistricts.size} районах — правильный проверочный маршрут построить нельзя`,
     });
   }
 
@@ -390,7 +390,7 @@ function checkWeeks(ctx: Ctx) {
 }
 
 /** 7. Длина документов и наличие перевода. */
-function checkTexts(ctx: Ctx) {
+function checkTexts(ctx: Ctx, translation: boolean) {
   const long: { id: string; where: string; text: Text }[] = [
     ...ctx.content.clues.map((c) => ({ id: c.clue_id, where: `${c.clue_id}.text`, text: c.text })),
     ...ctx.content.cables.map((c) => ({ id: c.cable_id, where: `${c.cable_id}.body`, text: c.body })),
@@ -423,7 +423,7 @@ function checkTexts(ctx: Ctx) {
     }
   };
   walk(ctx.content);
-  if (missing > 0) {
+  if (translation && missing > 0) {
     push(ctx, { level: 'warning', rule: 'translation', message: `Без английского перевода: ${missing} из ${total} текстов` });
   }
 }
@@ -465,7 +465,12 @@ function checkBalance(ctx: Ctx) {
   }
 }
 
-export function checkRules(content: ContentBundle, fileOf: Map<string, string>): Issue[] {
+export interface RuleOptions {
+  /** Напоминать о текстах без английского перевода (английская версия — позже). */
+  translation?: boolean;
+}
+
+export function checkRules(content: ContentBundle, fileOf: Map<string, string>, opts: RuleOptions = {}): Issue[] {
   const ctx: Ctx = { content, fileOf, issues: [] };
   checkReferences(ctx);
   checkUnlock(ctx);
@@ -473,7 +478,7 @@ export function checkRules(content: ContentBundle, fileOf: Map<string, string>):
   checkReachability(ctx);
   checkMapAndSdr(ctx);
   checkWeeks(ctx);
-  checkTexts(ctx);
+  checkTexts(ctx, opts.translation ?? false);
   checkPolygraph(ctx);
   checkBalance(ctx);
   return ctx.issues;

@@ -18,8 +18,8 @@ test('день: маршрут SDR прокладывается кликами �
   await page.screenshot({ path: 'test-results/screens/map-planning.png' });
 
   await page.getByTestId('confirm-route').click();
-  await expect(page.getByTestId('planned-ops')).toContainText('Осмотр отделения First Virginia Bank');
-  await expect(page.getByTestId('planned-ops')).toContainText('Аптека Peoples Drug → Почтовое отделение Джорджтауна → Химчистка на Ли-хайвей');
+  await expect(page.getByTestId('planned-ops')).toContainText('Осмотр отделения «Ферст Вирджиния бэнк»');
+  await expect(page.getByTestId('planned-ops')).toContainText('Аптека «Пиплс драг» → Почтовое отделение Джорджтауна → Химчистка на Ли-хайвей');
 });
 
 test('день: слабый маршрут в одном районе и выезд за 25 миль вызывают предупреждения', async ({ page }) => {
