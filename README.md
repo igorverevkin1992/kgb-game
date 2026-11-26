@@ -13,7 +13,7 @@
   слияния в `main`).
 - **На Windows:** скачайте артефакт `GodShpionov-windows` из последнего успешного запуска CI
   (вкладка Actions): `GodShpionov.exe`, `steam_api64.dll` и `steam_appid.txt`. Сборки для
-  плейтеста — на странице Releases (см. `docs/playtest.md`).
+  плейтеста — на странице Releases (см. `docs/playtest.md`). Пошагово, с решением проблем — `docs/windows.md`.
 - **В редакторе Godot:** установите [Godot 4.7](https://godotengine.org/download) (обычная
   версия, не .NET), откройте папку репозитория как проект и нажмите F5.
 
