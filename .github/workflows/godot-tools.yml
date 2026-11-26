@@ -1,0 +1,35 @@
+# Кладёт официальную сборку Godot (Linux-редактор + шаблоны экспорта) в релиз этого репозитория.
+# Зачем: облачный контейнер разработки не может скачивать с сайта Godot, но может — из релизов
+# этого репозитория. Запускается, когда меняется tools/godot-version.txt.
+name: Godot tools
+
+on:
+  push:
+    paths: [tools/godot-version.txt, .github/workflows/godot-tools.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Скачать Godot и выложить в релиз
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          V=$(cat tools/godot-version.txt)          # например 4.7.2-stable
+          TAG="godot-$V"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Релиз $TAG уже есть"; exit 0
+          fi
+          BASE="https://github.com/godotengine/godot-builds/releases/download/$V"
+          curl -fL --retry 3 -o "Godot_v${V}_linux.x86_64.zip" "$BASE/Godot_v${V}_linux.x86_64.zip"
+          curl -fL --retry 3 -o "Godot_v${V}_export_templates.tpz" "$BASE/Godot_v${V}_export_templates.tpz"
+          ls -la
+          gh release create "$TAG" --title "Godot $V (инструменты разработки)" \
+            --notes "Официальные сборки Godot $V с github.com/godotengine/godot-builds для облачной разработки и CI." \
+            --prerelease "Godot_v${V}_linux.x86_64.zip" "Godot_v${V}_export_templates.tpz"
