@@ -12,5 +12,3 @@ test-results/
 *.import.tmp
 build/
 build/
-addons/godotsteam/
-.godotsteam.off/

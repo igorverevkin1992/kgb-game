@@ -34,29 +34,28 @@ jobs:
             --notes "Официальные сборки Godot $V с github.com/godotengine/godot-builds для облачной разработки и CI." \
             --prerelease "Godot_v${V}_linux.x86_64.zip" "Godot_v${V}_export_templates.tpz"
 
-  # GodotSteam (GDExtension) — интеграция со Steam для Windows-сборки. github.com из облачного
-  # контейнера закрыт, поэтому, как и Godot, кладём архив в релиз этого репозитория.
+  # GodotSteam — шаблоны экспорта Godot со встроенным Steam (модуль) для Windows-сборки.
+  # github.com из облачного контейнера закрыт, поэтому, как и Godot, кладём архив в релиз репозитория.
   godotsteam:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Скачать GodotSteam и выложить в релиз
+      - name: Скачать шаблоны GodotSteam и выложить в релиз
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           V=$(cat tools/godotsteam-version.txt)      # например v4.24
-          TAG="godotsteam-$V"
+          GV=$(sed 's/-stable//; s/\.//g' tools/godot-version.txt)   # 4.7.2-stable → 472
+          TAG="godotsteam-$V-g$GV"
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Релиз $TAG уже есть"; exit 0
           fi
-          echo "Файлы релиза GodotSteam $V:"
-          gh release view "$V" -R GodotSteam/GodotSteam --json assets --jq '.assets[].name'
-          NAME=$(gh release view "$V" -R GodotSteam/GodotSteam --json assets --jq '.assets[].name' | grep -i gdextension | grep -i '\.zip$' | head -1)
-          [ -n "$NAME" ] || { echo "В релизе $V нет архива GDExtension"; exit 1; }
+          NAME=$(gh release view "$V" -R GodotSteam/GodotSteam --json assets --jq '.assets[].name' | grep "^godotsteam-g${GV}-.*-templates" | head -1)
+          [ -n "$NAME" ] || { echo "В релизе GodotSteam $V нет шаблонов для Godot g$GV"; exit 1; }
           gh release download "$V" -R GodotSteam/GodotSteam -p "$NAME"
-          mv "$NAME" godotsteam-gdextension.zip
-          unzip -l godotsteam-gdextension.zip | head -40
-          gh release create "$TAG" --title "GodotSteam $V (GDExtension)" \
-            --notes "Архив $NAME из github.com/GodotSteam/GodotSteam (лицензия MIT) для Windows-сборки." \
-            --prerelease godotsteam-gdextension.zip
+          mv "$NAME" godotsteam-templates.tar.xz
+          echo "Содержимое:"; tar -tJf godotsteam-templates.tar.xz | head -60
+          gh release create "$TAG" --title "GodotSteam $V для Godot g$GV (шаблоны экспорта)" \
+            --notes "Архив $NAME из github.com/GodotSteam/GodotSteam (лицензия MIT): шаблоны экспорта со встроенным Steam для Windows-сборки." \
+            --prerelease godotsteam-templates.tar.xz
