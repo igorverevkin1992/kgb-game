@@ -303,6 +303,25 @@ static func _settings_tab(v: VBoxContainer) -> void:
 	irow.add_child(it)
 	box.add_child(irow)
 	box.add_child(Style.para(T.t("settings.instantTextHint"), PANEL_W - 104, Style.mono(), 13, Color(Style.INK, 0.75)))
+	box.add_child(_h3(T.t("settings.crt")))
+	var crow := Style.hbox(8)
+	var crt := Style.button(T.t("settings.on") if Game.settings.crt else T.t("settings.off"), "crt-toggle", Style.INK, Color(0, 0, 0, 0), Style.INK)
+	crt.pressed.connect(func(): Game.set_setting("crt", not Game.settings.crt))
+	crow.add_child(crt)
+	box.add_child(crow)
+	box.add_child(Style.para(T.t("settings.crtHint"), PANEL_W - 104, Style.mono(), 13, Color(Style.INK, 0.75)))
+	box.add_child(_h3(T.t("settings.sound")))
+	for k in ["vol_master", "vol_sfx", "vol_ambient"]:
+		var row2 := Style.hbox(8)
+		var lab := Style.label(T.t("settings." + k), Style.form(), 15, Style.INK)
+		lab.custom_minimum_size.x = 220
+		row2.add_child(lab)
+		for step in Game.VOLUME_STEPS:
+			var on: bool = int(Game.settings[k]) == step
+			var vb := Style.button(T.t("settings.mute") if step == 0 else "%d%%" % step, "%s-%d" % [k.replace("_", "-"), step], Style.PAPER if on else Style.INK, Style.INK if on else Color(0, 0, 0, 0), Style.INK)
+			vb.pressed.connect(Game.set_setting.bind(k, step))
+			row2.add_child(vb)
+		box.add_child(row2)
 	# Переключатель языка вернётся вместе с английской версией (см. docs/plan.md).
 	v.add_child(box)
 

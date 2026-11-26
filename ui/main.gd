@@ -26,6 +26,24 @@ func _render() -> void:
 		add_child(Overlays.service())
 	if Game.state.ending != null and not Game.service_open:
 		add_child(Overlays.ending())
+	if Game.settings.get("crt", true):
+		add_child(_crt())
+
+
+## ЭЛТ-эффект поверх всего (отключается в настройках).
+static var _crt_material: ShaderMaterial = null
+
+
+func _crt() -> Control:
+	if _crt_material == null:
+		_crt_material = ShaderMaterial.new()
+		_crt_material.shader = load("res://ui/crt.gdshader")
+	var r := ColorRect.new()
+	r.name = "crt"
+	r.set_anchors_preset(Control.PRESET_FULL_RECT)
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	r.material = _crt_material
+	return r
 
 
 func _unhandled_input(event: InputEvent) -> void:

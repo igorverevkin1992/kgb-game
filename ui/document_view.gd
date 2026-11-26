@@ -14,6 +14,10 @@ static func build(cable: Dictionary) -> Control:
 
 
 static func _wrap(p: PanelContainer, cable: Dictionary) -> PanelContainer:
+	# Фактура бумаги под текстом: крапинки и волокна (детерминированно по документу).
+	var grain := PaperGrain.new(hash(cable.cable_id))
+	p.add_child(grain)
+	p.move_child(grain, 0)
 	p.name = "document"
 	p.set_meta("kind", cable.kind)
 	return p
@@ -148,3 +152,23 @@ static func _intercept(cable: Dictionary) -> Control:
 	v.add_child(intuition(cable, 640, Color(Style.INK, 0.6)))
 	p.add_child(v)
 	return _wrap(p, cable)
+
+
+
+## Фактура бумаги: редкие крапинки и короткие волокна, одинаковые от запуска к запуску.
+class PaperGrain extends Control:
+	var seed_value := 0
+	func _init(sd: int) -> void:
+		seed_value = sd
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+	func _draw() -> void:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed_value
+		var n := int(size.x * size.y / 900.0)
+		for i in n:
+			var p := Vector2(rng.randf() * size.x, rng.randf() * size.y)
+			draw_circle(p, rng.randf_range(0.4, 1.1), Color(0.3, 0.25, 0.15, rng.randf_range(0.05, 0.16)))
+		for i in n / 8:
+			var p := Vector2(rng.randf() * size.x, rng.randf() * size.y)
+			var d := Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(4, 12)
+			draw_line(p, p + d, Color(0.35, 0.3, 0.2, 0.08), 1)

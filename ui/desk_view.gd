@@ -47,7 +47,8 @@ static func _plaque() -> Control:
 	v.position = Vector2(16, 12)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(Style.label(T.t("game.title").to_upper(), Style.form(true), 22, Color("#1f1a0f"), false))
-	var act := Style.label("%s · %s" % [T.t("game.subtitle"), Fmt.op_phase(Game.act())], Style.form(), 14, Color("#1f1a0f"), false)
+	v.add_child(Style.label(T.t("game.subtitle"), Style.form(), 14, Color("#1f1a0f"), false))
+	var act := Style.label(Fmt.op_phase(Game.act()), Style.form(true), 14, Color("#1f1a0f"), false)
 	act.name = "act"
 	v.add_child(act)
 	v.add_child(Style.label("%s  [Esc]" % T.t("service.title"), Style.form(), 13, Color(0.12, 0.1, 0.06, 0.7), false))

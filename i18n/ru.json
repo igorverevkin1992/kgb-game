@@ -1,6 +1,6 @@
 {
   "game.title": "Линия КР: Вашингтон, 1985",
-  "game.subtitle": "Резидентура КГБ СССР в Вашингтоне, Маунт-Алто",
+  "game.subtitle": "Резидентура КГБ СССР в Вашингтоне",
   "desk.locked": "Откроется {phase}",
   "desk.back": "Вернуться к столу",
   "module.map.name": "Оперативная карта",
@@ -381,5 +381,12 @@
   "event.promise_kept": "Обещание выполнено: {name}",
   "event.loyalty_changed": "Лояльность агента {name}: с {from}% до {to}%",
   "finance.promiseTransit": "Всё обещанное отправлено: агент ждёт остаток и спокоен.",
-  "board.source.meeting": "Запись встречи"
+  "board.source.meeting": "Запись встречи",
+  "settings.crt": "Эффект старого экрана",
+  "settings.crtHint": "Виньетка, строки развёртки и зерно плёнки поверх стола. Выключите, если мешает читать.",
+  "settings.sound": "Звук",
+  "settings.vol_master": "Общая громкость",
+  "settings.vol_sfx": "Звуки стола",
+  "settings.vol_ambient": "Фон комнаты",
+  "settings.mute": "Выкл."
 }

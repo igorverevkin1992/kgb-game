@@ -14,7 +14,11 @@ var state: Dictionary = {}
 var storage = null
 ## Отладка: стол как в акте N (на сам движок не влияет).
 var debug_act := 0
-var settings := {"text_scale": 1.0, "instant_text": false}
+const DEFAULT_SETTINGS := {"text_scale": 1.0, "instant_text": false, "crt": true, "vol_master": 80, "vol_sfx": 80, "vol_ambient": 50}
+const VOLUME_STEPS := [0, 25, 50, 80, 100]
+var settings := DEFAULT_SETTINGS.duplicate()
+## Звук стола (нет в консольных инструментах).
+var sound: SoundBank = null
 
 ## Открытый модуль/лоток или "" — виден весь стол.
 var view := ""
@@ -59,11 +63,14 @@ func _ready() -> void:
 		return
 	if storage == null:
 		storage = Saves.FileStorage.new()
+	sound = SoundBank.new()
+	add_child(sound)
 	var args := OS.get_cmdline_user_args()
 	for a in args:
 		if a.begins_with("--act="):
 			debug_act = clampi(int(a.trim_prefix("--act=")), 1, 4)
 	_load_settings()
+	sound.start_ambient()
 	if not args.has("--new"):
 		var loaded := Saves.load_slot(storage, Saves.AUTOSAVE, content)
 		if loaded.ok:
@@ -81,7 +88,9 @@ func reset_for_test(new_state: Dictionary = {}, mem_storage = null) -> void:
 	state = new_state if not new_state.is_empty() else Campaign.new_campaign(content).state
 	Saves.persist(storage, null, state, content)
 	debug_act = 0
-	settings = {"text_scale": 1.0, "instant_text": true}
+	settings = DEFAULT_SETTINGS.duplicate()
+	settings.instant_text = true
+	_apply_volumes()
 	Style.text_scale = 1.0
 	_clear_ui()
 	saved_at = 0
@@ -101,6 +110,7 @@ func dispatch(action: Dictionary) -> void:
 		return
 	Saves.persist(storage, prev, r.state, content)
 	state = r.state
+	_event_sound(r.events)
 	# Встреча закончилась — на магнитофоне сразу её катушка, головка на последней строке.
 	if prev.meeting != null and state.meeting == null:
 		meeting_trump = ""
@@ -110,6 +120,21 @@ func dispatch(action: Dictionary) -> void:
 	last_error = ""
 	saved_at = Time.get_ticks_msec()
 	changed.emit()
+
+
+## Один звук на действие — по самому заметному событию.
+const EVENT_SOUNDS := [
+	["target_recruited", "stamp"], ["analysis_approved", "stamp"], ["directive_verified", "stamp"],
+	["report_submitted", "teletype"], ["meeting_started", "reel"], ["tranche_sent", "paper"],
+	["clue_found", "pencil"], ["clue_pinned", "pencil"], ["phase_changed", "click"],
+]
+
+
+func _event_sound(events: Array) -> void:
+	for pair in EVENT_SOUNDS:
+		if events.any(func(e): return e.type == pair[0]):
+			sfx(pair[1])
+			return
 
 
 func new_game(ironman := false) -> void:
@@ -150,8 +175,13 @@ func is_unlocked(v: String) -> bool:
 	return v == "inbox" or act() >= Modules.unlock_act(v)
 
 
+const OPEN_SOUNDS := {"map": "paper", "mice": "paper", "inbox": "paper", "finance": "paper", "cipher": "click", "dialog": "reel", "counterintel": "click"}
+
+
 func open(v: String) -> void:
 	if is_unlocked(v):
+		if v != view:
+			sfx(OPEN_SOUNDS.get(v, "click"))
 		view = v
 		analyst_open = false
 		service_open = false
@@ -174,6 +204,28 @@ func open_service() -> void:
 	service_open = true
 	analyst_open = false
 	changed.emit()
+
+
+## Короткий звук стола (если звук есть).
+func sfx(name: String) -> void:
+	if sound != null:
+		sound.play(name)
+
+
+func set_setting(key: String, value: Variant) -> void:
+	settings[key] = value
+	storage.write(SETTINGS_SLOT, JSON.stringify(settings))
+	_apply_volumes()
+	sfx("click")
+	changed.emit()
+
+
+func _apply_volumes() -> void:
+	if sound == null:
+		return
+	sound.set_volume("Master", int(settings.vol_master))
+	sound.set_volume("SFX", int(settings.vol_sfx))
+	sound.set_volume("Ambient", int(settings.vol_ambient))
 
 
 func set_text_scale(scale: float) -> void:
@@ -337,12 +389,14 @@ func select_directive(cable_id: String) -> void:
 ## Выставить роторы по ключевому блокноту (первый шаг ритуала).
 func set_cipher_key(cable_id: String) -> void:
 	cipher_key_set = cable_id
+	sfx("rotor")
 	changed.emit()
 
 
 ## Принять шифрограмму: директива расшифрована (прочитана), лента печатает открытый текст.
 func decode_directive(cable_id: String) -> void:
 	cipher_anim = {} if settings.instant_text else {"cable_id": cable_id, "start": Time.get_ticks_msec()}
+	sfx("teletype")
 	dispatch({"type": "read_cable", "cable_id": cable_id})
 
 
@@ -410,4 +464,10 @@ func _load_settings() -> void:
 		if TEXT_SCALES.any(func(x): return is_equal_approx(x, sc)):
 			settings.text_scale = sc
 		settings.instant_text = r.data.get("instant_text", false) == true
+		settings.crt = r.data.get("crt", true) == true
+		for k in ["vol_master", "vol_sfx", "vol_ambient"]:
+			var v = r.data.get(k, DEFAULT_SETTINGS[k])
+			if typeof(v) in [TYPE_INT, TYPE_FLOAT]:
+				settings[k] = clampi(int(v), 0, 100)
+	_apply_volumes()
 	Style.text_scale = settings.text_scale
