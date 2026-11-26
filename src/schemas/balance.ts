@@ -19,6 +19,14 @@ export const Balance = z.object({
     /** Сколько операций резидент может запланировать на одну неделю. */
     per_week: z.number().int().min(1).max(5),
   }),
+  sdr: z.object({
+    /** Посольство — центр дипломатической зоны. */
+    embassy_site: z.string(),
+    /** Радиус свободного передвижения дипломатов, мили. */
+    zone_radius_miles: z.number().positive(),
+    /** Сколько разных районов нужно на маршруте, чтобы хвост мелькнул дважды. */
+    min_districts_for_double_sighting: z.number().int().min(1).max(3),
+  }),
   sog_heat: z.object({
     /** Если у операции не задано своё `ignore_consequence.sog_heat_delta`. */
     missed_tail_default: Delta,

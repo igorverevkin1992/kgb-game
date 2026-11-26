@@ -33,7 +33,7 @@ export function availableOps(s: CampaignState, content: ContentBundle): Op[] {
  * своевременного отказа повторный выход проходит чисто.
  */
 export function tailPresent(s: CampaignState, op: Op): boolean {
-  return op.sdr_route.surveillance_present && s.op_results[op.op_id] !== 'aborted';
+  return op.sdr.surveillance_present && s.op_results[op.op_id] !== 'aborted';
 }
 
 /**

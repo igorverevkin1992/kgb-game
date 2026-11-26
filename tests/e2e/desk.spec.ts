@@ -1,4 +1,4 @@
-import { next, playActions, quietWeek, seedGame } from './helpers';
+import { GOOD_ROUTE, next, playActions, quietWeek, seedGame } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
@@ -124,8 +124,8 @@ test('доска MICE: досье установленных целей с ги�
     ...quietWeek,
     ...quietWeek,
     next,
-    { type: 'plan_op', op_id: 'op_a1_recon_first_virginia' },
-    { type: 'plan_op', op_id: 'op_a1_recon_potomac_cellar' },
+    { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GOOD_ROUTE },
+    { type: 'plan_op', op_id: 'op_a1_recon_potomac_cellar', route: GOOD_ROUTE },
     next,
     { type: 'resolve_op', op_id: 'op_a1_recon_first_virginia', decision: 'continue' },
     { type: 'resolve_op', op_id: 'op_a1_recon_potomac_cellar', decision: 'continue' },

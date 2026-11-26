@@ -48,7 +48,11 @@ npm run e2e        # Playwright (собирает и поднимает preview 
   Открытый модуль — `ui/desk/ModuleView.tsx`: рамка + «край стола» с остальными предметами
   (`edge-<view>`), клавиши 1–7 (`ui/views.ts`), Esc — к столу. Без меню.
 - Оболочки модулей — `ui/modules/Shells.tsx` (каждый шаг 4–8 заменяет свою оболочку настоящим
-  модулем). Лоток почты — `ui/desk/Inbox.tsx`, вид документов по типу — `ui/documents/`.
+  модулем). Готово: карта SDR — `ui/modules/map/` (`MapCanvas.tsx` — SVG в милях, `MapModule.tsx` —
+  планирование днём и выезд вечером; черновик маршрута и выезд лежат в сторе: `mapDraft`, `sdrRun`).
+- Карта в контенте: `map/sites.json` (точки, районы, мили), `map/cues.json` (приметы). Геометрия и
+  разбор маршрута — `src/engine/map.ts`. Наблюдения на маршруте генерирует движок в `plan_op`
+  (`buildObservations` в reducer.ts) и хранит в `state.routes` — сохранение их помнит. Лоток почты — `ui/desk/Inbox.tsx`, вид документов по типу — `ui/documents/`.
 - Арт-плейсхолдеры — SVG в `ui/art/DeskArt.tsx` (финальный арт — шаг 9). Диегетические сигналы
   рисков (отметки SOG на карте и т. п.) — `ui/signals.ts`.
 - Шрифты в сборке (`ui/fonts.ts`): PT Mono — машинопись, PT Serif — американская пресса,

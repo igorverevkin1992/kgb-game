@@ -1,17 +1,27 @@
 import type { z } from 'zod';
-import { Balance, Cable, CableFile, Campaign, Clue, ClueFile, Op, PolygraphExam, Target } from '../../schemas';
+import { Balance, Cable, CableFile, Campaign, Clue, ClueFile, CueFile, MapFile, Op, PolygraphExam, Target } from '../../schemas';
+import type { Cue } from '../../schemas';
 import type { ContentBundle, Issue, RawBundle, RawFile } from './types';
 
 const FOLDERS = ['targets', 'clues', 'cables', 'ops', 'polygraph'] as const;
 
+/** Файлы, которые существуют в одном экземпляре. */
+const SINGLE_FILES: Record<string, 'campaign' | 'balance' | 'map' | 'cues'> = {
+  'campaign.json': 'campaign',
+  'balance.json': 'balance',
+  'map/sites.json': 'map',
+  'map/cues.json': 'cues',
+};
+
 /** Раскладывает файлы по типам контента по их пути (`targets/x.json`, `campaign.json` и т. д.). */
 export function bundleFromEntries(entries: RawFile[]): RawBundle {
-  const raw: RawBundle = { campaign: [], balance: [], targets: [], clues: [], cables: [], ops: [], polygraph: [], unknown: [] };
+  const raw: RawBundle = { campaign: [], balance: [], map: [], cues: [], targets: [], clues: [], cables: [], ops: [], polygraph: [], unknown: [] };
   for (const entry of entries) {
     const path = entry.path.replace(/\\/g, '/').replace(/^\.\//, '');
     const file = { ...entry, path };
-    if (path === 'campaign.json' || path === 'balance.json') {
-      raw[path === 'campaign.json' ? 'campaign' : 'balance'].push(file);
+    const single = SINGLE_FILES[path];
+    if (single) {
+      raw[single].push(file);
       continue;
     }
     const folder = FOLDERS.find((f) => path.startsWith(`${f}/`));
@@ -53,7 +63,7 @@ export function parseBundle(raw: RawBundle): ParseResult {
       level: 'error',
       rule: 'layout',
       file: f.path,
-      message: 'Файл лежит вне известных папок. Допустимо: campaign.json, balance.json, targets/, clues/, cables/, ops/, polygraph/',
+      message: 'Файл лежит вне известных папок. Допустимо: campaign.json, balance.json, map/sites.json, map/cues.json, targets/, clues/, cables/, ops/, polygraph/',
     });
   }
 
@@ -81,6 +91,19 @@ export function parseBundle(raw: RawBundle): ParseResult {
     const first = raw.balance[0];
     if (first) balance = parseFile(Balance, first, issues);
   }
+
+  const single = <T,>(files: RawFile[], name: string, schema: Parameters<typeof parseFile>[0]): T | null => {
+    const first = files[0];
+    if (!first) {
+      issues.push({ level: 'error', rule: 'layout', message: `Нет файла ${name}` });
+      return null;
+    }
+    return parseFile(schema, first, issues) as T | null;
+  };
+  const map = single<MapFile>(raw.map, 'map/sites.json с точками карты', MapFile);
+  const cues = single<Cue[]>(raw.cues, 'map/cues.json с приметами для SDR', CueFile);
+  if (map) for (const site of map.sites) register(site.site_id, 'Точка карты', 'map/sites.json');
+  if (cues) for (const cue of cues) register(cue.tag, 'Примета', 'map/cues.json');
 
   const targets: Target[] = [];
   for (const f of raw.targets) {
@@ -139,6 +162,7 @@ export function parseBundle(raw: RawBundle): ParseResult {
     }
   }
 
-  const bundle = campaign && balance ? { campaign, balance, targets, clues, cables, ops, polygraph } : null;
+  const bundle =
+    campaign && balance && map && cues ? { campaign, balance, map, cues, targets, clues, cables, ops, polygraph } : null;
   return { bundle, issues, fileOf };
 }

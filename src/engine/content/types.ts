@@ -1,4 +1,4 @@
-import type { Balance, Cable, Campaign, Clue, Op, PolygraphExam, Target } from '../../schemas';
+import type { Balance, Cable, Campaign, Clue, Cue, MapFile, Op, PolygraphExam, Target } from '../../schemas';
 
 /** Сырой файл контента: путь относительно `src/content/` и разобранный JSON. */
 export interface RawFile {
@@ -9,6 +9,8 @@ export interface RawFile {
 export interface RawBundle {
   campaign: RawFile[];
   balance: RawFile[];
+  map: RawFile[];
+  cues: RawFile[];
   targets: RawFile[];
   clues: RawFile[];
   cables: RawFile[];
@@ -22,6 +24,10 @@ export interface RawBundle {
 export interface ContentBundle {
   campaign: Campaign;
   balance: Balance;
+  /** Карта: районы и точки (`map/sites.json`). */
+  map: MapFile;
+  /** Приметы для карточек наблюдения на SDR (`map/cues.json`). */
+  cues: Cue[];
   targets: Target[];
   clues: Clue[];
   cables: Cable[];

@@ -43,6 +43,10 @@ interface GameStore {
   lastEvents: GameEvent[];
   lastError: string | null;
   analystOpen: boolean;
+  /** Черновик маршрута SDR на карте (фаза «День»): выбранная операция и точки по порядку. */
+  mapDraft: { opId: string | null; stops: string[] };
+  /** Идущий выезд (фаза «Вечер»): какая операция и сколько точек маршрута уже пройдено. */
+  sdrRun: { opId: string; step: number; result: 'clean' | 'tail_missed' | 'aborted' | null } | null;
 
   act: () => Act;
   dispatch: (action: Action) => void;
@@ -51,6 +55,8 @@ interface GameStore {
   open: (view: View) => void;
   close: () => void;
   toggleAnalyst: () => void;
+  setMapDraft: (draft: { opId: string | null; stops: string[] }) => void;
+  setSdrRun: (run: GameStore['sdrRun']) => void;
 }
 
 export const useDeskStore = create<GameStore>((set, get) => ({
@@ -61,6 +67,8 @@ export const useDeskStore = create<GameStore>((set, get) => ({
   lastEvents: [],
   lastError: null,
   analystOpen: false,
+  mapDraft: { opId: null, stops: [] },
+  sdrRun: null,
 
   act: () => get().debugAct ?? get().game.act,
   dispatch: (action) => {
@@ -75,13 +83,15 @@ export const useDeskStore = create<GameStore>((set, get) => ({
   newGame: () => {
     const { state, events } = newCampaign(content);
     localSaveStorage.write(AUTOSAVE, serialize(state));
-    set({ game: state, lastEvents: events, lastError: null, view: null, analystOpen: false });
+    set({ game: state, lastEvents: events, lastError: null, view: null, analystOpen: false, mapDraft: { opId: null, stops: [] }, sdrRun: null });
   },
   open: (view) => {
     if (view === 'inbox' || isModuleUnlocked(getModule(view), get().act())) set({ view, analystOpen: false });
   },
   close: () => set({ view: null, analystOpen: false }),
   toggleAnalyst: () => set((s) => ({ analystOpen: !s.analystOpen })),
+  setMapDraft: (mapDraft) => set({ mapDraft }),
+  setSdrRun: (sdrRun) => set({ sdrRun }),
 }));
 
 export function useT() {

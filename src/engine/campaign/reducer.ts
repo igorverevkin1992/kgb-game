@@ -1,5 +1,6 @@
-import type { MiceAxis } from '../../schemas';
+import type { MiceAxis, Op, Site } from '../../schemas';
 import type { ContentBundle } from '../content';
+import { analyzeRoute, siteById, withinZone } from '../map';
 import { nextRandom } from '../rng';
 import { availableOps, currentActDef, nextActDef, tailPresent } from './selectors';
 import {
@@ -18,8 +19,8 @@ export type Action =
   | { type: 'advance_phase' }
   /** Отметить документ из утренней почты прочитанным. */
   | { type: 'read_cable'; cable_id: string }
-  /** День: запланировать или отменить полевую операцию. */
-  | { type: 'plan_op'; op_id: string }
+  /** День: запланировать полевую операцию по маршруту SDR из трёх бытовых точек (или отменить). */
+  | { type: 'plan_op'; op_id: string; route: string[] }
   | { type: 'cancel_op'; op_id: string }
   /** Вечер: итог маршрута SDR — продолжить операцию или свернуть на бытовую легенду. */
   | { type: 'resolve_op'; op_id: string; decision: 'continue' | 'abort' }
@@ -122,6 +123,45 @@ class Tx {
   }
 }
 
+/**
+ * Карточки наблюдений для трёх точек маршрута SDR. На каждой точке — местная примета и
+ * случайный прохожий («шум», без повторов). Если за резидентом хвост, его примета мелькает:
+ * на маршруте через разные районы — дважды («дважды — работа противника»), а если точки
+ * в одном-двух районах — один раз: бригада SOG меняет машины, и повтор не виден.
+ */
+function buildObservations(tx: Tx, op: Op, stops: Site[]): string[][] {
+  const { content, s } = tx;
+  const pick = <T,>(items: T[]): T | undefined => items[Math.floor(tx.roll() * items.length)];
+
+  const noise = content.cues.filter((c) => c.kind === 'noise').map((c) => c.tag);
+  for (let i = noise.length - 1; i > 0; i--) {
+    const j = Math.floor(tx.roll() * (i + 1));
+    [noise[i], noise[j]] = [noise[j]!, noise[i]!];
+  }
+
+  let tailStops: number[] = [];
+  const tail = tailPresent(s, op) ? op.sdr.repeating_cue : null;
+  if (tail) {
+    const districts = new Set(stops.map((st) => st.district)).size;
+    if (districts >= content.balance.sdr.min_districts_for_double_sighting) {
+      const skip = Math.floor(tx.roll() * 3);
+      tailStops = [0, 1, 2].filter((i) => i !== skip);
+    } else {
+      tailStops = [2];
+    }
+  }
+
+  return stops.map((site, i) => {
+    const cards: string[] = [];
+    const ambient = pick(site.ambient_tags);
+    if (ambient) cards.push(ambient);
+    const n = noise[i];
+    if (n) cards.push(n);
+    if (tail && tailStops.includes(i)) cards.splice(Math.floor(tx.roll() * (cards.length + 1)), 0, tail);
+    return cards;
+  });
+}
+
 /** Утро: свежая почта, донесения агентов, обнуление недельных счётчиков. */
 function startMorning(tx: Tx) {
   const { s, content } = tx;
@@ -172,6 +212,7 @@ export function newCampaign(content: ContentBundle): StepResult {
     clues: [],
     targets: Object.fromEntries(content.targets.map((t) => [t.target_id, initialTargetState(content, t.target_id)])),
     planned_ops: [],
+    routes: {},
     op_results: {},
     site_visits: {},
     week_failures: 0,
@@ -224,6 +265,13 @@ export function dispatch(state: CampaignState, content: ContentBundle, action: A
       if (s.planned_ops.length >= content.balance.ops.per_week) {
         return reject(state, `На неделю можно запланировать не больше ${content.balance.ops.per_week} операций`);
       }
+      const route = analyzeRoute(content, action.route);
+      if (route.blocking.length) {
+        return reject(state, 'Маршрут SDR — это три разные бытовые точки на карте');
+      }
+      const op = content.ops.find((o) => o.op_id === action.op_id)!;
+      const stops = action.route.map((id) => siteById(content, id)!);
+      s.routes[op.op_id] = { stops: action.route, observations: buildObservations(tx, op, stops) };
       s.planned_ops.push(action.op_id);
       tx.emit({ type: 'op_planned', op_id: action.op_id });
       break;
@@ -233,6 +281,7 @@ export function dispatch(state: CampaignState, content: ContentBundle, action: A
       if (s.phase !== 'day') return reject(state, 'Отменить операцию можно только днём');
       if (!s.planned_ops.includes(action.op_id)) return reject(state, 'Эта операция не запланирована');
       s.planned_ops = s.planned_ops.filter((id) => id !== action.op_id);
+      delete s.routes[action.op_id];
       tx.emit({ type: 'op_cancelled', op_id: action.op_id });
       break;
     }
@@ -243,8 +292,15 @@ export function dispatch(state: CampaignState, content: ContentBundle, action: A
       const op = content.ops.find((o) => o.op_id === action.op_id)!;
       const b = content.balance.sog_heat;
       const tail = tailPresent(s, op);
+      const routeStops = (s.routes[op.op_id]?.stops ?? []).map((id) => siteById(content, id)).filter((x) => x !== undefined);
       s.planned_ops = s.planned_ops.filter((id) => id !== op.op_id);
+      delete s.routes[op.op_id];
       s.week_field_activity = true;
+
+      // Каждая точка маршрута за 25 милями — заметный для ФБР выезд, даже если операцию свернули.
+      for (const stop of routeStops) {
+        if (!withinZone(content, stop)) tx.addRisk('sog_heat', b.outside_25_mile_zone, 'outside_25_miles');
+      }
 
       if (action.decision === 'abort') {
         s.op_results[op.op_id] = 'aborted';
@@ -257,12 +313,13 @@ export function dispatch(state: CampaignState, content: ContentBundle, action: A
       const visits = s.site_visits[site] ?? 0;
       s.site_visits[site] = visits + 1;
       if (visits > 0) tx.addRisk('sog_heat', b.site_reuse_per_use * visits, 'site_reuse');
-      if (!op.location.within_25_mile_zone) tx.addRisk('sog_heat', b.outside_25_mile_zone, 'outside_25_miles');
+      const target = siteById(content, site);
+      if (target && !withinZone(content, target)) tx.addRisk('sog_heat', b.outside_25_mile_zone, 'outside_25_miles');
 
       // Хвост был, а игрок продолжил: улики добыты, но ФБР всё зафиксировало (скрытый флаг).
       const outcome = tail ? 'tail_missed' : 'clean';
       if (outcome === 'tail_missed') {
-        const c = op.sdr_route.ignore_consequence;
+        const c = op.sdr.ignore_consequence;
         tx.addRisk('sog_heat', c?.sog_heat_delta ?? b.missed_tail_default, 'missed_tail');
         if (c?.flag_set) tx.setFlag(c.flag_set);
       }

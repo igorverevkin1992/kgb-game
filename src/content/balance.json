@@ -2,10 +2,22 @@
   "start": {
     "fund_usd": 40000,
     "centre_trust": 50,
-    "risks": { "sog_heat": 10, "mole_hunt": 0, "treasury": 0, "moscow_pressure": 20 },
+    "risks": {
+      "sog_heat": 10,
+      "mole_hunt": 0,
+      "treasury": 0,
+      "moscow_pressure": 20
+    },
     "seed": 1985
   },
-  "ops": { "per_week": 2 },
+  "ops": {
+    "per_week": 2
+  },
+  "sdr": {
+    "embassy_site": "site_mount_alto",
+    "zone_radius_miles": 25,
+    "min_districts_for_double_sighting": 3
+  },
   "sog_heat": {
     "missed_tail_default": 20,
     "outside_25_mile_zone": 10,
@@ -34,6 +46,11 @@
     "uncover_chance_embellished": 0.35,
     "uncover_chance_silence": 0.2
   },
-  "treasury": { "audit_mole_hunt_multiplier": 2 },
-  "thresholds": { "warning": 50, "danger": 75 }
+  "treasury": {
+    "audit_mole_hunt_multiplier": 2
+  },
+  "thresholds": {
+    "warning": 50,
+    "danger": 75
+  }
 }

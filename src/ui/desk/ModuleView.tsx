@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { getModule, isModuleUnlocked } from '../../engine/modules';
 import { ConsoleArt, CorkBoardArt, FialkaArt, InboxArt, LedgerArt, MapArt, RecorderArt } from '../art/DeskArt';
-import { CipherModule, CounterintelModule, DialogModule, FinanceModule, MapModule, MiceModule } from '../modules/Shells';
+import { MapModule } from '../modules/map/MapModule';
+import { CipherModule, CounterintelModule, DialogModule, FinanceModule, MiceModule } from '../modules/Shells';
 import { useDeskStore, useT } from '../store';
 import { hotkeyOf, VIEWS, viewName, type View } from '../views';
 import { Inbox } from './Inbox';

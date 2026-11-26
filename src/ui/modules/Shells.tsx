@@ -3,12 +3,11 @@
  * механика появится в своём шаге плана (номер шага — в плашке «в разработке»).
  */
 import type { ReactNode } from 'react';
-import { availableOps, axisKnowledge } from '../../engine/campaign';
+import { axisKnowledge } from '../../engine/campaign';
 import type { ModuleId } from '../../engine/modules';
 import type { MiceAxis } from '../../schemas';
 import type { I18nKey } from '../../i18n';
-import { MapArt, RecorderArt } from '../art/DeskArt';
-import { sogMarks } from '../signals';
+import { RecorderArt } from '../art/DeskArt';
 import { content, useDeskStore, useLocalized, useT } from '../store';
 import './modules.css';
 
@@ -27,37 +26,6 @@ function Shell({ id, children, aside }: { id: ModuleId; children: ReactNode; asi
         {aside && <aside className="shell__aside">{aside}</aside>}
       </div>
     </div>
-  );
-}
-
-export function MapModule() {
-  const t = useT();
-  const loc = useLocalized();
-  const game = useDeskStore((s) => s.game);
-  const ops = availableOps(game, content);
-  return (
-    <Shell
-      id="map"
-      aside={
-        <>
-          <h3>{t('map.ops')}</h3>
-          {ops.length ? (
-            <ul data-testid="map-ops">
-              {ops.map((op) => (
-                <li key={op.op_id}>{loc(op.title)}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>{t('map.noOps')}</p>
-          )}
-          <p className="shell__note">{t('map.sogNote', { marks: sogMarks(game.risks.sog_heat) })}</p>
-        </>
-      }
-    >
-      <div className="shell__map">
-        <MapArt sogMarks={sogMarks(game.risks.sog_heat)} />
-      </div>
-    </Shell>
   );
 }
 

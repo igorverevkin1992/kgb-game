@@ -3,7 +3,8 @@ import type { ContentBundle } from '../content';
 import { CampaignState, initialTargetState } from './state';
 
 export const SAVE_FORMAT = 'liniya-kr-save';
-export const SAVE_VERSION = 1;
+/** v2 (шаг 4): маршруты SDR в состоянии. Старые сохранения не загружаются. */
+export const SAVE_VERSION = 2;
 
 const SaveFile = z.object({
   format: z.literal(SAVE_FORMAT),

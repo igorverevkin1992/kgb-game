@@ -1,19 +1,12 @@
 import { z } from 'zod';
 import { Act, FlagId, OpId, TargetId, Text, Week } from './common';
-
-/** Остановка проверочного маршрута: бытовая точка с легендой визита и замеченными приметами. */
-const Waypoint = z.object({
-  stop: z.string().min(1),
-  name: Text,
-  /** Зачем резидент сюда заехал (банк, химчистка, продукты). */
-  cover_reason: z.string().min(1),
-  /** Приметы, которые игрок видит на этой остановке, например `blue_ford_ltd`. */
-  spotted_tags: z.array(z.string()).default([]),
-});
+import { SiteId } from './map';
 
 /**
  * Полевая операция на карте SDR (GDD, Схема 2 `dead_drop_op.json`).
  * Один файл — одна операция: `src/content/ops/*.json`.
+ * Маршрут из трёх бытовых точек прокладывает сам игрок на карте; операция задаёт
+ * только цель, наличие хвоста и последствия.
  */
 export const Op = z.object({
   op_id: OpId,
@@ -25,19 +18,17 @@ export const Op = z.object({
   /** Операция доступна только после открытия этих целей на доске. */
   requires_targets_unlocked: z.array(TargetId).default([]),
   location: z.object({
-    site_id: z.string().min(1),
-    name: Text,
+    /** Точка из `map/sites.json` с ролью `target`. */
+    site_id: SiteId,
     codename: z.string().optional(),
-    within_25_mile_zone: z.boolean(),
     signal_site: z.string().optional(),
     signal_type: z.string().optional(),
     container_type: z.string().optional(),
   }),
-  sdr_route: z.object({
-    /** Классический SDR — ровно три бытовые точки. */
-    waypoints: z.array(Waypoint).length(3, 'В маршруте SDR должно быть ровно 3 точки'),
+  sdr: z.object({
+    /** Есть ли за резидентом хвост SOG на этом выходе (при повторном выходе после отказа — нет). */
     surveillance_present: z.boolean(),
-    /** Примета, повторяющаяся на двух точках: «один раз — совпадение, дважды — работа противника». */
+    /** Примета хвоста (`kind: "tail"` в `map/cues.json`): «один раз — совпадение, дважды — работа противника». */
     repeating_cue: z.string().nullable(),
     abort_penalty_days: z.number().int().min(0).default(2),
     ignore_consequence: z

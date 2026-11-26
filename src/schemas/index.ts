@@ -6,3 +6,4 @@ export * from './op';
 export * from './polygraph';
 export * from './campaign';
 export * from './balance';
+export * from './map';

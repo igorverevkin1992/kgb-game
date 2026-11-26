@@ -1,4 +1,5 @@
 import { POLYGRAPH_VARS, type ClueSource, type Text } from '../../schemas';
+import { withinZone } from '../map';
 import { simulate } from './simulate';
 import type { ContentBundle, Issue } from './types';
 
@@ -250,45 +251,102 @@ function checkReachability(ctx: Ctx) {
   }
 }
 
-/** 5. Маршрут SDR честен: «один раз — совпадение, дважды — работа противника». */
-function checkSdr(ctx: Ctx) {
-  for (const op of ctx.content.ops) {
-    const { waypoints, surveillance_present, repeating_cue } = op.sdr_route;
-    const counts = new Map<string, number>();
-    for (const w of waypoints) for (const tag of new Set(w.spotted_tags)) counts.set(tag, (counts.get(tag) ?? 0) + 1);
-    const repeated = [...counts].filter(([, n]) => n >= 2).map(([tag]) => tag);
+/**
+ * 5. Карта и SDR честны: «один раз — совпадение, дважды — работа противника».
+ * Карточки наблюдений собирает движок из примет, поэтому здесь проверяем, что приметы
+ * не могут совпасть случайно и что у игрока есть из чего построить хороший маршрут.
+ */
+function checkMapAndSdr(ctx: Ctx) {
+  const { content } = ctx;
+  const sites = new Map(content.map.sites.map((s) => [s.site_id, s]));
+  const cues = new Map(content.cues.map((c) => [c.tag, c]));
+  const MAP = 'map/sites.json';
+  const CUES = 'map/cues.json';
 
+  const embassy = sites.get(content.balance.sdr.embassy_site);
+  if (!embassy) {
+    push(ctx, { level: 'error', rule: 'sdr', file: 'balance.json', where: 'sdr.embassy_site', message: `Нет точки посольства «${content.balance.sdr.embassy_site}» в ${MAP}` });
+  }
+
+  const seenAmbient = new Map<string, string>();
+  for (const site of content.map.sites) {
+    if (!content.map.districts[site.district]) {
+      push(ctx, { level: 'error', rule: 'sdr', file: MAP, where: `${site.site_id}.district`, message: `Район «${site.district}» не описан в districts` });
+    }
+    if (site.role !== 'stop') continue;
+    if (!site.cover_reason) {
+      push(ctx, { level: 'error', rule: 'sdr', file: MAP, where: site.site_id, message: 'У бытовой точки маршрута нет легенды визита (cover_reason)' });
+    }
+    if (site.ambient_tags.length === 0) {
+      push(ctx, { level: 'error', rule: 'sdr', file: MAP, where: `${site.site_id}.ambient_tags`, message: 'У точки маршрута нет местных примет' });
+    }
+    for (const tag of site.ambient_tags) {
+      const cue = cues.get(tag);
+      if (!cue) {
+        push(ctx, { level: 'error', rule: 'refs', file: MAP, where: `${site.site_id}.ambient_tags`, message: `Нет приметы «${tag}» в ${CUES}` });
+      } else if (cue.kind !== 'ambient') {
+        push(ctx, { level: 'error', rule: 'sdr', file: MAP, where: `${site.site_id}.ambient_tags`, message: `Примета «${tag}» — не местная (kind: ${cue.kind}), её нельзя привязать к точке` });
+      }
+      const other = seenAmbient.get(tag);
+      if (other) {
+        push(ctx, {
+          level: 'error',
+          rule: 'sdr',
+          file: MAP,
+          where: `${site.site_id}.ambient_tags`,
+          message: `Примета «${tag}» есть и у точки «${other}»: на маршруте через обе она повторится — ложный сигнал хвоста`,
+        });
+      }
+      seenAmbient.set(tag, site.site_id);
+    }
+  }
+
+  const noise = content.cues.filter((c) => c.kind === 'noise').length;
+  if (noise < 3) {
+    push(ctx, { level: 'error', rule: 'sdr', file: CUES, message: `Нужно минимум 3 приметы-«шума» (kind: noise), чтобы они не повторялись на трёх точках; сейчас ${noise}` });
+  }
+
+  // У игрока должен быть хотя бы один «правильный» маршрут: 3 точки в разных районах внутри зоны.
+  const goodDistricts = new Set(
+    content.map.sites.filter((s) => s.role === 'stop' && (!embassy || withinZone(content, s))).map((s) => s.district),
+  );
+  if (goodDistricts.size < content.balance.sdr.min_districts_for_double_sighting) {
+    push(ctx, {
+      level: 'error',
+      rule: 'sdr',
+      file: MAP,
+      message: `Бытовые точки внутри 25-мильной зоны есть только в ${goodDistricts.size} районах — правильный маршрут SDR построить нельзя`,
+    });
+  }
+
+  for (const op of content.ops) {
+    const site = sites.get(op.location.site_id);
+    if (!site) {
+      push(ctx, { level: 'error', rule: 'refs', id: op.op_id, where: 'location.site_id', message: `Нет точки «${op.location.site_id}» в ${MAP}` });
+    } else if (site.role !== 'target') {
+      push(ctx, { level: 'error', rule: 'sdr', id: op.op_id, where: 'location.site_id', message: `Точка «${site.site_id}» не является целью операции (role: ${site.role})` });
+    } else if (embassy && !withinZone(content, site)) {
+      push(ctx, { level: 'warning', rule: 'sdr', id: op.op_id, where: 'location.site_id', message: 'Цель вне 25-мильной зоны: выезд потребует согласования с Госдепом' });
+    }
+
+    const { surveillance_present, repeating_cue } = op.sdr;
     if (surveillance_present) {
       if (!repeating_cue) {
-        push(ctx, { level: 'error', rule: 'sdr', id: op.op_id, where: 'sdr_route.repeating_cue', message: 'Хвост есть, но не указана повторяющаяся примета' });
-      } else if ((counts.get(repeating_cue) ?? 0) < 2) {
+        push(ctx, { level: 'error', rule: 'sdr', id: op.op_id, where: 'sdr.repeating_cue', message: 'Хвост есть, но не указана его примета' });
+      } else if (cues.get(repeating_cue)?.kind !== 'tail') {
         push(ctx, {
           level: 'error',
           rule: 'sdr',
           id: op.op_id,
-          where: 'sdr_route.waypoints',
-          message: `Хвост есть, но примета «${repeating_cue}» встречается меньше чем на двух точках — игрок не сможет его заметить`,
+          where: 'sdr.repeating_cue',
+          message: `Примета хвоста «${repeating_cue}» должна быть в ${CUES} с kind: "tail"`,
         });
       }
-      if (!op.sdr_route.ignore_consequence) {
-        push(ctx, { level: 'warning', rule: 'sdr', id: op.op_id, where: 'sdr_route.ignore_consequence', message: 'Хвост есть, но не задано последствие, если игрок его пропустит' });
+      if (!op.sdr.ignore_consequence) {
+        push(ctx, { level: 'warning', rule: 'sdr', id: op.op_id, where: 'sdr.ignore_consequence', message: 'Хвост есть, но не задано последствие, если игрок его пропустит' });
       }
-    } else {
-      if (repeating_cue) {
-        push(ctx, { level: 'error', rule: 'sdr', id: op.op_id, where: 'sdr_route.repeating_cue', message: 'Хвоста нет, но указана повторяющаяся примета' });
-      }
-      if (repeated.length > 0) {
-        push(ctx, {
-          level: 'error',
-          rule: 'sdr',
-          id: op.op_id,
-          where: 'sdr_route.waypoints',
-          message: `Хвоста нет, но приметы повторяются на двух точках (${repeated.join(', ')}) — это ложный сигнал для игрока`,
-        });
-      }
-    }
-    if (!op.location.within_25_mile_zone) {
-      push(ctx, { level: 'warning', rule: 'sdr', id: op.op_id, where: 'location.within_25_mile_zone', message: 'Точка вне 25-мильной зоны: выезд потребует согласования с Госдепом' });
+    } else if (repeating_cue) {
+      push(ctx, { level: 'error', rule: 'sdr', id: op.op_id, where: 'sdr.repeating_cue', message: 'Хвоста нет, но указана его примета' });
     }
   }
 }
@@ -402,7 +460,7 @@ export function checkRules(content: ContentBundle, fileOf: Map<string, string>):
   checkUnlock(ctx);
   checkKeyAxes(ctx);
   checkReachability(ctx);
-  checkSdr(ctx);
+  checkMapAndSdr(ctx);
   checkWeeks(ctx);
   checkTexts(ctx);
   checkPolygraph(ctx);

@@ -99,18 +99,39 @@ describe('валидатор контента', () => {
     );
   });
 
-  it('SDR: хвост, примета которого не повторяется, — ошибка', () => {
+  it('SDR: одна местная примета у двух точек — ложный повтор, ошибка', () => {
     const entries = content();
-    const op = file(entries, 'ops/op_a1_recon_first_virginia.json').data as Json;
-    op.sdr_route.waypoints[2].spotted_tags = ['brown_cap'];
+    const map = file(entries, 'map/sites.json').data as Json;
+    const bookshop = map.sites.find((x: Json) => x.site_id === 'site_wisconsin_bookshop');
+    bookshop.ambient_tags = ['mailman_cart'];
+    const report = validateContent(entries);
+    expect(report.errors).toContainEqual(expect.objectContaining({ rule: 'sdr', message: expect.stringContaining('mailman_cart') }));
+  });
+
+  it('SDR: примета хвоста должна быть из приметы вида tail', () => {
+    const entries = content();
+    (file(entries, 'ops/op_a1_recon_first_virginia.json').data as Json).sdr.repeating_cue = 'red_buick';
     expect(rules(entries)).toContain('sdr');
   });
 
-  it('SDR: повтор примет без хвоста — ложный сигнал', () => {
+  it('SDR: цель операции — точка с ролью target', () => {
     const entries = content();
-    const op = file(entries, 'ops/op_a1_recon_potomac_cellar.json').data as Json;
-    op.sdr_route.waypoints[1].spotted_tags = ['green_volvo'];
+    (file(entries, 'ops/op_a1_recon_potomac_cellar.json').data as Json).location.site_id = 'site_safeway_clarendon';
     expect(rules(entries)).toContain('sdr');
+  });
+
+  it('SDR: если все бытовые точки в двух районах, правильный маршрут построить нельзя', () => {
+    const entries = content();
+    const map = file(entries, 'map/sites.json').data as Json;
+    for (const site of map.sites) if (site.role === 'stop') site.district = site.pos.x > 30 ? 'georgetown' : 'arlington';
+    const report = validateContent(entries);
+    expect(report.errors).toContainEqual(expect.objectContaining({ rule: 'sdr', message: expect.stringContaining('правильный маршрут') }));
+  });
+
+  it('SDR: ссылка на несуществующую точку карты', () => {
+    const entries = content();
+    (file(entries, 'ops/op_a1_recon_potomac_cellar.json').data as Json).location.site_id = 'site_nowhere';
+    expect(rules(entries)).toContain('refs');
   });
 
   it('документ длиннее 150 слов — ошибка', () => {

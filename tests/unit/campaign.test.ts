@@ -16,6 +16,9 @@ import {
 
 const content = loadContent();
 
+/** Правильный маршрут SDR: три бытовые точки в трёх разных районах внутри 25-мильной зоны. */
+const GOOD_ROUTE = ['site_peoples_drug_connecticut', 'site_georgetown_post_office', 'site_lee_highway_cleaners'];
+
 /** Применяет действия по очереди. Отклонённое действие валит тест с понятным текстом. */
 function play(state: CampaignState, actions: Action[]): { state: CampaignState; events: GameEvent[] } {
   const events: GameEvent[] = [];
@@ -60,7 +63,7 @@ describe('три недели с разными решениями', () => {
     // Неделя 2: выход к банку, хвост замечен — свернул на бытовую легенду. Доложил правду о сбое.
     ({ state } = play(state, [
       next,
-      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia' },
+      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GOOD_ROUTE },
       next,
       { type: 'resolve_op', op_id: 'op_a1_recon_first_virginia', decision: 'abort' },
       next,
@@ -74,8 +77,8 @@ describe('три недели с разными решениями', () => {
     // Неделя 3: повторный выход к банку проходит чисто, плюс вечер в баре. Вербовка Кэллоуэя.
     const w3 = play(state, [
       next,
-      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia' },
-      { type: 'plan_op', op_id: 'op_a1_recon_potomac_cellar' },
+      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GOOD_ROUTE },
+      { type: 'plan_op', op_id: 'op_a1_recon_potomac_cellar', route: GOOD_ROUTE },
       next,
       { type: 'resolve_op', op_id: 'op_a1_recon_first_virginia', decision: 'continue' },
       { type: 'resolve_op', op_id: 'op_a1_recon_potomac_cellar', decision: 'continue' },
@@ -107,7 +110,7 @@ describe('три недели с разными решениями', () => {
     // Неделя 2: хвост не замечен — улики добыты, но ФБР сфотографировало визит.
     ({ state } = play(state, [
       next,
-      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia' },
+      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GOOD_ROUTE },
       next,
       { type: 'resolve_op', op_id: 'op_a1_recon_first_virginia', decision: 'continue' },
     ]));
@@ -134,7 +137,7 @@ describe('три недели с разными решениями', () => {
     // Неделя 3: Варгас потеряна, но к Кэллоуэю ведут другие пути («Правило трёх улик»).
     ({ state } = play(state, [
       next,
-      { type: 'plan_op', op_id: 'op_a1_recon_potomac_cellar' },
+      { type: 'plan_op', op_id: 'op_a1_recon_potomac_cellar', route: GOOD_ROUTE },
       next,
       { type: 'resolve_op', op_id: 'op_a1_recon_potomac_cellar', decision: 'continue' },
       { type: 'recruitment', target_id: 'tar_calloway_martin', result: 'success' },
@@ -161,7 +164,7 @@ describe('правила фаз', () => {
   it('отклоняет действия не в свою фазу и не меняет состояние', () => {
     const { state } = newCampaign(content);
     for (const a of [
-      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia' },
+      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GOOD_ROUTE },
       { type: 'submit_report', report: 'truth' },
       { type: 'recruitment', target_id: 'tar_vargas_ellen', result: 'success' },
     ] as Action[]) {
@@ -174,7 +177,7 @@ describe('правила фаз', () => {
 
   it('нельзя уйти из вечера, не разыграв запланированные операции', () => {
     let { state } = newCampaign(content);
-    ({ state } = play(state, [...quietWeek(), next, { type: 'plan_op', op_id: 'op_a1_recon_first_virginia' }, next]));
+    ({ state } = play(state, [...quietWeek(), next, { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GOOD_ROUTE }, next]));
     expect(dispatch(state, content, next).error).toMatch(/Не разыграны/);
   });
 
@@ -183,7 +186,7 @@ describe('правила фаз', () => {
     ({ state } = play(state, [...quietWeek(), ...quietWeek(), next]));
     const ops = availableOps(state, content);
     expect(ops.length).toBeGreaterThanOrEqual(2);
-    ({ state } = play(state, ops.slice(0, 2).map((o) => ({ type: 'plan_op', op_id: o.op_id }) as Action)));
+    ({ state } = play(state, ops.slice(0, 2).map((o) => ({ type: 'plan_op', op_id: o.op_id, route: GOOD_ROUTE }) as Action)));
     expect(state.planned_ops).toHaveLength(content.balance.ops.per_week);
   });
 
@@ -212,7 +215,7 @@ describe('ложь в донесениях', () => {
 describe('сохранение и загрузка', () => {
   it('сохранение и загрузка дают то же состояние, и игра продолжается одинаково', () => {
     let { state } = newCampaign(content);
-    ({ state } = play(state, [...quietWeek('embellished'), next, { type: 'plan_op', op_id: 'op_a1_recon_first_virginia' }]));
+    ({ state } = play(state, [...quietWeek('embellished'), next, { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GOOD_ROUTE }]));
 
     const storage = memoryStorage();
     storage.write('autosave', serialize(state));
@@ -257,23 +260,92 @@ describe('наружка', () => {
       ...quietWeek(),
       ...quietWeek(),
       next,
-      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia' },
+      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GOOD_ROUTE },
       next,
       { type: 'resolve_op', op_id: 'op_a1_recon_first_virginia', decision: 'abort' },
       next,
       report('truth'),
       next,
-      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia' },
+      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GOOD_ROUTE },
       next,
       { type: 'resolve_op', op_id: 'op_a1_recon_first_virginia', decision: 'continue' },
       next,
       report('truth'),
       next,
-      { type: 'plan_op', op_id: 'op_a1_closing_time_vargas' },
+      { type: 'plan_op', op_id: 'op_a1_closing_time_vargas', route: GOOD_ROUTE },
       next,
     ]));
     const before = state.risks.sog_heat;
     ({ state } = play(state, [{ type: 'resolve_op', op_id: 'op_a1_closing_time_vargas', decision: 'continue' }]));
     expect(state.risks.sog_heat).toBe(before + content.balance.sog_heat.site_reuse_per_use);
+  });
+});
+
+describe('маршрут SDR', () => {
+  const GEORGETOWN_ONLY = ['site_georgetown_post_office', 'site_wisconsin_bookshop', 'site_m_street_tobacconist'];
+  /** Утро → день 2-й недели: первые операции уже доступны. */
+  const week2Day = () => play(newCampaign(content).state, [...quietWeek(), next]).state;
+  const counts = (obs: string[][]) => {
+    const m = new Map<string, number>();
+    for (const stop of obs) for (const tag of new Set(stop)) m.set(tag, (m.get(tag) ?? 0) + 1);
+    return m;
+  };
+
+  it('правильный маршрут через три района: хвост мелькает ровно дважды, остальное не повторяется', () => {
+    // Проверяем на разных зёрнах, чтобы правило не держалось на удаче.
+    for (let seed = 1; seed <= 25; seed++) {
+      const s0 = { ...week2Day(), rng: seed };
+      const { state } = play(s0, [{ type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GOOD_ROUTE }]);
+      const obs = state.routes.op_a1_recon_first_virginia!.observations;
+      const c = counts(obs);
+      expect(c.get('light_blue_ford_ltd')).toBe(2);
+      for (const [tag, n] of c) if (tag !== 'light_blue_ford_ltd') expect(n, tag).toBe(1);
+    }
+  });
+
+  it('маршрут в одном районе: хвост мелькает один раз — заметить его нельзя', () => {
+    const { state } = play(week2Day(), [{ type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GEORGETOWN_ONLY }]);
+    expect(counts(state.routes.op_a1_recon_first_virginia!.observations).get('light_blue_ford_ltd')).toBe(1);
+  });
+
+  it('без хвоста ни одна примета не повторяется', () => {
+    let state = play(newCampaign(content).state, [...quietWeek(), ...quietWeek(), next]).state;
+    ({ state } = play(state, [{ type: 'plan_op', op_id: 'op_a1_recon_potomac_cellar', route: GOOD_ROUTE }]));
+    for (const [, n] of counts(state.routes.op_a1_recon_potomac_cellar!.observations)) expect(n).toBe(1);
+  });
+
+  it('неверный маршрут отклоняется', () => {
+    const s = week2Day();
+    const bad: string[][] = [
+      GOOD_ROUTE.slice(0, 2),
+      [GOOD_ROUTE[0]!, GOOD_ROUTE[0]!, GOOD_ROUTE[1]!],
+      [GOOD_ROUTE[0]!, GOOD_ROUTE[1]!, 'site_potomac_cellar'],
+      [GOOD_ROUTE[0]!, GOOD_ROUTE[1]!, 'site_nowhere'],
+    ];
+    for (const route of bad) {
+      expect(dispatch(s, content, { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route }).error).toMatch(/Маршрут SDR/);
+    }
+  });
+
+  it('точка за 25 милями поднимает наружку, даже если операцию свернули', () => {
+    const route = ['site_leesburg_antiques', 'site_georgetown_post_office', 'site_lee_highway_cleaners'];
+    let state = week2Day();
+    const before = state.risks.sog_heat;
+    ({ state } = play(state, [
+      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route },
+      next,
+      { type: 'resolve_op', op_id: 'op_a1_recon_first_virginia', decision: 'abort' },
+    ]));
+    expect(state.risks.sog_heat).toBe(before + content.balance.sog_heat.outside_25_mile_zone);
+    expect(state.routes).toEqual({});
+  });
+
+  it('отмена операции убирает маршрут', () => {
+    const { state } = play(week2Day(), [
+      { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GOOD_ROUTE },
+      { type: 'cancel_op', op_id: 'op_a1_recon_first_virginia' },
+    ]);
+    expect(state.routes).toEqual({});
+    expect(state.planned_ops).toEqual([]);
   });
 });
