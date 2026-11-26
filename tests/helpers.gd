@@ -50,6 +50,12 @@ static func plan(op_id: String, route: Array = GOOD_ROUTE) -> Dictionary:
 	return {"type": "plan_op", "op_id": op_id, "route": route}
 
 
+## Транш агенту: по умолчанию — всё обещанное, наличными, одной частью.
+static func pay(target_id: String, amount := -1, instrument := "cash", parts := 1) -> Dictionary:
+	var a := amount if amount >= 0 else Finance.promised(content(), target_id)
+	return {"type": "pay_agent", "target_id": target_id, "amount": a, "instrument": instrument, "parts": parts}
+
+
 static func resolve(op_id: String, decision := "continue") -> Dictionary:
 	return {"type": "resolve_op", "op_id": op_id, "decision": decision}
 

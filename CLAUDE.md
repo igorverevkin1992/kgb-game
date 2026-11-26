@@ -50,12 +50,16 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
     `choices` по фактам недели и `request` — запрос в Центр (`state.requests`). Беседа (шаг 7):
     `start_meeting`, `meeting_turn {tone, clue_id}`, `meeting_offer`, `meeting_abort`;
     `state.meeting` — идущая встреча, `state.tapes` — катушки; `recruitment` — прямой исход для тестов;
+  - `finance.gd` — транши: `plan()` (части по неделям, форма 4789, дробление после закона 1986,
+    образ жизни, лояльность — те же числа, что применит движок), обещание агенту, `mlca_in_force`.
+    В движке: `pay_agent`, `state.agents`, `state.payments` (части в пути доходят утром),
+    оперативные расходы на выезд, задача акта с `settle_promise`;
   - `meeting.gd` — беседа: условия встречи, ход «тон + козырь» (ready/early), строки стенограммы
     как ссылки на контент, оговорки (`heard`), `winnable` — поиск для валидатора;
   - `cipher.gd` — ключевой блокнот (ключ и контрольная группа недели), подложные директивы
     (`forged`), факты недели из журнала, `classify` → truth/embellished/silence, `report_effects`
     (те же числа, что применит движок — для предпросмотра), запросы и срок акта с продлением;
-  - `saves.gd` — формат v6 (… verified, requests, meeting, tapes; v4 и v5 переносятся), проверка при загрузке, автосейв, чекпоинты месяц/акт (до 12),
+  - `saves.gd` — формат v7 (… meeting, tapes, agents, payments; v4–v6 переносятся), проверка при загрузке, автосейв, чекпоинты месяц/акт (до 12),
     3 слота, «Железный занавес» (флаг `mode_ironman`); `FileStorage` (user://saves), `MemoryStorage`;
   - `map_geo.gd` — мили, 25-мильная зона, разбор маршрута; `rng.gd` — mulberry32; `util.gd` —
     JSON (числа из JSON приходят float — `normalize_numbers` делает целые int); `modules.gd`.
@@ -72,7 +76,8 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
     DropZone с drag&drop и кликом, заключение тройкой, подсказки), `map_canvas.gd` + `map_module.gd` (карта, «Сбор» →
     «Вердикт»), `overlays.gd` (сводка аналитика, служебная папка, итог), `cipher_view.gd` (шифроузел:
     блокнот, роторы, лента, сверка, шифрограмма с плашкой последствий), `dialog_view.gd`
-    («Тембр-2М»: встреча с индикаторами и козырями, катушки с таймкодами и оговорками).
+    («Тембр-2М»: встреча с индикаторами и козырями, катушки с таймкодами и оговорками),
+    `finance_view.gd` (журнал: спецфонд, папка правил, шкалы агентов, калькулятор транша).
   - `style.gd` — палитра, шрифты PT (кириллица + латинский запасной файл), фабрики элементов;
     `Style.fs()` применяет масштаб текста 100–130 %. `i18n.gd` (`T.t`, `T.loc`), `fmt.gd` (суммы,
     даты), `signals.gd` (диегетические сигналы рисков).

@@ -34,7 +34,7 @@ func test_cautious_resident() -> void:
 	var no_board := Campaign.dispatch(s, H.content(), {"type": "recruitment", "target_id": "tar_calloway_martin", "result": "success"})
 	has_text(no_board.error, "доска мотивов")
 	s = H.approve(self, s, "tar_calloway_martin")
-	var end := H.play(self, s, [{"type": "recruitment", "target_id": "tar_calloway_martin", "result": "success"}, NEXT, H.report("truth")])
+	var end := H.play(self, s, [{"type": "recruitment", "target_id": "tar_calloway_martin", "result": "success"}, H.pay("tar_calloway_martin"), NEXT, H.report("truth")])
 	ok(end.state.targets.tar_calloway_martin.recruited)
 	ok(end.events.any(func(e): return e.type == "act_completed" and e.act == 1), "акт завершён")
 	eq(end.state.ending, "campaign_complete")
@@ -57,7 +57,7 @@ func test_reckless_resident() -> void:
 	eq(s.lies, [{"week": 2, "kind": "embellished"}])
 	s = H.play(self, s, [NEXT, H.plan("op_a1_recon_potomac_cellar"), NEXT, H.resolve("op_a1_recon_potomac_cellar")]).state
 	s = H.approve(self, s, "tar_calloway_martin")
-	s = H.play(self, s, [{"type": "recruitment", "target_id": "tar_calloway_martin", "result": "success"}, NEXT, H.report("silence")]).state
+	s = H.play(self, s, [{"type": "recruitment", "target_id": "tar_calloway_martin", "result": "success"}, H.pay("tar_calloway_martin"), NEXT, H.report("silence")]).state
 	ok(s.targets.tar_calloway_martin.recruited)
 	eq(s.lies.size(), 1, "умолчание без сбоев — не ложь")
 	eq(s.ending, "campaign_complete")

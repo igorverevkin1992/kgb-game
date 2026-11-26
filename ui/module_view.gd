@@ -47,7 +47,7 @@ static func _content(view: String) -> Control:
 		"cipher":
 			return CipherView.build()
 		"finance":
-			return Shells.finance()
+			return FinanceView.build()
 		"dialog":
 			return DialogView.build()
 		_:

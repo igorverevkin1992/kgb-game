@@ -27,6 +27,7 @@ static func check(content: Dictionary, file_of: Dictionary, opts := {}) -> Array
 	_board(ctx)
 	_cipher(ctx)
 	_dialogs(ctx)
+	_finance(ctx)
 	return ctx.issues
 
 
@@ -412,3 +413,20 @@ static func _dialogs(ctx: Dictionary) -> void:
 			_push(ctx, "error", "dialog", "Беседу невозможно выиграть даже идеальной игрой: Раппорт не доходит до %d%% раньше, чем Тревога до %d%%" % [d.offer_rapport, d.max_anxiety], id, id)
 		elif Meeting.winnable(d, r0, a0, []):
 			_push(ctx, "warning", "dialog", "Беседу можно выиграть без козырей из досье — доска мотивов на встрече не нужна", id, id)
+
+
+## 13. Финансы: обещанное агенту можно выплатить из стартового спецфонда.
+static func _finance(ctx: Dictionary) -> void:
+	var c: Dictionary = ctx.content
+	var fund := int(c.balance.start.fund_usd)
+	for a in c.campaign.acts:
+		if not a.goal.settle_promise:
+			continue
+		for id in a.goal.recruit_any_of:
+			var t := Campaign.target_by_id(c, id)
+			if t.is_empty():
+				continue
+			if t.get("finance") == null:
+				_push(ctx, "warning", "finance", "Цель акта %d без блока finance: обещания нет, задача засчитается сразу после вербовки" % a.act, "finance", id)
+			elif int(t.finance.promised_usd) > fund:
+				_push(ctx, "error", "finance", "Обещано %d долларов, а в стартовом спецфонде %d — задачу акта не выполнить" % [t.finance.promised_usd, fund], "finance.promised_usd", id)

@@ -83,6 +83,13 @@
       "en": "Why does he lecture his patrons, and why does it make him angry?"
     }
   },
+  "finance": {
+    "salary_usd": 21000,
+    "promised_usd": 4800,
+    "promise": {
+      "ru": "Закрыть долг по аренде бара"
+    }
+  },
   "initial_state": {
     "rapport": 10,
     "paranoia": 20

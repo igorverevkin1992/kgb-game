@@ -7,8 +7,8 @@ class_name Saves
 const FORMAT := "liniya-kr-save"
 ## v3: первая версия на Godot. v4 (шаг 5): доска мотивов — pinned, analysis.
 ## v5 (шаг 6): шифроузел — verified, requests. v6 (шаг 7): беседы — meeting, tapes.
-## Сохранения v4 и v5 переносятся автоматически.
-const VERSION := 6
+## v7 (шаг 8): финансы — agents, payments. Сохранения v4–v6 переносятся автоматически.
+const VERSION := 7
 const AUTOSAVE := "autosave"
 const MANUAL_SLOTS := ["manual-1", "manual-2", "manual-3"]
 const MAX_CHECKPOINTS := 12
@@ -64,6 +64,17 @@ static func deserialize(text: String, content: Dictionary) -> Dictionary:
 	if data.get("version") == 5 and typeof(data.get("state")) == TYPE_DICTIONARY:
 		data.state["meeting"] = null
 		data.state["tapes"] = []
+		data["version"] = 6
+	if data.get("version") == 6 and typeof(data.get("state")) == TYPE_DICTIONARY:
+		var agents := {}
+		var targets = data.state.get("targets", {})
+		if typeof(targets) == TYPE_DICTIONARY:
+			for id in targets:
+				if typeof(targets[id]) == TYPE_DICTIONARY and targets[id].get("recruited", false):
+					agents[id] = {"loyalty": targets[id].get("rapport", 50), "paid_usd": 0, "lifestyle": 0, "trace": 0,
+						"since_week": data.state.get("week", 1), "promise_kept": true}
+		data.state["agents"] = agents
+		data.state["payments"] = []
 		data["version"] = VERSION
 	if data.get("version") != VERSION:
 		return {"ok": false, "error": "Сохранение от другой версии игры (формат %s)" % str(data.get("version"))}
@@ -129,6 +140,14 @@ static func _state_spec() -> Dictionary:
 		"meeting": Schema.nullable(Schema.obj({
 			"target_id": Schema.s(), "dialog_id": Schema.s(), "beat": Schema.i(0), "rapport": pct, "anxiety": pct,
 			"used": strs, "lines": Schema.arr({"type": "dict", "of": {"type": "any"}}),
+		})),
+		"agents": {"type": "dict", "of": Schema.obj({
+			"loyalty": pct, "paid_usd": Schema.i(0), "lifestyle": pct, "trace": pct, "since_week": Schema.i(1), "promise_kept": {"type": "bool"},
+		})},
+		"payments": Schema.arr(Schema.obj({
+			"target_id": Schema.s(), "week": Schema.i(1), "amount": Schema.i(1), "instrument": Schema.e(["cash", "escrow"]),
+			"ctr": {"type": "bool"}, "structuring": {"type": "bool"}, "treasury": Schema.i(0), "lifestyle": Schema.i(0),
+			"loyalty": Schema.i(), "completes_promise": {"type": "bool"},
 		})),
 		"tapes": Schema.arr(Schema.obj({
 			"target_id": Schema.s(), "dialog_id": Schema.s(), "week": Schema.i(1),

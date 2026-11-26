@@ -15,7 +15,8 @@
         "recruit_any_of": [
           "tar_vargas_ellen",
           "tar_calloway_martin"
-        ]
+        ],
+        "settle_promise": true
       }
     }
   ]

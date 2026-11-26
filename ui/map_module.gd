@@ -93,6 +93,8 @@ static func _plan_panel(panel: VBoxContainer) -> void:
 	panel.add_child(_h3(T.t("sdr.plan.title")))
 	if ops.is_empty():
 		panel.add_child(_note(T.t("map.noOps")))
+	else:
+		panel.add_child(_note(T.t("map.opExpense", {"usd": Fmt.usd(int(Game.content.balance.finance.op_expense_usd)), "fund": Fmt.usd(int(s.fund_usd))})))
 	for op in ops:
 		var cur: bool = op.op_id == draft.op_id
 		var b := Style.button("%s\n%s" % [T.loc(op.title), _site_name(op.location.site_id)], "op-" + op.op_id, Style.PAPER,

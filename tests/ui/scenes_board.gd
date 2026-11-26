@@ -83,6 +83,8 @@ func scene_analysis_near_hints_approve_and_meet() -> void:
 	await press("trump-clue_calloway_vgu_profile")
 	await press("tone-ego")
 	await press("meeting-offer")
+	await key(KEY_4)
+	await press("tranche-send")  # обещанное Кэллоуэю — аренда бара
 	await key(KEY_2)
 	has_text("dossier-" + C, "ЗАВЕРБОВАН")
 	await shot("board-recruited")

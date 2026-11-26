@@ -50,6 +50,12 @@ static func _build() -> void:
 			"correct_access": Schema.s(),
 			"hint": text,
 		}),
+		# Финансы агента после вербовки: зарплата (для образа жизни) и обещанный первый транш.
+		"finance": Schema.opt(Schema.obj({
+			"salary_usd": Schema.i(1),
+			"promised_usd": Schema.i(0),
+			"promise": text,
+		})),
 		"initial_state": Schema.obj({
 			"rapport": scale,
 			"paranoia": scale,
@@ -184,7 +190,11 @@ static func _build() -> void:
 			"title": text,
 			"weeks": Schema.obj({"from": week, "to": week}),
 			"start_date": Schema.s("^\\d{4}-\\d{2}-\\d{2}$", "дата в формате ГГГГ-ММ-ДД"),
-			"goal": Schema.obj({"recruit_any_of": Schema.arr(Schema.id("tar"), 1)}),
+			"goal": Schema.obj({
+				"recruit_any_of": Schema.arr(Schema.id("tar"), 1),
+				# Задача выполнена, только когда завербованному агенту выплачено обещанное.
+				"settle_promise": Schema.opt({"type": "bool"}, false),
+			}),
 		}), 1),
 	})
 
@@ -213,6 +223,14 @@ static func _build() -> void:
 		"treasury": Schema.obj({"audit_mole_hunt_multiplier": Schema.n(1, 5)}),
 		"thresholds": Schema.obj({"warning": scale, "danger": scale}),
 		"meeting": Schema.obj({"anxiety_cooldown": Schema.i(0, 100)}),
+		"finance": Schema.obj({
+			"ctr_threshold_usd": Schema.i(1), "ctr_treasury": delta, "structuring_treasury": delta,
+			"mlca_date": Schema.s("^\\d{4}-\\d{2}-\\d{2}$", "дата в формате ГГГГ-ММ-ДД"),
+			"op_expense_usd": Schema.i(0), "max_parts": Schema.i(1, 5),
+			"lifestyle_factor": Schema.n(0, 5), "lifestyle_decay": Schema.i(0, 100), "lifestyle_danger_treasury": delta,
+			"loyalty_unpaid_week": Schema.i(0, 100), "loyalty_promise_cash": delta, "loyalty_promise_escrow": delta,
+			"loyalty_per_1000_extra": Schema.n(0, 10), "escrow_min_loyalty": scale, "reports_min_loyalty": scale,
+		}),
 		"cipher": Schema.obj({
 			"accept_forged_sog_heat": delta, "accept_forged_flag": flag,
 			"query_genuine_pressure": delta, "query_genuine_trust": delta, "query_forged_trust": delta,

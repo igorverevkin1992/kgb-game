@@ -8,9 +8,9 @@ const QUIET := [NEXT, NEXT, NEXT, {"type": "submit_report", "report": "truth"}]
 func scene_desk_act1() -> void:
 	await start()
 	has_text("plaque", "ЛИНИЯ КР: ВАШИНГТОН, 1985")
-	for v in ["map", "mice", "cipher", "dialog", "inbox"]:
+	for v in ["map", "mice", "cipher", "finance", "dialog", "inbox"]:
 		ok(enabled("desk-object-" + v), v + " открыт")
-	for v in ["finance", "counterintel"]:
+	for v in ["counterintel"]:
 		ok(not enabled("desk-object-" + v), v + " заперт")
 	has_text("inbox-unread", "2")
 	has_text("cipher-pending", "1")
@@ -41,10 +41,10 @@ func scene_module_switch_under_200ms() -> void:
 
 func scene_locked_module_stays_closed() -> void:
 	await start()
-	await key(KEY_4)
-	ok(not exists("module-panel-finance"), "финансы заперты")
+	await key(KEY_6)
+	ok(not exists("module-panel-counterintel"), "пульт обстановки заперт")
 	await key(KEY_1)
-	ok(not enabled("edge-finance"), "на краю стола тоже заперто")
+	ok(not enabled("edge-counterintel"), "на краю стола тоже заперто")
 
 
 func scene_inbox_documents() -> void:

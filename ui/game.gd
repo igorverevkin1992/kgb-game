@@ -43,6 +43,9 @@ var cipher_anim := {}
 var cipher_draft := {"week": 0, "choices": {}, "request": ""}
 ## Беседа: выбранный козырь, открытая катушка (номер в state.tapes, -1 — нет) и головка.
 var meeting_trump := ""
+## Финансовый журнал: выбранный агент и черновики траншей {target_id: {amount, instrument, parts}}.
+var finance_agent := ""
+var finance_forms := {}
 var tape_selected := -1
 var tape_cursor := 0
 
@@ -235,6 +238,33 @@ func set_sdr_run(run: Dictionary) -> void:
 	changed.emit()
 
 
+# ——— Финансовый журнал ———
+
+func select_finance_agent(id: String) -> void:
+	finance_agent = id
+	changed.emit()
+
+
+## Черновик транша: по умолчанию — остаток обещанного наличными одной частью.
+func finance_form_for(id: String) -> Dictionary:
+	if not finance_forms.has(id):
+		var left := Finance.promise_left(state, content, id)
+		finance_forms[id] = {"amount": left if left > 0 else 1000, "instrument": "cash", "parts": 1}
+	return finance_forms[id]
+
+
+func set_finance_form(id: String, field: String, value: Variant) -> void:
+	finance_form_for(id)[field] = value
+	changed.emit()
+
+
+func send_tranche(id: String) -> void:
+	var f := finance_form_for(id)
+	finance_forms.erase(id)
+	dispatch({"type": "pay_agent", "target_id": id, "amount": int(f.amount), "instrument": f.instrument,
+		"parts": int(f.parts) if f.instrument == "cash" else 1})
+
+
 # ——— Беседа ———
 
 func start_meeting(target_id: String) -> void:
@@ -369,6 +399,8 @@ func _clear_ui() -> void:
 	meeting_trump = ""
 	tape_selected = -1
 	tape_cursor = 0
+	finance_agent = ""
+	finance_forms = {}
 
 
 func _load_settings() -> void:

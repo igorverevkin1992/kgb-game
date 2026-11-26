@@ -2,7 +2,7 @@ class_name Modules
 ## Модули рабочего стола и с какого акта они доступны (GDD, Блок 3 + риск №2):
 ## в первые 45 минут игрок видит только карту, шифроузел и доску мотивов.
 
-const UNLOCK := {"map": 1, "mice": 1, "cipher": 1, "finance": 2, "dialog": 1, "counterintel": 3, "inbox": 1}
+const UNLOCK := {"map": 1, "mice": 1, "cipher": 1, "finance": 1, "dialog": 1, "counterintel": 3, "inbox": 1}
 ## Порядок на краю стола и горячие клавиши 1–7.
 const ORDER := ["map", "mice", "cipher", "finance", "dialog", "counterintel", "inbox"]
 

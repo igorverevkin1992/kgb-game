@@ -62,5 +62,22 @@
   },
   "meeting": {
     "anxiety_cooldown": 20
+  },
+  "finance": {
+    "ctr_threshold_usd": 10000,
+    "ctr_treasury": 25,
+    "structuring_treasury": 20,
+    "mlca_date": "1986-10-27",
+    "op_expense_usd": 500,
+    "max_parts": 3,
+    "lifestyle_factor": 0.5,
+    "lifestyle_decay": 5,
+    "lifestyle_danger_treasury": 5,
+    "loyalty_unpaid_week": 5,
+    "loyalty_promise_cash": 15,
+    "loyalty_promise_escrow": 5,
+    "loyalty_per_1000_extra": 1,
+    "escrow_min_loyalty": 60,
+    "reports_min_loyalty": 40
   }
 }

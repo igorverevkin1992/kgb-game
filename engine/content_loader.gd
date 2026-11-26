@@ -152,7 +152,7 @@ const RULE_RU := {
 	"three-clue": "три улики", "mice-three-clue": "три улики на мотив", "softlock": "тупик",
 	"robustness": "устойчивость", "unreachable": "недостижимо", "sdr": "проверочный маршрут",
 	"weeks": "недели", "text-length": "длина текста", "translation": "перевод", "polygraph": "полиграф",
-	"balance": "баланс", "board": "доска мотивов", "cipher": "шифроузел", "dialog": "беседа",
+	"balance": "баланс", "board": "доска мотивов", "cipher": "шифроузел", "dialog": "беседа", "finance": "финансы",
 }
 
 

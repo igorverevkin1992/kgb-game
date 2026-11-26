@@ -15,6 +15,7 @@ class_name Campaign
 ##   {type: "start_meeting", target_id} · {type: "meeting_turn", tone, clue_id?} — вербовочная беседа
 ##   {type: "meeting_offer"} · {type: "meeting_abort"} — сделать предложение / прервать контакт
 ##   (`recruitment` — прямой исход без беседы, для тестов и отладки)
+##   {type: "pay_agent", target_id, amount, instrument: "cash"|"escrow", parts} — транш (день и вечер)
 ##   {type: "verify_cable", cable_id, decision: "accept"|"query"} — сверка директивы (шифроузел)
 ##   {type: "submit_report", report: "truth"|"embellished"|"silence"} — быстрое донесение, или
 ##   {type: "submit_report", choices: {fact_key: "as_is"|"embellish"|"omit"}, request: "req_…"|""}
@@ -65,6 +66,8 @@ static func new_campaign(content: Dictionary) -> Dictionary:
 		"requests": [],
 		"meeting": null,
 		"tapes": [],
+		"agents": {},
+		"payments": [],
 		"rng": b.start.seed,
 		"ending": null,
 		"log": [],
@@ -112,6 +115,9 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 				return _reject(state, "Операция «%s» сейчас недоступна" % _op_title(content, action.op_id))
 			if s.planned_ops.size() >= int(content.balance.ops.per_week):
 				return _reject(state, "На неделю можно запланировать не больше %d операций" % content.balance.ops.per_week)
+			var expense := int(content.balance.finance.op_expense_usd)
+			if int(s.fund_usd) < expense:
+				return _reject(state, "В спецфонде нет %d долларов на оперативные расходы" % expense)
 			var route: Array = action.get("route", [])
 			if not MapGeo.analyze_route(content, route).blocking.is_empty():
 				return _reject(state, "Проверочный маршрут — это три разные бытовые точки на карте")
@@ -253,6 +259,18 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 				return _reject(state, "Встреча не идёт")
 			_finish_meeting(ctx, "aborted")
 
+		"pay_agent":
+			if s.phase != "day" and s.phase != "evening":
+				return _reject(state, "Транши передают днём или вечером, а сейчас %s" % phase_ru)
+			var plan := Finance.plan(s, content, action.get("target_id", ""), int(action.get("amount", 0)), action.get("instrument", ""), int(action.get("parts", 1)))
+			if plan.error != "":
+				return _reject(state, plan.error)
+			_change_fund(ctx, -int(action.amount), "tranche", action.target_id)
+			for p in plan.parts:
+				s.payments.append(p)
+			_emit(ctx, {"type": "tranche_sent", "target_id": action.target_id, "amount": int(action.amount), "instrument": action.instrument, "parts": plan.parts.size()})
+			_deliver_payments(ctx)
+
 		"verify_cable":
 			var cable := cable_by_id(content, action.cable_id)
 			if cable.is_empty() or cable.kind != "directive" or not s.delivered_cables.has(cable.cable_id):
@@ -381,10 +399,13 @@ static func _start_morning(ctx: Dictionary) -> void:
 			s.delivered_cables.append(cable.cable_id)
 			_emit(ctx, {"type": "cable_delivered", "cable_id": cable.cable_id})
 			# Улики из документов игрок снимает сам (подсвеченные фрагменты, take_clue).
-	# Каждый завербованный агент приносит по одному донесению в неделю.
+	_deliver_payments(ctx)
+	# Каждый завербованный агент приносит по одному донесению в неделю — если лоялен.
 	for t in content.targets:
 		var ts = s.targets.get(t.target_id)
-		if ts == null or not ts.recruited:
+		if ts == null or not ts.recruited or ts.lost:
+			continue
+		if s.agents.has(t.target_id) and int(s.agents[t.target_id].loyalty) < int(content.balance.finance.reports_min_loyalty):
 			continue
 		var reports: Array = content.clues.filter(func(c): return c.source.channel == "agent" and c.source.from == t.target_id)
 		if ts.reports_delivered < reports.size():
@@ -444,6 +465,7 @@ static func _resolve_op(ctx: Dictionary, op: Dictionary, decision: String) -> vo
 	s.planned_ops = Util.without(s.planned_ops, op.op_id)
 	s.routes.erase(op.op_id)
 	s.week_field_activity = true
+	_change_fund(ctx, -int(content.balance.finance.op_expense_usd), "op_expense", op.op_id)
 	# Каждая точка маршрута за 25 милями — заметный для ФБР выезд, даже если операцию свернули.
 	for st in route_stops:
 		if not MapGeo.within_zone(content, st):
@@ -496,10 +518,76 @@ static func _finish_meeting(ctx: Dictionary, outcome: String) -> void:
 static func _recruit(ctx: Dictionary, target_id: String) -> void:
 	var s: Dictionary = ctx.s
 	s.targets[target_id].recruited = true
+	s.agents[target_id] = Finance.new_agent(s, ctx.content, target_id)
 	_emit(ctx, {"type": "target_recruited", "target_id": target_id})
+	_check_goal(ctx)
+
+
+## Задача акта: завербовать одну из целей (и, если задано, выплатить ей обещанное).
+static func _check_goal(ctx: Dictionary) -> void:
+	var s: Dictionary = ctx.s
 	var def := current_act_def(s, ctx.content)
-	if not def.is_empty() and def.goal.recruit_any_of.has(target_id):
-		s.goal_reached = true
+	if def.is_empty() or s.goal_reached:
+		return
+	for id in def.goal.recruit_any_of:
+		if s.targets.has(id) and s.targets[id].recruited and not s.targets[id].lost \
+				and (not def.goal.settle_promise or (s.agents.has(id) and s.agents[id].promise_kept)):
+			s.goal_reached = true
+			return
+
+
+static func _change_fund(ctx: Dictionary, delta: int, reason: String, ref := "") -> void:
+	if delta == 0:
+		return
+	var s: Dictionary = ctx.s
+	var from: int = s.fund_usd
+	s.fund_usd = from + delta
+	_emit(ctx, {"type": "fund_changed", "from": from, "to": s.fund_usd, "reason": reason, "ref": ref})
+
+
+## Доставка частей траншей, срок которых наступил: деньги у агента, банк реагирует.
+static func _deliver_payments(ctx: Dictionary) -> void:
+	var s: Dictionary = ctx.s
+	var keep: Array = []
+	for p in s.payments:
+		if int(p.week) > int(s.week):
+			keep.append(p)
+			continue
+		var ag = s.agents.get(p.target_id)
+		if ag == null:
+			continue
+		ag.paid_usd += int(p.amount)
+		ag.lifestyle = Util.clamp100(int(ag.lifestyle) + int(p.lifestyle))
+		ag.loyalty = Util.clamp100(int(ag.loyalty) + int(p.loyalty))
+		_emit(ctx, {"type": "tranche_delivered", "target_id": p.target_id, "amount": int(p.amount), "instrument": p.instrument})
+		if p.ctr:
+			_emit(ctx, {"type": "ctr_filed", "target_id": p.target_id, "amount": int(p.amount)})
+		if p.structuring:
+			_emit(ctx, {"type": "structuring_noted", "target_id": p.target_id})
+		if int(p.treasury) > 0:
+			ag.trace = Util.clamp100(int(ag.trace) + int(p.treasury))
+			_add_risk(ctx, "treasury", int(p.treasury), "ctr" if p.ctr else "structuring")
+		if p.completes_promise:
+			ag.promise_kept = true
+			_emit(ctx, {"type": "promise_kept", "target_id": p.target_id})
+	s.payments = keep
+	_check_goal(ctx)
+
+
+## Ночь: агенты ждут обещанного, образ жизни остывает или бросается в глаза.
+static func _agents_night(ctx: Dictionary) -> void:
+	var s: Dictionary = ctx.s
+	var b: Dictionary = ctx.content.balance.finance
+	for id in Finance.agents(s):
+		var ag: Dictionary = s.agents[id]
+		if not ag.promise_kept and int(s.week) > int(ag.since_week) and Finance.promise_left(s, ctx.content, id) > 0:
+			var from: int = ag.loyalty
+			ag.loyalty = Util.clamp100(from - int(b.loyalty_unpaid_week))
+			_emit(ctx, {"type": "loyalty_changed", "target_id": id, "from": from, "to": ag.loyalty, "reason": "promise_unpaid"})
+		if int(ag.lifestyle) >= int(ctx.content.balance.thresholds.danger):
+			ag.trace = Util.clamp100(int(ag.trace) + int(b.lifestyle_danger_treasury))
+			_add_risk(ctx, "treasury", int(b.lifestyle_danger_treasury), "lifestyle")
+		ag.lifestyle = maxi(0, int(ag.lifestyle) - int(b.lifestyle_decay))
 
 
 static func _lose(ctx: Dictionary, target_id: String) -> void:
@@ -537,10 +625,8 @@ static func _request(ctx: Dictionary, request_id: String) -> void:
 	var fx: Dictionary = r.granted if granted else r.refused
 	_add_trust(ctx, fx.centre_trust, "request")
 	_add_risk(ctx, "moscow_pressure", fx.moscow_pressure, "request")
-	if granted and fx.get("fund_usd", 0) != 0:
-		var from: int = s.fund_usd
-		s.fund_usd += int(fx.fund_usd)
-		_emit(ctx, {"type": "fund_changed", "from": from, "to": s.fund_usd, "reason": "request"})
+	if granted:
+		_change_fund(ctx, int(fx.get("fund_usd", 0)), "request", request_id)
 
 
 ## Ночь: донесение, сверка лжи, пересчёт рисков, концовки и переход к следующей неделе.
@@ -579,6 +665,7 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 	elif not act.is_empty() and s.week - act.weeks.from + 1 > int(mp.grace_weeks):
 		_add_risk(ctx, "moscow_pressure", mp.per_week_without_goal, "no_progress")
 
+	_agents_night(ctx)
 	if not s.week_field_activity:
 		_add_risk(ctx, "sog_heat", b.sog_heat.quiet_week, "quiet_week")
 

@@ -84,6 +84,13 @@
       "en": "What does Vargas need most right now, and what is she hiding from her manager?"
     }
   },
+  "finance": {
+    "salary_usd": 24000,
+    "promised_usd": 11400,
+    "promise": {
+      "ru": "Погасить долг клинике в Бетесде за лечение матери"
+    }
+  },
   "initial_state": {
     "rapport": 0,
     "paranoia": 35

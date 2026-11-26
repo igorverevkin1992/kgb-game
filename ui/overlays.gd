@@ -104,6 +104,10 @@ static func _bar(name: String, title: String, value: int, level: String, at100: 
 	return col
 
 
+static func _tname(id: String) -> String:
+	return T.loc(Campaign.target_by_id(Game.content, id).get("name", {"ru": id}))
+
+
 static func _event_text(e: Dictionary) -> String:
 	var c: Dictionary = Game.content
 	match e.type:
@@ -135,6 +139,18 @@ static func _event_text(e: Dictionary) -> String:
 			return T.t("event.request_" + ("granted" if e.granted else "refused"), {"name": T.loc(Cipher.request_by_id(c, e.request_id).title)})
 		"meeting_ended":
 			return T.t("event.meeting_" + e.outcome, {"name": T.loc(Campaign.target_by_id(c, e.target_id).name)})
+		"tranche_sent":
+			return T.t("event.tranche_sent", {"name": _tname(e.target_id), "usd": Fmt.usd(e.amount), "how": T.t("finance.instrument." + e.instrument)})
+		"tranche_delivered":
+			return T.t("event.tranche_delivered", {"name": _tname(e.target_id), "usd": Fmt.usd(e.amount)})
+		"ctr_filed":
+			return T.t("event.ctr_filed", {"name": _tname(e.target_id), "usd": Fmt.usd(e.amount)})
+		"structuring_noted":
+			return T.t("event.structuring_noted", {"name": _tname(e.target_id)})
+		"promise_kept":
+			return T.t("event.promise_kept", {"name": _tname(e.target_id)})
+		"loyalty_changed":
+			return T.t("event.loyalty_changed", {"name": _tname(e.target_id), "from": e.from, "to": e.to})
 		"fund_changed":
 			return T.t("event.fund_changed", {"from": Fmt.usd(e.from), "to": Fmt.usd(e.to)})
 	return ""
