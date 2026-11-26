@@ -1,0 +1,33 @@
+{
+  "game.title": "Линия КР: Вашингтон, 1985",
+  "game.subtitle": "Режимная комната резидентуры, Маунт-Алто",
+  "desk.locked": "Откроется в акте {act}",
+  "desk.back": "Вернуться к столу",
+  "desk.backHint": "Esc — вернуться к столу",
+  "desk.act": "Акт {act}",
+  "desk.placeholder": "Модуль в разработке. Здесь будет: {details}",
+
+  "module.map.name": "Оперативная карта",
+  "module.map.object": "Складная карта Вашингтона и Северной Вирджинии",
+  "module.map.details": "маршруты SDR, тайники, 25-мильный радиус",
+
+  "module.mice.name": "Доска MICE",
+  "module.mice.object": "Пробковая доска и картотека дел",
+  "module.mice.details": "досье целей, улики, красные нити связей",
+
+  "module.cipher.name": "Шифроузел «Фиалка»",
+  "module.cipher.object": "Роторная шифромашина М-125 и телетайп",
+  "module.cipher.details": "депеши Центра и ответные шифрограммы",
+
+  "module.finance.name": "Финансовый журнал",
+  "module.finance.object": "Тетрадь учёта спецфонда",
+  "module.finance.details": "транши, легенды доходов, порог CTR $10 000",
+
+  "module.dialog.name": "Магнитофон «Тембр-2М»",
+  "module.dialog.object": "Катушечный магнитофон и стенограммы",
+  "module.dialog.details": "вербовочные беседы, раппорт и тревога",
+
+  "module.counterintel.name": "Пульт обстановки",
+  "module.counterintel.object": "Московская картотека и протокол полиграфа",
+  "module.counterintel.details": "«Окно арестов» и полиграф ЦРУ"
+}

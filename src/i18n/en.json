@@ -1,0 +1,33 @@
+{
+  "game.title": "Line KR: Washington, 1985",
+  "game.subtitle": "Secure room of the rezidentura, Mount Alto",
+  "desk.locked": "Unlocks in Act {act}",
+  "desk.back": "Back to the desk",
+  "desk.backHint": "Esc — back to the desk",
+  "desk.act": "Act {act}",
+  "desk.placeholder": "Module in development. Coming here: {details}",
+
+  "module.map.name": "Operational map",
+  "module.map.object": "Folding map of Washington and Northern Virginia",
+  "module.map.details": "SDR routes, dead drops, the 25-mile radius",
+
+  "module.mice.name": "MICE board",
+  "module.mice.object": "Cork board and case files",
+  "module.mice.details": "target dossiers, clues, red threads",
+
+  "module.cipher.name": "Fialka cipher station",
+  "module.cipher.object": "M-125 rotor cipher machine and teletype",
+  "module.cipher.details": "cables from the Centre and coded replies",
+
+  "module.finance.name": "Finance ledger",
+  "module.finance.object": "Special fund ledger",
+  "module.finance.details": "payments, income legends, the $10,000 CTR threshold",
+
+  "module.dialog.name": "Tembr-2M tape recorder",
+  "module.dialog.object": "Reel-to-reel recorder and transcripts",
+  "module.dialog.details": "recruitment talks, rapport and alarm",
+
+  "module.counterintel.name": "Situation console",
+  "module.counterintel.object": "Moscow card index and polygraph protocol",
+  "module.counterintel.details": "the Arrest Window and the CIA polygraph"
+}

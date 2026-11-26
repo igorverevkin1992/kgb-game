@@ -1,0 +1,226 @@
+/* Каркас кабинета. Палитра «Контейнера» (GDD, Блок 5): оливковый крашеный металл,
+   выцветшая охра папок, сероватая бумага ГОСТ-бланков, тёмный шпон стола.
+   Финальный арт и ЭЛТ-шейдер — шаги 3 и 9. */
+
+:root {
+  --veneer-dark: #1d1712;
+  --veneer: #3a2c20;
+  --olive: #4f5640;
+  --olive-dark: #343a2b;
+  --ochre: #b8955a;
+  --paper: #d9d4c5;
+  --paper-ink: #2a2620;
+  --stamp-red: #8e2b22;
+  --lamp: rgba(255, 226, 160, 0.16);
+  --type: 'PT Mono', 'Courier New', ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--veneer-dark);
+  color: var(--paper);
+  font-family: var(--type);
+}
+
+.room {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px 32px 32px;
+  gap: 16px;
+}
+
+.room__header h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.room__header p {
+  margin: 4px 0 0;
+  opacity: 0.7;
+  font-size: 14px;
+}
+
+.desk {
+  position: relative;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  grid-template-areas:
+    'map mice counterintel'
+    'cipher finance dialog';
+  gap: 20px;
+  padding: 24px;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.08) 0 3px, transparent 3px 11px),
+    linear-gradient(160deg, var(--veneer) 0%, var(--veneer-dark) 100%);
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+.desk__lamp {
+  position: absolute;
+  inset: -20% -10% auto auto;
+  width: 70%;
+  height: 90%;
+  background: radial-gradient(ellipse at 70% 20%, var(--lamp), transparent 65%);
+  pointer-events: none;
+}
+
+.desk-object {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 18px;
+  border: 0;
+  border-radius: 4px;
+  text-align: left;
+  font-family: var(--type);
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+  transition:
+    transform 80ms ease-out,
+    filter 80ms ease-out;
+}
+
+.desk-object:hover:not(:disabled),
+.desk-object:focus-visible {
+  transform: translateY(-3px);
+  filter: brightness(1.12);
+  outline: none;
+}
+
+.desk-object:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.8) brightness(0.45);
+}
+
+.desk-object__name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.desk-object__caption {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.desk-object--map {
+  grid-area: map;
+  background:
+    linear-gradient(90deg, transparent 49.5%, rgba(0, 0, 0, 0.15) 50%, transparent 50.5%),
+    linear-gradient(0deg, transparent 49.5%, rgba(0, 0, 0, 0.12) 50%, transparent 50.5%),
+    #cfd2b8;
+  color: var(--paper-ink);
+}
+
+.desk-object--mice {
+  grid-area: mice;
+  background:
+    radial-gradient(circle at 20% 30%, #a63a2c 0 4px, transparent 5px),
+    radial-gradient(circle at 65% 55%, #a63a2c 0 4px, transparent 5px),
+    #9b7a52;
+  color: #1f160d;
+}
+
+.desk-object--cipher {
+  grid-area: cipher;
+  background: linear-gradient(180deg, #2a2a28, #151514);
+  color: var(--paper);
+}
+
+.desk-object--finance {
+  grid-area: finance;
+  background: var(--ochre);
+  color: var(--paper-ink);
+}
+
+.desk-object--dialog {
+  grid-area: dialog;
+  background: linear-gradient(180deg, var(--olive), var(--olive-dark));
+  color: var(--paper);
+}
+
+.desk-object--counterintel {
+  grid-area: counterintel;
+  background: #5b2f2a;
+  color: var(--paper);
+}
+
+.module-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 8, 6, 0.72);
+}
+
+.module-panel {
+  position: relative;
+  width: min(760px, calc(100vw - 32px));
+  min-height: 420px;
+  padding: 48px 56px;
+  background: var(--paper);
+  color: var(--paper-ink);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+}
+
+.module-panel h2 {
+  margin-top: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.module-panel__stamp {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  padding: 4px 10px;
+  border: 2px solid var(--stamp-red);
+  color: var(--stamp-red);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  transform: rotate(-4deg);
+}
+
+.module-panel footer {
+  position: absolute;
+  left: 56px;
+  right: 56px;
+  bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.module-panel button {
+  padding: 8px 16px;
+  border: 1px solid var(--paper-ink);
+  background: transparent;
+  color: var(--paper-ink);
+  font-family: var(--type);
+  cursor: pointer;
+}
+
+.module-panel small {
+  opacity: 0.6;
+}
