@@ -1,0 +1,295 @@
+class_name Overlays
+## Оверлеи поверх стола: сводка аналитика, служебная папка (сохранения и настройки), итог кампании.
+
+const PANEL_W := 860.0
+
+
+static func _overlay(name: String, close_on_click := true) -> Array:
+	var root := Control.new()
+	root.name = name + "-overlay"
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var dim := ColorRect.new()
+	dim.color = Color(0.04, 0.03, 0.02, 0.74)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	if close_on_click:
+		dim.gui_input.connect(func(e): if e is InputEventMouseButton and e.pressed: Game.close())
+	root.add_child(dim)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(center)
+	var sb := Style.box(Style.PAPER, Color(0, 0, 0, 0), 0, 0, 44)
+	sb.content_margin_left = 52
+	sb.content_margin_right = 52
+	sb.shadow_color = Color(0, 0, 0, 0.6)
+	sb.shadow_size = 30
+	var panel := PanelContainer.new()
+	panel.name = name
+	panel.add_theme_stylebox_override("panel", sb)
+	center.add_child(panel)
+	var v := Style.vbox(10)
+	v.custom_minimum_size.x = PANEL_W - 104
+	panel.add_child(v)
+	return [root, v, panel]
+
+
+static func _title(v: VBoxContainer, title: String, stamp: String) -> void:
+	var h := Style.hbox(12)
+	h.add_child(Style.label(title.to_upper(), Style.form(true), 28, Style.INK))
+	var sp := Control.new()
+	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(sp)
+	h.add_child(Style.stamp(stamp))
+	v.add_child(h)
+
+
+static func _h3(text: String) -> Label:
+	return Style.label(text.to_upper(), Style.form(true), 17, Style.INK)
+
+
+# ——— Сводка аналитика ———
+
+static func analyst() -> Control:
+	var o := _overlay("analyst")
+	var v: VBoxContainer = o[1]
+	var s: Dictionary = Game.state
+	_title(v, T.t("analyst.title"), T.t("analyst.stamp"))
+	for r in Campaign.RISKS:
+		v.add_child(_bar("risk-" + r, T.t("risk." + r), s.risks[r], Campaign.risk_level(s.risks[r], Game.content), T.t("risk.%s.at100" % r)))
+	v.add_child(_bar("centre-trust", T.t("analyst.trust"), s.centre_trust, "trust", ""))
+	v.add_child(Style.label(T.t("analyst.fund", {"usd": Fmt.usd(s.fund_usd)}), Style.mono(), 14, Style.INK))
+	v.add_child(_h3(T.t("analyst.journal")))
+	var journal := Style.vbox(3)
+	journal.name = "journal"
+	var lines: Array = []
+	for entry in s.log:
+		var text := _event_text(entry.event)
+		if text != "":
+			lines.append("%s  %s" % [T.t("calendar.week", {"week": entry.week}), text])
+	lines.reverse()
+	for line in lines.slice(0, 12):
+		journal.add_child(Style.para(line, PANEL_W - 104, Style.mono(), 13, Style.INK))
+	v.add_child(journal)
+	return o[0]
+
+
+static func _bar(name: String, title: String, value: int, level: String, at100: String) -> Control:
+	var col := Style.vbox(2)
+	col.name = name
+	var row := Style.hbox(12)
+	var l := Style.label(title, Style.form(), 17, Style.INK)
+	l.custom_minimum_size.x = 240
+	row.add_child(l)
+	var bar := Control.new()
+	bar.custom_minimum_size = Vector2(PANEL_W - 104 - 252, 18)
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var w: float = bar.custom_minimum_size.x
+	bar.add_child(Style.rect(Color(Style.INK, 0.12), Rect2(0, 0, w, 18)))
+	var color: Color = {"calm": Color("#6b7356"), "warning": Style.OCHRE, "danger": Style.STAMP_RED, "trust": Color("#3d5a73")}[level]
+	bar.add_child(Style.rect(color, Rect2(0, 0, w * value / 100.0, 18)))
+	if level != "trust":
+		var th: Dictionary = Game.content.balance.thresholds
+		bar.add_child(Style.rect(Style.OCHRE_DARK, Rect2(w * th.warning / 100.0, -3, 2, 24)))
+		bar.add_child(Style.rect(Style.STAMP_RED, Rect2(w * th.danger / 100.0, -3, 2, 24)))
+	var pct := Style.label("%d%%" % value, Style.mono(), 12, Style.INK)
+	pct.position = Vector2(w - 44, 0)
+	bar.add_child(pct)
+	row.add_child(bar)
+	col.add_child(row)
+	if at100 != "":
+		var note := Style.label(at100, Style.form(), 13, Color(Style.INK, 0.7))
+		note.custom_minimum_size.x = PANEL_W - 104
+		col.add_child(note)
+	return col
+
+
+static func _event_text(e: Dictionary) -> String:
+	var c: Dictionary = Game.content
+	match e.type:
+		"cable_delivered":
+			return T.t("event.cable_delivered", {"name": T.loc(Campaign.cable_by_id(c, e.cable_id).subject)})
+		"clue_found":
+			return T.t("event.clue_found", {"name": T.loc(Campaign.clue_by_id(c, e.clue_id).title)})
+		"target_unlocked":
+			return T.t("event.target_unlocked", {"name": T.loc(Campaign.target_by_id(c, e.target_id).name)})
+		"target_recruited":
+			return T.t("event.target_recruited", {"name": T.loc(Campaign.target_by_id(c, e.target_id).name)})
+		"target_lost":
+			return T.t("event.target_lost", {"name": T.loc(Campaign.target_by_id(c, e.target_id).name)})
+		"op_resolved":
+			return T.t("event.op_" + e.outcome, {"name": T.loc(Campaign.op_by_id(c, e.op_id).title)})
+		"risk_changed":
+			return T.t("event.risk_changed", {"risk": T.t("risk." + e.risk), "from": e.from, "to": e.to})
+		"trust_changed":
+			return T.t("event.trust_changed", {"from": e.from, "to": e.to})
+		"lie_uncovered":
+			return T.t("event.lie_uncovered", {"week": e.lie_week})
+		"act_completed":
+			return T.t("event.act_completed", {"act": e.act})
+	return ""
+
+
+# ——— Служебная папка ———
+
+static var service_tab := "saves"
+static var _confirm_new := false
+static var _ironman_choice := false
+static var _load_error := ""
+
+
+static func service() -> Control:
+	var o := _overlay("service-folder")
+	var v: VBoxContainer = o[1]
+	_title(v, T.t("service.title"), T.t("service.stamp"))
+	var tabs := Style.hbox(8)
+	for tab in ["saves", "settings"]:
+		var on: bool = service_tab == tab
+		var b := Style.button(T.t("service.tab." + tab), "service-tab-" + tab, Style.PAPER if on else Style.INK, Style.INK if on else Color(0, 0, 0, 0), Style.INK)
+		b.pressed.connect(func():
+			service_tab = tab
+			Game.changed.emit())
+		tabs.add_child(b)
+	v.add_child(tabs)
+	if service_tab == "saves":
+		_saves_tab(v)
+	else:
+		_settings_tab(v)
+	var close := Style.paper_button("%s  [Esc]" % T.t("desk.back"), "service-close")
+	close.pressed.connect(Game.close)
+	v.add_child(close)
+	return o[0]
+
+
+static func _slot_label(info: Dictionary) -> String:
+	var at: String = String(info.saved_at).replace("T", " ").substr(0, 16)
+	return "%s · %s · %s — %s" % [T.t("desk.act", {"act": info.act}), T.t("calendar.week", {"week": info.week}), T.t("phase." + info.phase), at]
+
+
+static func _saves_tab(v: VBoxContainer) -> void:
+	var st = Game.storage
+	var iron := Campaign.is_ironman(Game.state)
+	var box := Style.vbox(8)
+	box.name = "saves"
+	var auto := Saves.slot_info(st, Saves.AUTOSAVE, Game.content)
+	var head := T.t("saves.ironmanOn") if iron else T.t("saves.autosave")
+	var auto_l := Style.para("%s %s" % [head, _slot_label(auto) if not auto.is_empty() else ""], PANEL_W - 104, Style.mono(), 14, Style.INK)
+	auto_l.name = "autosave-info"
+	box.add_child(auto_l)
+
+	box.add_child(_h3(T.t("saves.manual")))
+	for i in Saves.MANUAL_SLOTS.size():
+		var slot: String = Saves.MANUAL_SLOTS[i]
+		var info := Saves.slot_info(st, slot, Game.content)
+		var row := Style.hbox(12)
+		row.name = "slot-" + slot
+		var l := Style.label("%s   %s" % [T.t("saves.slot", {"n": i + 1}), _slot_label(info) if not info.is_empty() else T.t("saves.empty")], Style.mono(), 14, Style.INK)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(l)
+		var w := Style.paper_button(T.t("saves.write"), "save-" + slot)
+		w.disabled = iron
+		w.pressed.connect(func(): Game.save_to_slot(slot))
+		row.add_child(w)
+		var ld := Style.paper_button(T.t("saves.load"), "load-" + slot)
+		ld.disabled = iron or info.is_empty()
+		ld.pressed.connect(func(): _load_error = Game.load_game(slot))
+		row.add_child(ld)
+		box.add_child(row)
+
+	box.add_child(_h3(T.t("saves.checkpoints")))
+	if iron:
+		box.add_child(Style.label(T.t("saves.ironmanNoCheckpoints"), Style.mono(), 14, Style.INK))
+	else:
+		var list := Saves.list_checkpoints(st)
+		list.reverse()
+		var cps := Style.vbox(4)
+		cps.name = "checkpoints"
+		for slot in list:
+			var info := Saves.slot_info(st, slot, Game.content)
+			if info.is_empty():
+				continue
+			var row := Style.hbox(12)
+			var l := Style.label(_slot_label(info), Style.mono(), 14, Style.INK)
+			l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(l)
+			var ld := Style.paper_button(T.t("saves.load"), "load-" + slot)
+			ld.pressed.connect(func(): _load_error = Game.load_game(slot))
+			row.add_child(ld)
+			cps.add_child(row)
+		if cps.get_child_count() == 0:
+			cps.add_child(Style.label(T.t("saves.noCheckpoints"), Style.mono(), 14, Style.INK))
+		box.add_child(cps)
+	if _load_error != "":
+		box.add_child(Style.label(_load_error, Style.mono(), 14, Style.STAMP_RED))
+
+	box.add_child(_h3(T.t("saves.newTitle")))
+	if not _confirm_new:
+		var nb := Style.paper_button(T.t("saves.new"), "new-campaign")
+		nb.pressed.connect(func():
+			_confirm_new = true
+			Game.changed.emit())
+		box.add_child(nb)
+	else:
+		var cb := CheckBox.new()
+		cb.name = "ironman-toggle"
+		cb.text = T.t("saves.ironman")
+		cb.focus_mode = Control.FOCUS_NONE
+		cb.button_pressed = _ironman_choice
+		cb.add_theme_font_override("font", Style.form())
+		cb.add_theme_font_size_override("font_size", Style.fs(16))
+		for c in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
+			cb.add_theme_color_override(c, Style.INK)
+		cb.toggled.connect(func(on): _ironman_choice = on)
+		box.add_child(cb)
+		box.add_child(Style.para(T.t("saves.ironmanHint"), PANEL_W - 104, Style.mono(), 13, Color(Style.INK, 0.75)))
+		var row := Style.hbox(8)
+		var ok := Style.paper_button(T.t("saves.newConfirm"), "new-campaign-confirm")
+		ok.pressed.connect(func():
+			_confirm_new = false
+			Game.new_game(_ironman_choice)
+			_ironman_choice = false)
+		row.add_child(ok)
+		var cancel := Style.paper_button(T.t("saves.cancel"), "new-campaign-cancel")
+		cancel.pressed.connect(func():
+			_confirm_new = false
+			Game.changed.emit())
+		row.add_child(cancel)
+		box.add_child(row)
+	v.add_child(box)
+
+
+static func _settings_tab(v: VBoxContainer) -> void:
+	var box := Style.vbox(8)
+	box.name = "settings"
+	box.add_child(_h3(T.t("settings.textScale")))
+	var row := Style.hbox(8)
+	for sc in Game.TEXT_SCALES:
+		var on: bool = is_equal_approx(Game.settings.text_scale, sc)
+		var b := Style.button("%d%%" % int(round(sc * 100)), "text-scale-%d" % int(round(sc * 100)), Style.PAPER if on else Style.INK, Style.INK if on else Color(0, 0, 0, 0), Style.INK)
+		b.pressed.connect(Game.set_text_scale.bind(sc))
+		row.add_child(b)
+	box.add_child(row)
+	box.add_child(Style.para(T.t("settings.textScaleHint"), PANEL_W - 104, Style.mono(), 13, Color(Style.INK, 0.75)))
+	# Переключатель языка вернётся вместе с английской версией (см. docs/plan.md).
+	v.add_child(box)
+
+
+# ——— Итог кампании ———
+
+static func ending() -> Control:
+	var o := _overlay("ending", false)
+	var v: VBoxContainer = o[1]
+	var e: String = Game.state.ending
+	o[2].set_meta("ending", e)
+	_title(v, T.t("ending.%s.title" % e), T.t("ending.stamp"))
+	v.add_child(Style.para(T.t("ending.%s.text" % e, {"week": Game.state.week}), PANEL_W - 104, Style.mono(), 16, Style.INK))
+	var row := Style.hbox(12)
+	if not Campaign.is_ironman(Game.state):
+		var ld := Style.paper_button(T.t("ending.load"), "ending-load")
+		ld.pressed.connect(Game.open_service)
+		row.add_child(ld)
+	var nb := Style.paper_button(T.t("ending.new_game"), "new-game")
+	nb.pressed.connect(func(): Game.new_game(false))
+	row.add_child(nb)
+	v.add_child(row)
+	return o[0]

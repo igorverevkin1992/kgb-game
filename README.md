@@ -1,35 +1,37 @@
 # Линия КР: Вашингтон, 1985
 
 Диегетический UI-симулятор офицера линии контрразведки Вашингтонской резидентуры ПГУ КГБ,
-1984–1986. Платформа: Windows (Steam, VK Play).
+1984–1986. Движок — Godot 4.7. Платформа: Windows (Steam, VK Play).
 
 - План разработки: [docs/plan.md](docs/plan.md)
-- Концепт и GDD: [docs/](docs/README.md)
+- Концепт и документация: [docs/](docs/README.md)
+- Как править контент: [docs/content-guide.md](docs/content-guide.md)
 
-## Как запустить у себя
+## Как поиграть
 
-Нужен [Node.js 22](https://nodejs.org/).
+- **В браузере:** https://igorverevkin1992.github.io/kgb-game/ (обновляется после каждого
+  слияния в `main`).
+- **На Windows:** скачайте артефакт `LiniyaKR-windows` из последнего успешного запуска CI
+  (вкладка Actions) — это один файл `LiniyaKR.exe`.
+- **В редакторе Godot:** установите [Godot 4.7](https://godotengine.org/download) (обычная
+  версия, не .NET), откройте папку репозитория как проект и нажмите F5.
+
+Отладка: запуск с аргументами `-- --new` начинает кампанию заново, `-- --act=3` показывает стол
+как в акте 3.
+
+## Проверки (Linux или облачная сессия)
 
 ```bash
-npm install
+tools/validate.sh
 ```
 
 ```bash
-npm run dev
-```
-
-Откроется http://localhost:5173. Для отладки акт и язык можно задать в адресе:
-`http://localhost:5173/?act=3&lang=en`.
-
-## Проверки
-
-```bash
-npm run check
+tools/test.sh
 ```
 
 ```bash
-npm run e2e
+tools/ui-test.sh
 ```
 
-`check` запускает линтер, проверку типов, unit-тесты и сборку. `e2e` проходит игру в браузере
-через Playwright и сохраняет скриншоты в `test-results/screens/`.
+`validate` проверяет контент, `test` — движок, `ui-test` проходит сценарии интерфейса под
+виртуальным экраном и сохраняет скриншоты в `build/screens/`. Сборки: `tools/export.sh all`.

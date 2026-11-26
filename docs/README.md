@@ -4,6 +4,7 @@
 - [concept/concept-bible.pdf](concept/concept-bible.pdf): оригинал концепта.
 - [concept/concept-bible.txt](concept/concept-bible.txt): текстовая версия для поиска и ссылок.
 - [content-guide.md](content-guide.md): как править игровой контент и что проверяет валидатор.
+- [best-practices.md](best-practices.md): лучшие практики жанра и правила дизайна; исследование — в `research/`.
 
 ## Оглавление концепта (номера строк в `concept-bible.txt`)
 

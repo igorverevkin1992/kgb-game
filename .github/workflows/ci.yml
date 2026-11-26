@@ -7,25 +7,35 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run validate
-      - run: npm test
-      - run: npm run build
-      - run: npx playwright install --with-deps chromium
-      - run: npm run e2e
-      - name: Скриншоты кабинета
+      - name: Пакеты для виртуального экрана
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 > /dev/null
+      - name: Godot и шаблоны экспорта
+        run: tools/get-godot.sh templates
+      - name: Импорт проекта
+        run: timeout 300 "$(tools/get-godot.sh)" --headless --path . --import || true
+      - name: Проверка контента
+        run: tools/validate.sh
+      - name: Unit-тесты движка
+        run: tools/test.sh
+      - name: Сценарии интерфейса (Xvfb)
+        run: tools/ui-test.sh
+      - name: Сборки Windows и Web
+        run: tools/export.sh all
+      - name: Скриншоты
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: screens
-          path: test-results/
+          path: build/screens/
           if-no-files-found: ignore
           retention-days: 14
+      - name: Windows-сборка
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiniyaKR-windows
+          path: build/windows/LiniyaKR.exe
+          retention-days: 30
