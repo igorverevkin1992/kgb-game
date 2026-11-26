@@ -418,5 +418,14 @@
   "archive.locked": "Откроется после первой фазы операции",
   "archive.empty": "Архив пуст.",
   "archive.footer": "Справочник необязателен: на ход операции он не влияет. Читать можно в любой момент.",
-  "ending.archive": "Факт и вымысел: эпилог"
+  "ending.archive": "Факт и вымысел: эпилог",
+  "archive.section.epilogue": "Эпилог: дело Эймса",
+  "archive.lockedFinal": "Откроется в финале операции",
+  "ending.epilogue": "Эпилог: как было на самом деле",
+  "epilogue.kicker": "Хроника · дело Эймса, 1985–1994",
+  "epilogue.page": "Лист {n} из {of}",
+  "epilogue.prev": "« Назад",
+  "epilogue.next": "Дальше »",
+  "epilogue.toArchive": "Факт и вымысел в игре",
+  "epilogue.close": "Закрыть"
 }

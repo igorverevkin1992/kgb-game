@@ -24,7 +24,9 @@ func _render() -> void:
 		add_child(Overlays.analyst())
 	if Game.service_open:
 		add_child(Overlays.service())
-	if Game.state.ending != null and not Game.service_open and Game.view != "archive":
+	if Game.epilogue_page >= 0:
+		add_child(EpilogueView.build())
+	elif Game.state.ending != null and not Game.service_open and Game.view != "archive":
 		add_child(Overlays.ending())
 	if Game.notice != "" and Time.get_ticks_msec() - Game.notice_at < 2500:
 		add_child(_notice())
@@ -71,7 +73,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if key == KEY_ESCAPE:
-		if Game.view != "" or Game.analyst_open or Game.service_open:
+		if Game.view != "" or Game.analyst_open or Game.service_open or Game.epilogue_page >= 0:
 			Game.close()
 		else:
 			Game.open_service()

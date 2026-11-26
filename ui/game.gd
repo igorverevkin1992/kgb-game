@@ -57,6 +57,8 @@ var meeting_trump := ""
 var finance_agent := ""
 ## «Архив 1985»: открытая запись.
 var archive_selected := ""
+## Документальный эпилог после финала: открытый лист (-1 — закрыт).
+var epilogue_page := -1
 var finance_forms := {}
 var tape_selected := -1
 var tape_cursor := 0
@@ -219,6 +221,7 @@ func open(v: String) -> void:
 
 
 func close() -> void:
+	epilogue_page = -1
 	view = ""
 	analyst_open = false
 	service_open = false
@@ -368,6 +371,12 @@ func open_archive(entry_id: String) -> void:
 	open("archive")
 
 
+func set_epilogue_page(i: int) -> void:
+	epilogue_page = i
+	sfx("paper")
+	changed.emit()
+
+
 func select_archive(entry_id: String) -> void:
 	archive_selected = entry_id
 	sfx("paper")
@@ -513,6 +522,7 @@ func _clear_ui() -> void:
 	finance_agent = ""
 	finance_forms = {}
 	archive_selected = ""
+	epilogue_page = -1
 
 
 func _load_settings() -> void:

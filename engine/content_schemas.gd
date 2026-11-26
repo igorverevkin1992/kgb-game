@@ -114,11 +114,12 @@ static func _build() -> void:
 	# «Архив эпохи: 1985» — справочник: техника, история, законы и эпилог «факт и вымысел».
 	_cache["archive"] = Schema.obj({
 		"id": Schema.s("^arc_[a-z0-9_]+$", "id записи архива: arc_ и латиница, цифры, «_»"),
-		"section": Schema.e(["history", "technique", "law", "fiction"]),
+		"section": Schema.e(["history", "technique", "law", "fiction", "epilogue"]),
 		"status": Schema.e(["fact", "fiction", "mixed"]),
 		"title": text,
 		"text": text,
-		# Событие движка, после которого запись открывается (пусто — открыта сразу).
+		# Событие движка, после которого запись открывается (пусто — открыта сразу),
+		# или «ending:<концовка>» — открывается в этом финале (эпилог).
 		"unlock": Schema.opt(Schema.s(), ""),
 	})
 

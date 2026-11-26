@@ -41,6 +41,19 @@ func scene_epilogue_after_phase_one() -> void:
 		{"type": "pay_agent", "target_id": C, "amount": 4800, "instrument": "cash", "parts": 1}, NEXT,
 		{"type": "submit_report", "report": "truth"}])
 	eq(node("ending").get_meta("ending"), "campaign_complete")
+	# Документальный эпилог: хроника дела Эймса по листам.
+	await press("ending-epilogue")
+	eq(node("epilogue").get_meta("page"), 0)
+	has_text("epilogue", "16 апреля 1985")
+	for i in 2:
+		await press("epilogue-next")
+	has_text("epilogue", "Черкашин")
+	await shot("epilogue-cherkashin")
+	while exists("epilogue-next"):
+		await press("epilogue-next")
+	has_text("epilogue", "Лист 6 из 6")
+	await press("epilogue-close")
+	ok(exists("ending"), "назад к итогу")
 	await press("ending-archive")
 	ok(exists("module-panel-archive"), "эпилог в архиве")
 	eq(node("archive-text").get_meta("entry"), "arc_epilogue_fiction")

@@ -17,3 +17,15 @@ func test_validator_unknown_event() -> void:
 	var a: Array = H.file(e, "achievements/steam.json")
 	a[0].event = "nonexistent_event"
 	has_issue(H.errors(e), "achievements", "Неизвестное событие")
+
+
+
+func test_epilogue_opens_in_final() -> void:
+	var s := H.fresh()
+	eq(Archive.epilogue(s, H.content()), [], "до финала эпилога нет")
+	s.ending = "recalled"
+	eq(Archive.epilogue(s, H.content()), [], "в отзыве в Москву — тоже")
+	s.ending = "campaign_complete"
+	var pages := Archive.epilogue(s, H.content())
+	eq(pages.size(), 6)
+	eq(pages[0].id, "arc_ames_walkin")

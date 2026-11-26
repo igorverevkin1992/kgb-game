@@ -360,7 +360,12 @@ static func ending() -> Control:
 		var ld := Style.paper_button(T.t("ending.load"), "ending-load")
 		ld.pressed.connect(Game.open_service)
 		row.add_child(ld)
-	# Документальный эпилог: факт и вымысел (открывается вместе с концом фазы операции).
+	# Документальный эпилог: хроника дела Эймса (в финале операции).
+	if not Archive.epilogue(Game.state, Game.content).is_empty():
+		var eb := Style.paper_button(T.t("ending.epilogue"), "ending-epilogue")
+		eb.pressed.connect(Game.set_epilogue_page.bind(0))
+		row.add_child(eb)
+	# Факт и вымысел (открывается вместе с концом фазы операции).
 	var epi := Archive.entry_by_id(Game.content, "arc_epilogue_real")
 	if not epi.is_empty() and Archive.is_open(Game.state, epi):
 		var ab := Style.paper_button(T.t("ending.archive"), "ending-archive")
