@@ -111,6 +111,15 @@ static func _build() -> void:
 		})), []),
 	})
 
+	# Достижения Steam: какое событие движка (и с какими полями) их открывает.
+	_cache["achievement"] = Schema.obj({
+		"id": Schema.s("^ACH_[A-Z0-9_]+$", "id достижения: ACH_ и заглавная латиница, цифры, «_»"),
+		"title": text,
+		"description": text,
+		"event": Schema.s(),
+		"match": Schema.opt({"type": "dict", "of": {"type": "any"}}, {}),
+	})
+
 	# Запросы в Центр, которые резидент может приложить к ночной шифрограмме.
 	_cache["request"] = Schema.obj({
 		"request_id": Schema.id("req"),

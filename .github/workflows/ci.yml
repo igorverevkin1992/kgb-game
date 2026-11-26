@@ -36,6 +36,6 @@ jobs:
       - name: Windows-сборка
         uses: actions/upload-artifact@v4
         with:
-          name: LiniyaKR-windows
-          path: build/windows/LiniyaKR.exe
+          name: Washington1985-windows
+          path: build/windows/
           retention-days: 30

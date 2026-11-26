@@ -1,5 +1,5 @@
 {
-  "game.title": "Линия КР: Вашингтон, 1985",
+  "game.title": "Вашингтон, 1985",
   "game.subtitle": "Резидентура КГБ СССР в Вашингтоне",
   "desk.locked": "Откроется {phase}",
   "desk.back": "Вернуться к столу",
@@ -388,5 +388,14 @@
   "settings.vol_master": "Общая громкость",
   "settings.vol_sfx": "Звуки стола",
   "settings.vol_ambient": "Фон комнаты",
-  "settings.mute": "Выкл."
+  "settings.mute": "Выкл.",
+  "settings.telemetry": "Журнал плейтеста",
+  "settings.telemetryFolder": "Открыть папку журнала",
+  "settings.telemetryHint": "Игра записывает на ваш компьютер, где и сколько вы думали, какие действия не получились и где нажата {key} («застрял здесь»). В сеть ничего не отправляется: файлы из папки журнала можно прислать разработчику.",
+  "settings.build": "Сборка {version} · {platform}: {steam}",
+  "steam.absent": "нет в этой сборке",
+  "steam.not_running": "не запущен",
+  "steam.ready": "подключён",
+  "telemetry.marked": "Отметка «застрял здесь» записана в журнал плейтеста",
+  "telemetry.off": "Журнал плейтеста выключен в настройках"
 }

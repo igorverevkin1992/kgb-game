@@ -1,4 +1,4 @@
-# «Линия КР: Вашингтон, 1985» — заметки для Claude
+# «Вашингтон, 1985» — заметки для Claude
 
 Диегетический UI-симулятор резидента ПГУ КГБ в Вашингтоне 1984–1986. Однопользовательская
 кампания на 7–10 часов, 4 акта. Платформа: **только Windows x64** (Steam + VK Play),
@@ -23,7 +23,8 @@ macOS и Linux не делаем. Движок: **Godot 4.7 (GDScript, ренд�
 tools/validate.sh            # проверка контента (--dir=путь, --en — напомнить о переводе)
 tools/test.sh [фильтр]       # unit-тесты движка (tests/test_*.gd), headless
 tools/ui-test.sh [фильтр]    # сценарии интерфейса под Xvfb + OpenGL, скриншоты в build/screens/
-tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
+tools/export.sh windows|web|all   # build/windows/Washington1985.exe (+ Steam), build/web/
+tools/telemetry-report.sh [папка] # сводка журналов плейтеста (session-*.jsonl)
 ```
 Шаг готов, когда зелёные все три проверки и снят скриншот нового экрана. `test.sh` и `ui-test.sh`
 сначала запускают `tools/check_scripts.tscn` — проверку, что все скрипты компилируются. Прогон, в выводе
@@ -78,6 +79,11 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
     блокнот, роторы, лента, сверка, шифрограмма с плашкой последствий), `dialog_view.gd`
     («Тембр-2М»: встреча с индикаторами и козырями, катушки с таймкодами и оговорками),
     `finance_view.gd` (журнал: спецфонд, папка правил, шкалы агентов, калькулятор транша).
+  - `steam_bridge.gd` — Steam через GodotSteam (`Game.steam`): Windows-сборка — на шаблоне Godot
+    со встроенным Steam (`tools/get-godotsteam.sh`, зеркало в релизе репозитория, workflow «Godot
+    tools»); без Steam — тихая заглушка. Достижения — `content/achievements/`, `engine/achievements.gd`;
+  - `telemetry.gd` — журнал плейтеста (`Game.telemetry`, user://telemetry/session-*.jsonl, только
+    локально; F8 — «застрял здесь»), сводка — `engine/telemetry_summary.gd`;
   - `sound_bank.gd` — звук стола (`Game.sound`, `Game.sfx(имя)`): шины SFX и Ambient, процедурные
     заглушки, замена файлом `assets/sfx/<имя>.ogg`; `crt.gdshader` — ЭЛТ-эффект (настройка `crt`).
     Перечень ассетов — `docs/assets.md`;
@@ -90,12 +96,14 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
   `start(actions)` собирает состояние движком, `press`, `click`, `key`, `has_text`, `shot`).
   `Game.reset_for_test` включает «Мгновенный вывод текста» (лента шифроузла без анимации). После действия экран перестроен — узлы, найденные до него, уже удалены: ищи заново по имени.
 - Сборки: `export_presets.cfg` — Windows (`.exe` со встроенным pck) и Web (без потоков, для Pages).
+  Каталог данных — `user://` = `%APPDATA%\Washington1985` (`custom_user_dir_name`). Сборка для
+  тестеров — тег `playtest-N` (workflow «Playtest», архив в Releases); памятки `docs/playtest.md`, `docs/steam.md`.
 
 ## Язык: сейчас только русская версия
 Весь видимый текст — по-русски, без латиницы (тест `tests/test_russian.gd`; разрешены `{x}` и
 римские цифры). Все символы должны быть в шрифтах PT (тест `tests/test_fonts.gd`): стрелок → ←
 там нет — используем « » и тире. Английская версия позже (`i18n/en.json` заморожен).
-Исключение: подсказка клавиши `[Esc]`.
+Исключения (подставляются из кода, не из `ru.json`): клавиши `[Esc]`, `[F8]` и название платформы Steam.
 
 Глоссарий (внутренние id в коде прежние: `mice`, `sdr`, `sog_heat`, `act`, `clue`, `target`):
 - Тексты — в стиле документов ПГУ КГБ 80-х: «указание Центра», «шифртелеграмма», «справка»,

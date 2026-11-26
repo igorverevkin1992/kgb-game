@@ -26,8 +26,23 @@ func _render() -> void:
 		add_child(Overlays.service())
 	if Game.state.ending != null and not Game.service_open:
 		add_child(Overlays.ending())
+	if Game.notice != "" and Time.get_ticks_msec() - Game.notice_at < 2500:
+		add_child(_notice())
 	if Game.settings.get("crt", true):
 		add_child(_crt())
+
+
+## Короткое уведомление вверху по центру; само бледнеет.
+func _notice() -> Control:
+	var p := Style.panel(Color(0.08, 0.06, 0.04, 0.9), 12, Color(Style.PAPER, 0.5), 1)
+	p.name = "notice"
+	p.add_child(Style.label(Game.notice, Style.form(true), 16, Style.PAPER_LIGHT, false))
+	p.position = Vector2(800 - p.get_combined_minimum_size().x / 2, 10)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tw := p.create_tween()
+	tw.tween_interval(1.6)
+	tw.tween_property(p, "modulate:a", 0.0, 0.8)
+	return p
 
 
 ## ЭЛТ-эффект поверх всего (отключается в настройках).
@@ -50,6 +65,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.pressed or event.echo:
 		return
 	var key: int = event.keycode
+	# F8 — «застрял здесь»: отметка в журнале плейтеста (для «Пути мысли»).
+	if key == KEY_F8:
+		Game.mark_stuck()
+		get_viewport().set_input_as_handled()
+		return
 	if key == KEY_ESCAPE:
 		if Game.view != "" or Game.analyst_open or Game.service_open:
 			Game.close()

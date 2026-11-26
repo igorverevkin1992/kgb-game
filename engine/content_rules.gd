@@ -28,6 +28,7 @@ static func check(content: Dictionary, file_of: Dictionary, opts := {}) -> Array
 	_cipher(ctx)
 	_dialogs(ctx)
 	_finance(ctx)
+	_achievements(ctx)
 	return ctx.issues
 
 
@@ -430,3 +431,10 @@ static func _finance(ctx: Dictionary) -> void:
 				_push(ctx, "warning", "finance", "Цель акта %d без блока finance: обещания нет, задача засчитается сразу после вербовки" % a.act, "finance", id)
 			elif int(t.finance.promised_usd) > fund:
 				_push(ctx, "error", "finance", "Обещано %d долларов, а в стартовом спецфонде %d — задачу акта не выполнить" % [t.finance.promised_usd, fund], "finance.promised_usd", id)
+
+
+## 14. Достижения висят на событиях, которые движок действительно испускает.
+static func _achievements(ctx: Dictionary) -> void:
+	for a in ctx.content.achievements:
+		if not Achievements.EVENTS.has(a.event):
+			_push(ctx, "error", "achievements", "Неизвестное событие «%s». Допустимо: %s" % [a.event, ", ".join(Achievements.EVENTS)], "%s.event" % a.id, a.id)

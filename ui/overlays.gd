@@ -322,6 +322,24 @@ static func _settings_tab(v: VBoxContainer) -> void:
 			vb.pressed.connect(Game.set_setting.bind(k, step))
 			row2.add_child(vb)
 		box.add_child(row2)
+	box.add_child(_h3(T.t("settings.telemetry")))
+	var trow := Style.hbox(8)
+	var tb := Style.button(T.t("settings.on") if Game.settings.telemetry else T.t("settings.off"), "telemetry-toggle", Style.INK, Color(0, 0, 0, 0), Style.INK)
+	tb.pressed.connect(func(): Game.set_setting("telemetry", not Game.settings.telemetry))
+	trow.add_child(tb)
+	if OS.has_feature("pc"):
+		var fb := Style.button(T.t("settings.telemetryFolder"), "telemetry-folder", Style.INK, Color(0, 0, 0, 0), Style.INK)
+		fb.pressed.connect(func():
+			DirAccess.make_dir_recursive_absolute(Telemetry.DIR)
+			OS.shell_open(ProjectSettings.globalize_path(Telemetry.DIR)))
+		trow.add_child(fb)
+	box.add_child(trow)
+	box.add_child(Style.para(T.t("settings.telemetryHint", {"key": "[F8]"}), PANEL_W - 104, Style.mono(), 13, Color(Style.INK, 0.75)))
+	# Сборка и Steam — для отчётов тестеров.
+	var steam_status: String = Game.steam.status if Game.steam != null else "absent"
+	var build := Style.label(T.t("settings.build", {"version": ProjectSettings.get_setting("application/config/version", ""), "platform": "Steam", "steam": T.t("steam." + steam_status)}), Style.mono(), 12, Color(Style.INK, 0.6))
+	build.name = "build-info"
+	box.add_child(build)
 	# Переключатель языка вернётся вместе с английской версией (см. docs/plan.md).
 	v.add_child(box)
 

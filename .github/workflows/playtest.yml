@@ -1,0 +1,38 @@
+# Сборка для плейтеста: тег playtest-N (git tag playtest-1 && git push origin playtest-1) или
+# запуск вручную (Actions → Playtest → Run workflow). Собирает Windows-версию со Steam и выкладывает
+# архив в релиз репозитория — тестеры скачивают его со страницы Releases.
+name: Playtest
+
+on:
+  push:
+    tags: ["playtest-*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Godot и шаблоны экспорта
+        run: tools/get-godot.sh templates
+      - name: Импорт проекта
+        run: timeout 300 "$(tools/get-godot.sh)" --headless --path . --import || true
+      - name: Проверка контента и тесты движка
+        run: tools/validate.sh && tools/test.sh
+      - name: Windows-сборка
+        run: tools/export.sh windows
+      - name: Архив и релиз
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          [[ "$TAG" == playtest-* ]] || TAG="playtest-$(date -u +%Y%m%d-%H%M)"
+          cp docs/playtest-tester.txt build/windows/ПРОЧТИ.txt
+          (cd build/windows && zip -q -r "../../Washington1985-$TAG.zip" .)
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --prerelease \
+            --title "Плейтест: $TAG" --notes "Сборка для закрытого плейтеста (Windows). Инструкция — файл ПРОЧТИ.txt в архиве."
+          gh release upload "$TAG" "Washington1985-$TAG.zip" --clobber

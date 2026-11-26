@@ -14,11 +14,17 @@ var state: Dictionary = {}
 var storage = null
 ## Отладка: стол как в акте N (на сам движок не влияет).
 var debug_act := 0
-const DEFAULT_SETTINGS := {"text_scale": 1.0, "instant_text": false, "crt": true, "vol_master": 80, "vol_sfx": 80, "vol_ambient": 50}
+const DEFAULT_SETTINGS := {"text_scale": 1.0, "instant_text": false, "crt": true, "vol_master": 80, "vol_sfx": 80, "vol_ambient": 50, "telemetry": true}
 const VOLUME_STEPS := [0, 25, 50, 80, 100]
 var settings := DEFAULT_SETTINGS.duplicate()
 ## Звук стола (нет в консольных инструментах).
 var sound: SoundBank = null
+## Steam (GodotSteam в Windows-сборке; без него — заглушка) и журнал плейтеста.
+var steam: SteamBridge = null
+var telemetry: Telemetry = null
+## Короткое уведомление поверх стола (например, «отметка записана»): текст и момент показа.
+var notice := ""
+var notice_at := 0
 
 ## Открытый модуль/лоток или "" — виден весь стол.
 var view := ""
@@ -65,6 +71,10 @@ func _ready() -> void:
 		storage = Saves.FileStorage.new()
 	sound = SoundBank.new()
 	add_child(sound)
+	steam = SteamBridge.new()
+	add_child(steam)
+	telemetry = Telemetry.new()
+	add_child(telemetry)
 	var args := OS.get_cmdline_user_args()
 	for a in args:
 		if a.begins_with("--act="):
@@ -75,11 +85,18 @@ func _ready() -> void:
 		var loaded := Saves.load_slot(storage, Saves.AUTOSAVE, content)
 		if loaded.ok:
 			state = loaded.state
+			_start_telemetry()
 			return
 		if loaded.error != "Слот пуст":
 			push_warning("[сохранение] %s. Начинаем новую кампанию." % loaded.error)
 	state = Campaign.new_campaign(content).state
 	Saves.persist(storage, null, state, content)
+	_start_telemetry()
+
+
+func _start_telemetry() -> void:
+	telemetry.enabled = bool(settings.telemetry)
+	telemetry.start_session(state, view)
 
 
 ## Для тестов интерфейса: чистое хранилище в памяти и заданное состояние.
@@ -90,6 +107,10 @@ func reset_for_test(new_state: Dictionary = {}, mem_storage = null) -> void:
 	debug_act = 0
 	settings = DEFAULT_SETTINGS.duplicate()
 	settings.instant_text = true
+	settings.telemetry = false  # тесты не пишут журнал плейтеста
+	if telemetry != null:
+		telemetry.enabled = false
+	notice = ""
 	_apply_volumes()
 	Style.text_scale = 1.0
 	_clear_ui()
@@ -104,10 +125,15 @@ func act() -> int:
 func dispatch(action: Dictionary) -> void:
 	var prev := state
 	var r := Campaign.dispatch(prev, content, action)
+	if telemetry != null:
+		telemetry.action(action, r.error, r.events, r.state, view)
 	if r.error != "":
 		last_error = r.error
 		changed.emit()
 		return
+	if steam != null:
+		for id in Achievements.unlocked_by(content, r.events):
+			steam.unlock(id)
 	Saves.persist(storage, prev, r.state, content)
 	state = r.state
 	_event_sound(r.events)
@@ -182,6 +208,8 @@ func open(v: String) -> void:
 	if is_unlocked(v):
 		if v != view:
 			sfx(OPEN_SOUNDS.get(v, "click"))
+			if telemetry != null:
+				telemetry.view_opened(state, v)
 		view = v
 		analyst_open = false
 		service_open = false
@@ -212,8 +240,24 @@ func sfx(name: String) -> void:
 		sound.play(name)
 
 
+## F8: «застрял здесь» — отметка в журнале плейтеста с местом в игре.
+func mark_stuck() -> void:
+	if telemetry == null:
+		return
+	telemetry.stuck(state, view)
+	show_notice(T.t("telemetry.marked") if telemetry.enabled else T.t("telemetry.off"))
+
+
+func show_notice(text: String) -> void:
+	notice = text
+	notice_at = Time.get_ticks_msec()
+	changed.emit()
+
+
 func set_setting(key: String, value: Variant) -> void:
 	settings[key] = value
+	if key == "telemetry" and telemetry != null:
+		telemetry.enabled = bool(value)
 	storage.write(SETTINGS_SLOT, JSON.stringify(settings))
 	_apply_volumes()
 	sfx("click")
@@ -465,6 +509,7 @@ func _load_settings() -> void:
 			settings.text_scale = sc
 		settings.instant_text = r.data.get("instant_text", false) == true
 		settings.crt = r.data.get("crt", true) == true
+		settings.telemetry = r.data.get("telemetry", true) == true
 		for k in ["vol_master", "vol_sfx", "vol_ambient"]:
 			var v = r.data.get(k, DEFAULT_SETTINGS[k])
 			if typeof(v) in [TYPE_INT, TYPE_FLOAT]:

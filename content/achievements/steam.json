@@ -1,0 +1,87 @@
+[
+  {
+    "id": "ACH_FIRST_CANDIDATE",
+    "title": {
+      "ru": "Первый кандидат"
+    },
+    "description": {
+      "ru": "Установить первого кандидата на вербовку."
+    },
+    "event": "target_unlocked",
+    "match": {}
+  },
+  {
+    "id": "ACH_ONCE_IS_CHANCE",
+    "title": {
+      "ru": "Дважды — работа противника"
+    },
+    "description": {
+      "ru": "Заметить наружку на проверочном маршруте и уйти на бытовое прикрытие."
+    },
+    "event": "op_resolved",
+    "match": {
+      "outcome": "aborted"
+    }
+  },
+  {
+    "id": "ACH_PROVOCATION",
+    "title": {
+      "ru": "Бдительность"
+    },
+    "description": {
+      "ru": "Распознать подложное указание Центра."
+    },
+    "event": "directive_verified",
+    "match": {
+      "outcome": "exposed"
+    }
+  },
+  {
+    "id": "ACH_FIRST_AGENT",
+    "title": {
+      "ru": "Первый агент"
+    },
+    "description": {
+      "ru": "Привлечь кандидата к сотрудничеству."
+    },
+    "event": "target_recruited",
+    "match": {}
+  },
+  {
+    "id": "ACH_PROMISE",
+    "title": {
+      "ru": "Слово резидента"
+    },
+    "description": {
+      "ru": "Выплатить агенту обещанное."
+    },
+    "event": "promise_kept",
+    "match": {}
+  },
+  {
+    "id": "ACH_PHASE_ONE",
+    "title": {
+      "ru": "Пристрелка"
+    },
+    "description": {
+      "ru": "Завершить первую фазу операции."
+    },
+    "event": "act_completed",
+    "match": {
+      "act": 1
+    }
+  },
+  {
+    "id": "ACH_RECALLED",
+    "title": {
+      "ru": "Сдать дела"
+    },
+    "description": {
+      "ru": "Быть отозванным в Москву."
+    },
+    "event": "game_over",
+    "match": {
+      "ending": "recalled"
+    }
+  }
+]

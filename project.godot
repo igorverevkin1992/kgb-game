@@ -1,9 +1,12 @@
-; Линия КР: Вашингтон, 1985 — проект Godot 4.7 (GDScript, рендерер Compatibility).
+; Вашингтон, 1985 — проект Godot 4.7 (GDScript, рендерер Compatibility).
 config_version=5
 
 [application]
 
-config/name="Линия КР: Вашингтон, 1985"
+config/name="Вашингтон, 1985"
+config/version="0.10.0"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="Washington1985"
 config/description="Диегетический UI-симулятор резидента ПГУ КГБ в Вашингтоне, 1984–1986."
 run/main_scene="res://ui/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
