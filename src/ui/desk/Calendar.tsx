@@ -1,15 +1,6 @@
-import { currentActDef, type Report } from '../../engine/campaign';
+import { currentActDef, weekDate, type Report } from '../../engine/campaign';
 import type { I18nKey } from '../../i18n';
 import { content, useDeskStore, useT } from '../store';
-
-/** Дата начала недели по календарю акта (`start_date` в campaign.json). */
-function weekStart(week: number, act: number): Date | null {
-  const def = content.campaign.acts.find((a) => a.act === act);
-  if (!def) return null;
-  const d = new Date(`${def.start_date}T12:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + (week - def.weeks.from) * 7);
-  return d;
-}
 
 const REPORTS: Report[] = ['truth', 'embellished', 'silence'];
 
@@ -21,8 +12,9 @@ export function Calendar() {
   const dispatch = useDeskStore((s) => s.dispatch);
   const error = useDeskStore((s) => s.lastError);
   const toggleAnalyst = useDeskStore((s) => s.toggleAnalyst);
+  const savedAt = useDeskStore((s) => s.savedAt);
 
-  const date = weekStart(game.week, game.act);
+  const date = weekDate(content, game.act, game.week);
   const dateText = date?.toLocaleDateString(lang === 'en' ? 'en-US' : 'ru-RU', {
     day: 'numeric',
     month: 'long',
@@ -72,6 +64,11 @@ export function Calendar() {
         <button type="button" className="calendar__analyst" data-testid="analyst-toggle" onClick={toggleAnalyst}>
           {t('analyst.open')}
         </button>
+        {savedAt > 0 && (
+          <span key={savedAt} className="calendar__saved" data-testid="save-indicator" role="status">
+            {t('saves.saved')}
+          </span>
+        )}
         {error && (
           <p className="calendar__error" role="alert" data-testid="engine-error">
             {error}

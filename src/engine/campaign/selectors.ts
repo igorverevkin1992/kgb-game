@@ -68,3 +68,12 @@ export function riskLevels(s: CampaignState, content: ContentBundle): Record<Ris
 export function unreadCables(s: CampaignState): string[] {
   return s.delivered_cables.filter((id) => !s.read_cables.includes(id));
 }
+
+/** Календарная дата начала недели по `start_date` акта (UTC, полдень — без сдвигов часовых поясов). */
+export function weekDate(content: ContentBundle, act: number, week: number): Date | null {
+  const def = content.campaign.acts.find((a) => a.act === act);
+  if (!def) return null;
+  const d = new Date(`${def.start_date}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + (week - def.weeks.from) * 7);
+  return d;
+}

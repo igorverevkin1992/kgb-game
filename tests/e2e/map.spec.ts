@@ -51,10 +51,30 @@ test('вечер: на правильном маршруте хвост мель
   await expect(page.locator(`[data-cue="${TAIL}"]`)).toHaveCount(2);
   await page.screenshot({ path: 'test-results/screens/map-sdr-tail.png' });
 
-  await page.getByTestId('sdr-abort').click();
+  // «Вердикт»: блокнот сравнения, обводим повторившуюся машину и сворачиваем.
+  await page.getByTestId('sdr-to-verdict').click();
+  const notebook = page.getByTestId('sdr-notebook');
+  await expect(notebook.locator(`[data-cue="${TAIL}"]`)).toHaveCount(2);
+  const first = notebook.locator(`[data-cue="${TAIL}"]`).first();
+  await first.click();
+  await expect(first).toHaveAttribute('aria-pressed', 'true');
+  await page.screenshot({ path: 'test-results/screens/map-sdr-verdict.png' });
+  await page.getByTestId('sdr-verdict-tail').click();
   await expect(page.getByTestId('sdr-result')).toHaveAttribute('data-result', 'aborted');
   await page.getByTestId('sdr-done').click();
   await expect(page.getByTestId('sdr-run')).toHaveCount(0);
+});
+
+test('свернуть можно и посреди маршрута, не дожидаясь вердикта', async ({ page }) => {
+  await seedGame(
+    page,
+    playActions([...quietWeek, next, { type: 'plan_op', op_id: 'op_a1_recon_first_virginia', route: GOOD_ROUTE }, next]),
+  );
+  await openGame(page);
+  await page.keyboard.press('1');
+  await page.getByTestId('depart-op_a1_recon_first_virginia').click();
+  await page.getByTestId('sdr-abort').click();
+  await expect(page.getByTestId('sdr-result')).toHaveAttribute('data-result', 'aborted');
 });
 
 test('вечер: чистый выезд к бару приносит улики и открывает цель', async ({ page }) => {
@@ -67,7 +87,8 @@ test('вечер: чистый выезд к бару приносит улик�
   await page.getByTestId('depart-op_a1_recon_potomac_cellar').click();
   await page.getByTestId('sdr-next').click();
   await page.getByTestId('sdr-next').click();
-  await page.getByTestId('sdr-continue').click();
+  await page.getByTestId('sdr-to-verdict').click();
+  await page.getByTestId('sdr-verdict-clean').click();
   const result = page.getByTestId('sdr-result');
   await expect(result).toHaveAttribute('data-result', 'done');
   await expect(result).toContainText('«Они держат меня за официанта»');

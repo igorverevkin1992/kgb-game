@@ -167,7 +167,7 @@ function PlannedList({ cancellable = false, departable = false }: { cancellable?
               </button>
             )}
             {departable && (
-              <button type="button" data-testid={`depart-${id}`} onClick={() => setRun({ opId: id, step: 1, result: null })}>
+              <button type="button" data-testid={`depart-${id}`} onClick={() => setRun({ opId: id, step: 1, verdict: false, marks: [], result: null })}>
                 {t('sdr.depart')}
               </button>
             )}
@@ -225,6 +225,58 @@ function SdrRunPanel() {
 
   const route = game.routes[op.op_id];
   if (!route) return null;
+  const targetName = loc(target?.name ?? { ru: '' }).split(',')[0]!;
+
+  // Фаза «Вердикт» (Golden Idol: «Сбор» → «Осмысление»): все приметы в блокноте сравнения.
+  if (run.verdict) {
+    const toggleMark = (key: string) =>
+      setRun({ ...run, marks: run.marks.includes(key) ? run.marks.filter((m) => m !== key) : [...run.marks, key] });
+    return (
+      <section className="sdr-run sdr-verdict" data-testid="sdr-verdict">
+        <h3>{t('sdr.verdict.title')}</h3>
+        <p className="map-panel__note">{t('sdr.verdict.hint')}</p>
+        <div className="sdr-notebook" data-testid="sdr-notebook">
+          {route.stops.map((id, i) => (
+            <div key={id} className="sdr-notebook__col">
+              <h4>
+                {i + 1}. {loc(siteById(content, id)!.name).split(',')[0]}
+              </h4>
+              {route.observations[i]!.map((tag) => {
+                const key = `${i + 1}:${tag}`;
+                const marked = run.marks.includes(key);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    className={`sdr-notebook__entry${marked ? ' marked' : ''}`}
+                    data-cue={tag}
+                    data-testid={`note-${i + 1}-${tag}`}
+                    aria-pressed={marked}
+                    onClick={() => toggleMark(key)}
+                  >
+                    {cueText(tag)}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        <div className="map-panel__actions">
+          <button type="button" data-testid="sdr-verdict-clean" onClick={() => resolve('continue')}>
+            {t('sdr.verdict.clean', { name: targetName })}
+          </button>
+          <button type="button" className="danger" data-testid="sdr-verdict-tail" onClick={() => resolve('abort')}>
+            {t('sdr.verdict.tail')}
+          </button>
+          <button type="button" data-testid="sdr-verdict-back" onClick={() => setRun({ ...run, verdict: false })}>
+            {t('sdr.verdict.back')}
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  // Фаза «Сбор»: точка за точкой всплывают карточки наблюдений.
   return (
     <section className="sdr-run" data-testid="sdr-run">
       <h3>{loc(op.title)}</h3>
@@ -255,8 +307,8 @@ function SdrRunPanel() {
             {t('sdr.run.next')}
           </button>
         ) : (
-          <button type="button" data-testid="sdr-continue" onClick={() => resolve('continue')}>
-            {t('sdr.run.toTarget', { name: loc(target?.name ?? { ru: '' }).split(',')[0]! })}
+          <button type="button" data-testid="sdr-to-verdict" onClick={() => setRun({ ...run, verdict: true })}>
+            {t('sdr.run.toVerdict')}
           </button>
         )}
         <button type="button" className="danger" data-testid="sdr-abort" onClick={() => resolve('abort')}>

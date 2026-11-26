@@ -67,6 +67,31 @@
   font-family: var(--form);
 }
 
+.plaque__button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.plaque__hint {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.plaque:hover {
+  filter: brightness(1.1);
+}
+
 .plaque h1 {
   margin: 0;
   font-size: 22px;
@@ -303,6 +328,36 @@ kbd {
   opacity: 0.85;
 }
 
+.calendar__saved {
+  align-self: flex-start;
+  padding: 1px 8px;
+  border: 2px solid rgba(132, 170, 120, 0.8);
+  color: #a9c89c;
+  font-family: var(--form);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  animation: saved-stamp 2.4s ease-out forwards;
+}
+
+@keyframes saved-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.4) rotate(-6deg);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1) rotate(-3deg);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.35;
+    transform: rotate(-3deg);
+  }
+}
+
 .calendar__error {
   margin: 0;
   font-size: 12px;
@@ -486,6 +541,25 @@ kbd {
   margin: 0;
 }
 
+.analyst__tick {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--ochre-dark);
+}
+
+.analyst__tick--danger {
+  background: var(--stamp-red);
+}
+
+.analyst__at100 {
+  grid-column: 2;
+  margin-top: -6px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
 .analyst__risk {
   display: grid;
   grid-template-columns: 240px 1fr;
@@ -552,4 +626,94 @@ kbd {
 
 .analyst__journal span {
   opacity: 0.55;
+}
+
+/* Масштаб текста из настроек (100–130%): увеличиваем текстовые блоки, раскладка стола не меняется. */
+.doc,
+.module-panel,
+.inbox__list,
+.dossier,
+.teletype,
+.ledger-page,
+.map-panel,
+.calendar__controls,
+.shell__aside {
+  zoom: var(--text-scale, 1);
+}
+
+/* Служебная папка. */
+.service {
+  max-height: 840px;
+  overflow: auto;
+}
+
+.service__tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.service__tabs button[aria-pressed='true'],
+.service__choices button[aria-pressed='true'] {
+  background: var(--paper-ink);
+  color: var(--paper);
+}
+
+.service h3 {
+  margin: 18px 0 8px;
+  font-family: var(--form);
+  font-size: 17px;
+  text-transform: uppercase;
+}
+
+.service__note {
+  margin: 0 0 8px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.service__slots {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.service__slots li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(42, 38, 32, 0.2);
+  font-size: 14px;
+}
+
+.service__slots li span {
+  flex: 1;
+}
+
+.service__choices {
+  display: flex;
+  gap: 8px;
+}
+
+.service__new label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+  font-family: var(--form);
+  font-size: 16px;
+}
+
+.service__new button {
+  margin-right: 8px;
+}
+
+.service__error {
+  color: var(--stamp-red);
+}
+
+.module-panel button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }

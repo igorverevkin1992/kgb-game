@@ -77,8 +77,11 @@ export function AnalystSummary() {
               <dt>{t(`risk.${r}` as I18nKey)}</dt>
               <dd>
                 <span className="analyst__bar" style={{ width: `${game.risks[r]}%` }} />
+                <i className="analyst__tick" style={{ left: `${content.balance.thresholds.warning}%` }} />
+                <i className="analyst__tick analyst__tick--danger" style={{ left: `${content.balance.thresholds.danger}%` }} />
                 <b>{game.risks[r]}%</b>
               </dd>
+              <small className="analyst__at100">{t(`risk.${r}.at100` as I18nKey)}</small>
             </div>
           ))}
           <div className="analyst__risk" data-testid="centre-trust">

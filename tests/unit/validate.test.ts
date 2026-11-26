@@ -108,6 +108,14 @@ describe('валидатор контента', () => {
     expect(report.errors).toContainEqual(expect.objectContaining({ rule: 'sdr', message: expect.stringContaining('mailman_cart') }));
   });
 
+  it('SDR: две приметы с одинаковым текстом — ложный повтор, ошибка', () => {
+    const entries = content();
+    const cues = file(entries, 'map/cues.json').data as Json[];
+    cues.find((c) => c.tag === 'dark_blue_ford_ltd')!.text.ru = 'Светло-синий седан Ford LTD';
+    const report = validateContent(entries);
+    expect(report.errors).toContainEqual(expect.objectContaining({ rule: 'sdr', message: expect.stringContaining('ложный повтор') }));
+  });
+
   it('SDR: примета хвоста должна быть из приметы вида tail', () => {
     const entries = content();
     (file(entries, 'ops/op_a1_recon_first_virginia.json').data as Json).sdr.repeating_cue = 'red_buick';

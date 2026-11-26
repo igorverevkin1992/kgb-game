@@ -1,6 +1,6 @@
 [
   { "tag": "light_blue_ford_ltd", "kind": "tail", "text": { "ru": "Светло-синий седан Ford LTD", "en": "A light-blue Ford LTD sedan" } },
-
+  { "tag": "dark_blue_ford_ltd", "kind": "noise", "text": { "ru": "Тёмно-синий седан Ford LTD", "en": "A dark-blue Ford LTD sedan" } },
   { "tag": "red_buick", "kind": "noise", "text": { "ru": "Красный «Бьюик» с вмятиной на крыле", "en": "A red Buick with a dented fender" } },
   { "tag": "brown_cap", "kind": "noise", "text": { "ru": "Мужчина в коричневой кепке", "en": "A man in a brown cap" } },
   { "tag": "green_volvo", "kind": "noise", "text": { "ru": "Зелёный «Вольво»-универсал", "en": "A green Volvo estate" } },
@@ -13,7 +13,6 @@
   { "tag": "couple_on_bench", "kind": "noise", "text": { "ru": "Пожилая пара на скамейке", "en": "An elderly couple on a bench" } },
   { "tag": "jogger_sweatshirt", "kind": "noise", "text": { "ru": "Бегун в толстовке Джорджтаунского университета", "en": "A jogger in a Georgetown University sweatshirt" } },
   { "tag": "grey_trenchcoat", "kind": "noise", "text": { "ru": "Мужчина в сером плаще", "en": "A man in a grey trenchcoat" } },
-
   { "tag": "nurse_white_coat", "kind": "ambient", "text": { "ru": "Медсестра в белом халате курит у входа", "en": "A nurse in a white coat smoking by the door" } },
   { "tag": "bus_stop_queue", "kind": "ambient", "text": { "ru": "Очередь на автобусной остановке", "en": "A queue at the bus stop" } },
   { "tag": "mailman_cart", "kind": "ambient", "text": { "ru": "Почтальон с тележкой", "en": "A mailman with his cart" } },

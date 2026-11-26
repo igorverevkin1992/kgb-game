@@ -301,6 +301,17 @@ function checkMapAndSdr(ctx: Ctx) {
     }
   }
 
+  // Разные приметы с одинаковым текстом игрок примет за повтор — ложный сигнал хвоста.
+  const byText = new Map<string, string>();
+  for (const cue of content.cues) {
+    const key = cue.text.ru.trim().toLowerCase();
+    const other = byText.get(key);
+    if (other) {
+      push(ctx, { level: 'error', rule: 'sdr', file: CUES, where: cue.tag, message: `Текст приметы совпадает с «${other}» — игрок увидит ложный повтор` });
+    }
+    byText.set(key, cue.tag);
+  }
+
   const noise = content.cues.filter((c) => c.kind === 'noise').length;
   if (noise < 3) {
     push(ctx, { level: 'error', rule: 'sdr', file: CUES, message: `Нужно минимум 3 приметы-«шума» (kind: noise), чтобы они не повторялись на трёх точках; сейчас ${noise}` });
