@@ -1,0 +1,337 @@
+/* Оболочки модулей. Каждый модуль — свой материал: бумага карты, пробка, металл, тетрадь. */
+
+.shell,
+.inbox {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.shell__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 28px 12px;
+  font-family: var(--form);
+}
+
+.shell__header h2 {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.shell__wip {
+  font-size: 15px;
+  opacity: 0.7;
+}
+
+.shell__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 24px;
+  padding: 0 28px 24px;
+}
+
+.shell__main {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.shell__aside {
+  width: 340px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.shell__aside h3 {
+  margin: 0 0 8px;
+  font-family: var(--form);
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+.shell__aside ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.shell__note {
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+/* Карта. */
+.shell--map {
+  background: #c9c8ae;
+  color: var(--paper-ink);
+}
+
+.shell__map {
+  height: 100%;
+}
+
+/* Доска MICE. */
+.shell--mice {
+  background: #4a3421;
+  color: var(--paper-light);
+}
+
+.shell__cork {
+  position: absolute;
+  inset: 0;
+  border: 14px solid #5a3f27;
+  background:
+    radial-gradient(circle at 25% 35%, #8b663e 0 1.1px, transparent 1.6px) 0 0 / 8px 8px,
+    radial-gradient(circle at 75% 75%, #b8915f 0 0.9px, transparent 1.4px) 0 0 / 8px 8px,
+    radial-gradient(circle at 60% 20%, #94704a 0 1px, transparent 1.5px) 0 0 / 11px 11px,
+    #a37c4f;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35);
+}
+
+.dossiers {
+  position: absolute;
+  inset: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 32px;
+}
+
+.dossier {
+  position: relative;
+  width: 300px;
+  padding: 18px 18px 14px;
+  background: var(--paper-light);
+  color: var(--paper-ink);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.5);
+  transform: rotate(-1deg);
+}
+
+.dossier:nth-child(even) {
+  transform: rotate(1.2deg);
+}
+
+.dossier::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--thread-red);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+}
+
+.dossier h3 {
+  margin: 0;
+  font-family: var(--form);
+  font-size: 22px;
+}
+
+.dossier p {
+  margin: 4px 0 12px;
+  font-size: 13px;
+}
+
+.dossier dl {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin: 0;
+}
+
+.dossier__axis {
+  padding: 6px 4px;
+  border: 1px solid #8a8578;
+  text-align: center;
+  font-family: var(--form);
+}
+
+.dossier__axis dt {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.dossier__axis dd {
+  margin: 0;
+  font-size: 12px;
+}
+
+.dossier__axis--unknown {
+  opacity: 0.45;
+}
+
+.dossier__axis--hypothesis {
+  border-style: dashed;
+  border-color: var(--ochre-dark);
+}
+
+.dossier__axis--confirmed {
+  border: 2px solid var(--thread-red);
+}
+
+.dossier__stamp {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  padding: 2px 8px;
+  border: 2px solid var(--stamp-red);
+  color: var(--stamp-red);
+  font-family: var(--form);
+  text-transform: uppercase;
+  transform: rotate(-6deg);
+}
+
+.dossiers__hidden {
+  align-self: flex-end;
+  width: 100%;
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+/* Шифроузел. */
+.shell--cipher {
+  background: linear-gradient(180deg, #262823, #151613);
+  color: var(--paper);
+}
+
+.teletype {
+  max-width: 820px;
+  padding: 26px 30px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 25px, rgba(0, 0, 0, 0.04) 25px 26px),
+    var(--paper-light);
+  color: var(--paper-ink);
+  font-family: var(--type);
+  font-size: 17px;
+  line-height: 1.6;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+}
+
+.teletype__head {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* Финансовый журнал. */
+.shell--finance {
+  background: var(--ochre-dark);
+  color: var(--paper-ink);
+}
+
+.ledger-page {
+  height: 100%;
+  padding: 30px 40px;
+  background:
+    linear-gradient(90deg, transparent 70px, rgba(142, 43, 34, 0.5) 70px 72px, transparent 72px),
+    repeating-linear-gradient(180deg, transparent 0 31px, #9fb3c8 31px 32px),
+    var(--paper-light);
+  font-family: var(--type);
+  font-size: 20px;
+  line-height: 32px;
+}
+
+.ledger-page p {
+  margin: 0 0 32px 60px;
+}
+
+/* Магнитофон. */
+.shell--dialog {
+  background: linear-gradient(180deg, var(--olive), var(--olive-dark));
+  color: var(--paper);
+}
+
+.shell__recorder {
+  height: 100%;
+  max-width: 760px;
+}
+
+/* Пульт обстановки. */
+.shell--counterintel {
+  background: #3b3f35;
+  color: var(--paper);
+}
+
+/* Лоток входящих. */
+.inbox {
+  background: #2a2119;
+  color: var(--paper);
+}
+
+.inbox__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 28px;
+  padding: 0 28px 24px;
+}
+
+.inbox__list {
+  width: 420px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+}
+
+.inbox__item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 10px 14px;
+  border: 0;
+  border-left: 4px solid transparent;
+  background: rgba(217, 212, 197, 0.08);
+  color: var(--paper);
+  text-align: left;
+  cursor: pointer;
+}
+
+.inbox__item:hover {
+  background: rgba(217, 212, 197, 0.16);
+}
+
+.inbox__item--unread {
+  border-left-color: var(--stamp-red);
+}
+
+.inbox__item--unread .inbox__subject {
+  font-weight: 700;
+}
+
+.inbox__item--current {
+  background: rgba(217, 212, 197, 0.22);
+}
+
+.inbox__kind {
+  font-family: var(--form);
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.inbox__subject {
+  font-family: var(--form);
+  font-size: 17px;
+}
+
+.inbox__reader {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: auto;
+}
+
+.inbox__empty {
+  margin-top: 80px;
+  opacity: 0.6;
+}

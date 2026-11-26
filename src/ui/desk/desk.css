@@ -1,184 +1,436 @@
-/* Каркас кабинета. Палитра «Контейнера» (GDD, Блок 5): оливковый крашеный металл,
-   выцветшая охра папок, сероватая бумага ГОСТ-бланков, тёмный шпон стола.
-   Финальный арт и ЭЛТ-шейдер — шаги 3 и 9. */
-
-:root {
-  --veneer-dark: #1d1712;
-  --veneer: #3a2c20;
-  --olive: #4f5640;
-  --olive-dark: #343a2b;
-  --ochre: #b8955a;
-  --paper: #d9d4c5;
-  --paper-ink: #2a2620;
-  --stamp-red: #8e2b22;
-  --lamp: rgba(255, 226, 160, 0.16);
-  --type: 'PT Mono', 'Courier New', ui-monospace, monospace;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  margin: 0;
-  height: 100%;
-}
-
-body {
-  background: var(--veneer-dark);
-  color: var(--paper);
-  font-family: var(--type);
-}
+/* Кабинет на сцене 1600×900: стена (0–300) и стол (300–900). Координаты в пикселях сцены. */
 
 .room {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 24px 32px 32px;
-  gap: 16px;
+  position: absolute;
+  inset: 0;
 }
 
-.room__header h1 {
+.room__wall {
+  position: absolute;
+  inset: 0 0 600px 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.06) 0 2px, transparent 2px 120px),
+    linear-gradient(180deg, var(--wall) 0%, var(--wall-dark) 100%);
+}
+
+.room__desk {
+  position: absolute;
+  inset: 300px 0 0 0;
+  background:
+    repeating-linear-gradient(91deg, rgba(0, 0, 0, 0.09) 0 3px, transparent 3px 13px),
+    repeating-linear-gradient(89deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 29px),
+    linear-gradient(170deg, var(--veneer-light) 0%, var(--veneer) 35%, var(--veneer-dark) 100%);
+  box-shadow:
+    inset 0 6px 0 #6b4f35,
+    inset 0 10px 18px rgba(0, 0, 0, 0.6),
+    inset 0 0 160px rgba(0, 0, 0, 0.65);
+}
+
+.room__lamp-light {
+  position: absolute;
+  left: 640px;
+  top: 300px;
+  width: 760px;
+  height: 600px;
+  background: radial-gradient(ellipse at 45% 20%, var(--lamp), transparent 62%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.room__lamp {
+  position: absolute;
+  left: 1000px;
+  top: 322px;
+  width: 150px;
+  height: 190px;
+  z-index: 2;
+}
+
+.room__window {
+  position: absolute;
+  left: 1400px;
+  top: 30px;
+  width: 170px;
+  height: 230px;
+}
+
+/* Табличка с названием на стене. */
+.plaque {
+  position: absolute;
+  left: 40px;
+  top: 40px;
+  width: 300px;
+  padding: 14px 16px;
+  background: linear-gradient(160deg, #8f7a4a, #5e4e2c);
+  color: #1f1a0f;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+  font-family: var(--form);
+}
+
+.plaque h1 {
   margin: 0;
   font-size: 22px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-.room__header p {
+.plaque p {
   margin: 4px 0 0;
-  opacity: 0.7;
   font-size: 14px;
 }
 
-.desk {
-  position: relative;
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  grid-template-areas:
-    'map mice counterintel'
-    'cipher finance dialog';
-  gap: 20px;
-  padding: 24px;
-  border-radius: 6px;
-  background:
-    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.08) 0 3px, transparent 3px 11px),
-    linear-gradient(160deg, var(--veneer) 0%, var(--veneer-dark) 100%);
-  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.7);
-  overflow: hidden;
-}
-
-.desk__lamp {
-  position: absolute;
-  inset: -20% -10% auto auto;
-  width: 70%;
-  height: 90%;
-  background: radial-gradient(ellipse at 70% 20%, var(--lamp), transparent 65%);
-  pointer-events: none;
-}
-
+/* Предметы. */
 .desk-object {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 6px;
-  padding: 18px;
+  position: absolute;
+  z-index: 2;
+  padding: 0;
   border: 0;
-  border-radius: 4px;
-  text-align: left;
-  font-family: var(--type);
+  background: none;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+  filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.55));
   transition:
-    transform 80ms ease-out,
-    filter 80ms ease-out;
+    transform 90ms ease-out,
+    filter 90ms ease-out;
 }
 
 .desk-object:hover:not(:disabled),
 .desk-object:focus-visible {
-  transform: translateY(-3px);
-  filter: brightness(1.12);
+  transform: translateY(-4px);
+  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.6)) brightness(1.1);
   outline: none;
 }
 
 .desk-object:disabled {
   cursor: not-allowed;
-  filter: grayscale(0.8) brightness(0.45);
+  filter: grayscale(0.75) brightness(0.5);
 }
 
-.desk-object__name {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+.desk-object__art {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-.desk-object__caption {
-  font-size: 13px;
-  opacity: 0.8;
-}
-
-.desk-object--map {
-  grid-area: map;
-  background:
-    linear-gradient(90deg, transparent 49.5%, rgba(0, 0, 0, 0.15) 50%, transparent 50.5%),
-    linear-gradient(0deg, transparent 49.5%, rgba(0, 0, 0, 0.12) 50%, transparent 50.5%),
-    #cfd2b8;
+.desk-object__tag {
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 3px 10px;
+  white-space: nowrap;
+  background: var(--paper-light);
   color: var(--paper-ink);
+  font-family: var(--form);
+  font-size: 15px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.45);
+}
+
+.desk-object__tag em {
+  font-style: normal;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 4px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-family: var(--type);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.desk-object__badge {
+  position: absolute;
+  top: 66px;
+  right: 6px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 17px;
+  background: var(--stamp-red);
+  color: var(--paper-light);
+  font: 700 18px/34px var(--form);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
 }
 
 .desk-object--mice {
-  grid-area: mice;
-  background:
-    radial-gradient(circle at 20% 30%, #a63a2c 0 4px, transparent 5px),
-    radial-gradient(circle at 65% 55%, #a63a2c 0 4px, transparent 5px),
-    #9b7a52;
-  color: #1f160d;
-}
-
-.desk-object--cipher {
-  grid-area: cipher;
-  background: linear-gradient(180deg, #2a2a28, #151514);
-  color: var(--paper);
-}
-
-.desk-object--finance {
-  grid-area: finance;
-  background: var(--ochre);
-  color: var(--paper-ink);
-}
-
-.desk-object--dialog {
-  grid-area: dialog;
-  background: linear-gradient(180deg, var(--olive), var(--olive-dark));
-  color: var(--paper);
+  left: 380px;
+  top: 26px;
+  width: 680px;
+  height: 260px;
 }
 
 .desk-object--counterintel {
-  grid-area: counterintel;
-  background: #5b2f2a;
-  color: var(--paper);
+  left: 1110px;
+  top: 30px;
+  width: 250px;
+  height: 250px;
 }
 
-.module-overlay {
-  position: fixed;
+.desk-object--map {
+  left: 50px;
+  top: 360px;
+  width: 520px;
+  height: 416px;
+  transform: rotate(-2.5deg);
+}
+
+.desk-object--map:hover:not(:disabled) {
+  transform: rotate(-2.5deg) translateY(-4px);
+}
+
+.desk-object--cipher {
+  left: 620px;
+  top: 330px;
+  width: 300px;
+  height: 290px;
+}
+
+.desk-object--inbox {
+  left: 610px;
+  top: 650px;
+  width: 290px;
+  height: 222px;
+}
+
+.desk-object--finance {
+  left: 950px;
+  top: 560px;
+  width: 230px;
+  height: 280px;
+  transform: rotate(5deg);
+}
+
+.desk-object--finance:hover:not(:disabled) {
+  transform: rotate(5deg) translateY(-4px);
+}
+
+.desk-object--dialog {
+  left: 1230px;
+  top: 590px;
+  width: 320px;
+  height: 260px;
+}
+
+/* Настольный календарь с отрывными листами. */
+.calendar {
+  position: absolute;
+  left: 1190px;
+  top: 330px;
+  width: 380px;
+  z-index: 4;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.calendar__sheet {
+  flex: none;
+  width: 160px;
+  padding: 10px 12px;
+  background: var(--paper-light);
+  color: var(--paper-ink);
+  border-top: 10px solid var(--stamp-red);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.55);
+  font-family: var(--form);
+}
+
+.calendar__week {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.calendar__date,
+.calendar__act {
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.calendar__phase {
+  margin: 6px 0;
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--stamp-red);
+}
+
+.calendar__controls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+}
+
+.calendar__hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  opacity: 0.75;
+}
+
+.calendar__reports {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.calendar button {
+  padding: 6px 10px;
+  border: 1px solid var(--paper);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--paper);
+  font-family: var(--type);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.calendar button:hover {
+  background: rgba(217, 212, 197, 0.14);
+}
+
+.calendar .calendar__analyst {
+  border-style: dashed;
+  opacity: 0.85;
+}
+
+.calendar__error {
+  margin: 0;
+  font-size: 12px;
+  color: #e2826f;
+}
+
+/* Открытый модуль: предмет приближен, внизу кромка стола с остальными предметами. */
+.module-view {
+  position: absolute;
   inset: 0;
   z-index: 10;
+  background: rgba(8, 6, 4, 0.78);
+}
+
+.module-frame {
+  position: absolute;
+  left: 32px;
+  top: 24px;
+  width: 1536px;
+  height: 756px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+  animation: frame-in 110ms ease-out;
+}
+
+@keyframes frame-in {
+  from {
+    opacity: 0.4;
+    transform: scale(0.985);
+  }
+}
+
+.desk-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 104px;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 32px 12px;
+  background: linear-gradient(180deg, #4a3624, var(--veneer-dark));
+  box-shadow: inset 0 4px 0 #6b4f35;
+}
+
+.desk-edge button {
+  border: 0;
+  background: none;
+  color: var(--paper);
+  cursor: pointer;
+  font-family: var(--form);
+}
+
+.desk-edge__back {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  width: 150px;
+  padding: 0 12px;
+  border: 1px solid rgba(217, 212, 197, 0.4) !important;
+  font-size: 16px;
+  text-align: left;
+}
+
+.desk-edge__item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px !important;
+  border-radius: 4px;
+  text-align: left;
+  opacity: 0.75;
+  transition: opacity 80ms;
+}
+
+.desk-edge__item:hover:not(:disabled),
+.desk-edge__item:focus-visible {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.06) !important;
+  outline: none;
+}
+
+.desk-edge__item--current {
+  opacity: 1;
+  background: rgba(217, 212, 197, 0.12) !important;
+  box-shadow: inset 0 -3px 0 var(--stamp-red);
+}
+
+.desk-edge__item:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.desk-edge__art {
+  flex: none;
+  width: 72px;
+  height: 64px;
+}
+
+.desk-edge__label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 15px;
+  line-height: 1.15;
+}
+
+.desk-edge__label kbd {
+  align-self: flex-start;
+}
+
+/* Общие оверлеи (сводка аналитика, итог кампании). */
+.module-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
   display: grid;
   place-items: center;
-  background: rgba(10, 8, 6, 0.72);
+  background: rgba(10, 8, 6, 0.74);
 }
 
 .module-panel {
   position: relative;
-  width: min(760px, calc(100vw - 32px));
-  min-height: 420px;
-  padding: 48px 56px;
+  width: 860px;
+  padding: 44px 52px;
   background: var(--paper);
   color: var(--paper-ink);
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
@@ -186,8 +438,10 @@ body {
 
 .module-panel h2 {
   margin-top: 0;
+  font-family: var(--form);
+  font-size: 28px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
 }
 
 .module-panel__stamp {
@@ -197,16 +451,15 @@ body {
   padding: 4px 10px;
   border: 2px solid var(--stamp-red);
   color: var(--stamp-red);
-  font-size: 12px;
+  font-family: var(--form);
+  font-size: 14px;
   letter-spacing: 0.1em;
+  text-transform: uppercase;
   transform: rotate(-4deg);
 }
 
 .module-panel footer {
-  position: absolute;
-  left: 56px;
-  right: 56px;
-  bottom: 40px;
+  margin-top: 28px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -221,102 +474,9 @@ body {
   cursor: pointer;
 }
 
-.module-panel small {
-  opacity: 0.6;
-}
-
-/* Перекидной календарь и донесение (шаг 2). */
-.room__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-}
-
-.calendar {
-  display: flex;
-  gap: 16px;
-  align-items: stretch;
-}
-
-.calendar__sheet {
-  min-width: 190px;
-  padding: 10px 14px;
-  background: var(--paper);
-  color: var(--paper-ink);
-  border-top: 8px solid var(--stamp-red);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
-}
-
-.calendar__week {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.calendar__date,
-.calendar__act {
-  font-size: 12px;
-  opacity: 0.75;
-}
-
-.calendar__phase {
-  margin: 4px 0;
-  font-size: 15px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--stamp-red);
-}
-
-.calendar__controls {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  max-width: 420px;
-}
-
-.calendar__hint {
-  margin: 0;
-  font-size: 12px;
-  opacity: 0.7;
-}
-
-.calendar__reports {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.calendar button,
-.ending button {
-  padding: 6px 12px;
-  border: 1px solid var(--paper);
-  background: transparent;
-  color: var(--paper);
-  font-family: var(--type);
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.calendar button:hover {
-  background: rgba(217, 212, 197, 0.12);
-}
-
-.calendar .calendar__analyst {
-  border-style: dashed;
-  opacity: 0.8;
-}
-
-.calendar__error {
-  margin: 0;
-  font-size: 12px;
-  color: #e2826f;
-}
-
 /* Сводка аналитика. */
 .analyst {
-  min-height: 0;
-  max-height: calc(100vh - 64px);
+  max-height: 820px;
   overflow: auto;
 }
 
@@ -328,9 +488,14 @@ body {
 
 .analyst__risk {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 240px 1fr;
   align-items: center;
   gap: 12px;
+}
+
+.analyst__risk dt {
+  font-family: var(--form);
+  font-size: 17px;
 }
 
 .analyst__risk dd {
@@ -372,23 +537,19 @@ body {
 
 .analyst h3 {
   margin: 20px 0 6px;
-  font-size: 14px;
+  font-family: var(--form);
+  font-size: 16px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .analyst__journal {
   margin: 0;
-  padding-left: 18px;
+  padding-left: 22px;
   font-size: 13px;
   line-height: 1.5;
 }
 
 .analyst__journal span {
   opacity: 0.55;
-}
-
-.ending button {
-  border-color: var(--paper-ink);
-  color: var(--paper-ink);
 }

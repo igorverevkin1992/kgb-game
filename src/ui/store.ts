@@ -9,9 +9,10 @@ import {
   type CampaignState,
   type GameEvent,
 } from '../engine/campaign';
-import { getModule, isModuleUnlocked, parseAct, type Act, type ModuleId } from '../engine/modules';
+import { getModule, isModuleUnlocked, parseAct, type Act } from '../engine/modules';
 import { parseLang, translate, type I18nKey, type Lang } from '../i18n';
 import { localSaveStorage } from './saveStorage';
+import type { View } from './views';
 
 export const content = loadContent();
 
@@ -36,7 +37,8 @@ interface GameStore {
   /** Отладка: ?act=N показывает стол так, будто идёт акт N (на сам движок не влияет). */
   debugAct: Act | null;
   lang: Lang;
-  openModule: ModuleId | null;
+  /** Открытый модуль или лоток входящих; null — виден весь стол. */
+  view: View | null;
   /** События последнего действия — для подсветки изменений на столе. */
   lastEvents: GameEvent[];
   lastError: string | null;
@@ -45,7 +47,8 @@ interface GameStore {
   act: () => Act;
   dispatch: (action: Action) => void;
   newGame: () => void;
-  open: (id: ModuleId) => void;
+  /** Открыть модуль (если он уже доступен в этом акте) или лоток входящих. */
+  open: (view: View) => void;
   close: () => void;
   toggleAnalyst: () => void;
 }
@@ -54,7 +57,7 @@ export const useDeskStore = create<GameStore>((set, get) => ({
   game: initialGame(),
   debugAct: params.has('act') ? parseAct(params.get('act')) : null,
   lang: parseLang(params.get('lang')),
-  openModule: null,
+  view: null,
   lastEvents: [],
   lastError: null,
   analystOpen: false,
@@ -72,12 +75,12 @@ export const useDeskStore = create<GameStore>((set, get) => ({
   newGame: () => {
     const { state, events } = newCampaign(content);
     localSaveStorage.write(AUTOSAVE, serialize(state));
-    set({ game: state, lastEvents: events, lastError: null, openModule: null, analystOpen: false });
+    set({ game: state, lastEvents: events, lastError: null, view: null, analystOpen: false });
   },
-  open: (id) => {
-    if (isModuleUnlocked(getModule(id), get().act())) set({ openModule: id });
+  open: (view) => {
+    if (view === 'inbox' || isModuleUnlocked(getModule(view), get().act())) set({ view, analystOpen: false });
   },
-  close: () => set({ openModule: null, analystOpen: false }),
+  close: () => set({ view: null, analystOpen: false }),
   toggleAnalyst: () => set((s) => ({ analystOpen: !s.analystOpen })),
 }));
 

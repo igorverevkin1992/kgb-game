@@ -91,5 +91,6 @@ tests/         — unit (vitest) + e2e (playwright)
 ## Статус
 - [x] Шаг 0 — каркас проекта (слит в `main`). Играбельная веб-версия: https://igorverevkin1992.github.io/kgb-game/
 - [x] Шаг 1 — схемы данных и валидатор (слит в `main`). Памятка по контенту: `docs/content-guide.md`.
-- [x] Шаг 2 — движок кампании (ветка `step-2-engine`). Баланс: `src/content/balance.json`.
-- [ ] Шаг 3 — кабинет и переключение модулей.
+- [x] Шаг 2 — движок кампании (слит в `main`). Баланс: `src/content/balance.json`.
+- [x] Шаг 3 — кабинет и переключение модулей (ветка `step-3-desk`).
+- [ ] Шаг 4 — карта SDR.
