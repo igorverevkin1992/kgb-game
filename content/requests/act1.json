@@ -38,5 +38,23 @@
     "refused": {
       "moscow_pressure": 6
     }
+  },
+  {
+    "request_id": "req_a2_fund",
+    "act": 2,
+    "title": {
+      "ru": "Ходатайство о выделении 15 000 долларов"
+    },
+    "phrase": {
+      "ru": "В связи с развёртыванием работы по второму эшелону прошу выделить резидентуре дополнительно 15 000 долларов."
+    },
+    "min_trust": 50,
+    "granted": {
+      "fund_usd": 15000,
+      "moscow_pressure": 3
+    },
+    "refused": {
+      "centre_trust": -2
+    }
   }
 ]

@@ -16,6 +16,8 @@ class_name Campaign
 ##   {type: "meeting_offer"} · {type: "meeting_abort"} — сделать предложение / прервать контакт
 ##   (`recruitment` — прямой исход без беседы, для тестов и отладки)
 ##   {type: "pay_agent", target_id, amount, instrument: "cash"|"escrow", parts} — транш (день и вечер)
+##   {type: "plan_op", …, operative: "op_…"} — поручить выход подчинённому (resolve_op решает сам)
+##   {type: "decide", decision_id, option_id} — решение резидента
 ##   {type: "verify_cable", cable_id, decision: "accept"|"query"} — сверка директивы (шифроузел)
 ##   {type: "submit_report", report: "truth"|"embellished"|"silence"} — быстрое донесение, или
 ##   {type: "submit_report", choices: {fact_key: "as_is"|"embellish"|"omit"}, request: "req_…"|""}
@@ -68,6 +70,8 @@ static func new_campaign(content: Dictionary) -> Dictionary:
 		"tapes": [],
 		"agents": {},
 		"payments": [],
+		"decisions": {},
+		"personal_ops": 0,
 		"rng": b.start.seed,
 		"ending": null,
 		"log": [],
@@ -122,8 +126,16 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			if not MapGeo.analyze_route(content, route).blocking.is_empty():
 				return _reject(state, "Проверочный маршрут — это три разные бытовые точки на карте")
 			var op := op_by_id(content, action.op_id)
+			var who: String = action.get("operative", Delegation.RESIDENT)
+			if who != Delegation.RESIDENT:
+				if Delegation.operative(content, who).is_empty():
+					return _reject(state, "Такого оперработника нет")
+				if not Delegation.unlocked(s, content):
+					return _reject(state, "Поручать выходы подчинённым можно после %d личных выходов" % content.balance.delegation.unlock_after_personal_ops)
+				if not Delegation.available(s, content).any(func(o): return o.operative_id == who):
+					return _reject(state, "Этот оперработник на этой неделе занят или выведен из работы")
 			var stops: Array = route.map(func(id): return MapGeo.site(content, id))
-			s.routes[op.op_id] = {"stops": route.duplicate(), "observations": _build_observations(ctx, op, stops)}
+			s.routes[op.op_id] = {"stops": route.duplicate(), "observations": _build_observations(ctx, op, stops), "operative": who}
 			s.planned_ops.append(op.op_id)
 			_emit(ctx, {"type": "op_planned", "op_id": op.op_id})
 
@@ -141,7 +153,21 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 				return _reject(state, "В город выходят вечером, а сейчас %s" % phase_ru)
 			if not s.planned_ops.has(action.op_id):
 				return _reject(state, "Этот выход не готовился")
-			_resolve_op(ctx, op_by_id(content, action.op_id), action.decision)
+			var who: String = s.routes.get(action.op_id, {}).get("operative", Delegation.RESIDENT)
+			var decision: String = action.get("decision", "continue")
+			if who != Delegation.RESIDENT:
+				# Подчинённый решает сам: заметил наружку — ушёл на бытовое прикрытие.
+				decision = "continue"
+				var op_d := op_by_id(content, action.op_id)
+				if tail_present(s, op_d):
+					var p := Delegation.notice_chance(content, who, s.routes[action.op_id].stops)
+					var noticed := _roll(ctx) < p
+					_emit(ctx, {"type": "operative_report", "op_id": action.op_id, "operative": who, "noticed": noticed})
+					if noticed:
+						decision = "abort"
+			else:
+				s.personal_ops = int(s.get("personal_ops", 0)) + 1
+			_resolve_op(ctx, op_by_id(content, action.op_id), decision)
 
 		"recruitment":
 			if s.phase != "evening":
@@ -271,6 +297,15 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			_emit(ctx, {"type": "tranche_sent", "target_id": action.target_id, "amount": int(action.amount), "instrument": action.instrument, "parts": plan.parts.size()})
 			_deliver_payments(ctx)
 
+		"decide":
+			var d := Decisions.by_id(content, action.get("decision_id", ""))
+			if d.is_empty() or not Decisions.pending(s, content).any(func(x): return x.decision_id == d.decision_id):
+				return _reject(state, "Это решение сейчас не требуется")
+			var o := Decisions.option(d, action.get("option_id", ""))
+			if o.is_empty():
+				return _reject(state, "Выберите один из вариантов")
+			_decide(ctx, d, o)
+
 		"verify_cable":
 			var cable := cable_by_id(content, action.cable_id)
 			if cable.is_empty() or cable.kind != "directive" or not s.delivered_cables.has(cable.cable_id):
@@ -286,6 +321,9 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 		"submit_report":
 			if s.phase != "night":
 				return _reject(state, "Доклад в Центр отправляют ночью, а сейчас %s" % phase_ru)
+			var waiting := Decisions.pending(s, content)
+			if not waiting.is_empty():
+				return _reject(state, "Сначала примите решение: «%s»" % waiting[0].title.ru)
 			var report: String = action.get("report", "")
 			if action.has("choices"):
 				var choices: Dictionary = action.choices
@@ -376,9 +414,15 @@ static func _give_clue(ctx: Dictionary, clue_id: String) -> void:
 		if ts != null and not ts.discovered_axes.has(r.axis):
 			ts.discovered_axes.append(r.axis)
 			_emit(ctx, {"type": "axis_discovered", "target_id": r.target_id, "axis": r.axis})
+	_check_unlocks(ctx)
+
+
+## Кандидаты открываются по найденным сведениям — но не раньше своей фазы операции.
+static func _check_unlocks(ctx: Dictionary) -> void:
+	var s: Dictionary = ctx.s
 	for t in ctx.content.targets:
 		var ts = s.targets.get(t.target_id)
-		if ts == null or ts.unlocked or not t.unlock.clue_ids.has(clue_id):
+		if ts == null or ts.unlocked or int(t.act) > int(s.act):
 			continue
 		var found: int = t.unlock.clue_ids.filter(func(id): return s.clues.has(id)).size()
 		if found >= int(t.unlock.clues_required):
@@ -400,6 +444,7 @@ static func _start_morning(ctx: Dictionary) -> void:
 			_emit(ctx, {"type": "cable_delivered", "cable_id": cable.cable_id})
 			# Улики из документов игрок снимает сам (подсвеченные фрагменты, take_clue).
 	_deliver_payments(ctx)
+	_check_unlocks(ctx)  # новая фаза операции: могли открыться кандидаты по старым сведениям
 	# Каждый завербованный агент приносит по одному донесению в неделю — если лоялен.
 	for t in content.targets:
 		var ts = s.targets.get(t.target_id)
@@ -407,11 +452,12 @@ static func _start_morning(ctx: Dictionary) -> void:
 			continue
 		if s.agents.has(t.target_id) and int(s.agents[t.target_id].loyalty) < int(content.balance.finance.reports_min_loyalty):
 			continue
-		var reports: Array = content.clues.filter(func(c): return c.source.channel == "agent" and c.source.from == t.target_id)
-		if ts.reports_delivered < reports.size():
-			var nxt: Dictionary = reports[ts.reports_delivered]
+		var reports: Array = content.clues.filter(func(c): return c.source.channel == "agent" and c.source.from == t.target_id and int(c.get("act", 1)) <= int(s.act))
+		# Первое ещё не полученное донесение (новые фазы операции добавляют свои).
+		var fresh: Array = reports.filter(func(c): return not s.clues.has(c.clue_id))
+		if not fresh.is_empty():
 			ts.reports_delivered += 1
-			_give_clue(ctx, nxt.clue_id)
+			_give_clue(ctx, fresh[0].clue_id)
 
 
 ## Карточки наблюдений для трёх точек маршрута. На каждой — местная примета и случайный
@@ -492,6 +538,11 @@ static func _resolve_op(ctx: Dictionary, op: Dictionary, decision: String) -> vo
 			_set_flag(ctx, c.flag_set)
 	s.op_results[op.op_id] = outcome
 	_emit(ctx, {"type": "op_resolved", "op_id": op.op_id, "outcome": outcome})
+	# Тайник для бесконтактного агента: чистая закладка — контакт установлен.
+	var contact: String = op.get("contact_target_id", "")
+	if contact != "" and outcome == "clean" and s.targets.has(contact) and not s.targets[contact].recruited and not s.targets[contact].lost:
+		_emit(ctx, {"type": "contact_established", "target_id": contact, "op_id": op.op_id})
+		_recruit(ctx, contact)
 	for clue in content.clues:
 		if clue.source.channel == "field" and clue.source.from == op.op_id:
 			_give_clue(ctx, clue.clue_id)
@@ -608,6 +659,22 @@ static func _lose(ctx: Dictionary, target_id: String) -> void:
 	_add_risk(ctx, "sog_heat", ctx.content.balance.sog_heat.failed_recruitment, "failed_recruitment")
 
 
+## Решение резидента: последствия сразу и (для оперативных игр) каждую ночь.
+static func _decide(ctx: Dictionary, d: Dictionary, o: Dictionary) -> void:
+	var s: Dictionary = ctx.s
+	var fx: Dictionary = o.effects
+	s.decisions[d.decision_id] = o.option_id
+	_emit(ctx, {"type": "decision_made", "decision_id": d.decision_id, "option_id": o.option_id})
+	for r in RISKS:
+		_add_risk(ctx, r, int(fx.get(r, 0)), "decision")
+	_add_trust(ctx, int(fx.centre_trust), "decision")
+	_change_fund(ctx, int(fx.fund_usd), "decision", d.decision_id)
+	if fx.flag_set != "":
+		_set_flag(ctx, fx.flag_set)
+	if fx.operative_out != "":
+		_set_flag(ctx, "out_" + fx.operative_out)
+
+
 ## Директива сверена: принять к исполнению или запросить подтверждение у Центра.
 static func _verify(ctx: Dictionary, cable: Dictionary, decision: String) -> void:
 	var b: Dictionary = ctx.content.balance.cipher
@@ -676,6 +743,7 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 		_add_risk(ctx, "moscow_pressure", mp.per_week_without_goal, "no_progress")
 
 	_agents_night(ctx)
+	_add_risk(ctx, "sog_heat", Decisions.weekly_sog(s, content), "operational_game")
 	if not s.week_field_activity:
 		_add_risk(ctx, "sog_heat", b.sog_heat.quiet_week, "quiet_week")
 
@@ -761,7 +829,9 @@ static func available_ops(s: Dictionary, content: Dictionary) -> Array:
 		var r = s.op_results.get(op.op_id)
 		return op.act <= s.act and op.week <= s.week and r != "clean" and r != "tail_missed" \
 			and not s.planned_ops.has(op.op_id) \
-			and op.requires_targets_unlocked.all(func(t): return s.targets.has(t) and s.targets[t].unlocked))
+			and op.requires_targets_unlocked.all(func(t): return s.targets.has(t) and s.targets[t].unlocked) \
+			and (op.get("contact_target_id", "") == "" or (s.targets.has(op.contact_target_id) and analysis_state(s, op.contact_target_id).approved \
+				and not s.targets[op.contact_target_id].recruited)))
 
 
 ## Есть ли хвост на маршруте. Вовремя свернув на бытовую легенду, игрок «спасает операцию»:

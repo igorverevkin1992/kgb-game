@@ -1,0 +1,86 @@
+{
+  "target_id": "tar_jenkins_clara",
+  "tier": 2,
+  "act": 2,
+  "name": {
+    "ru": "Клара Дженкинс"
+  },
+  "role": {
+    "ru": "Референт архива переаттестаций, Управление безопасности ЦРУ"
+  },
+  "affiliation": "CIA",
+  "unlock": {
+    "clues_required": 2,
+    "clue_ids": [
+      "clue_jenkins_letter_post",
+      "clue_jenkins_rally",
+      "clue_jenkins_named_by_hales"
+    ]
+  },
+  "mice_profile": {
+    "money": {
+      "true_value": 20,
+      "trigger": null
+    },
+    "ideology": {
+      "true_value": 78,
+      "trigger": "nuclear_fear"
+    },
+    "compromise": {
+      "true_value": 55,
+      "trigger": "affair_with_boss",
+      "backfire_risk": 0.6
+    },
+    "ego": {
+      "true_value": 35,
+      "trigger": null
+    }
+  },
+  "approach": {
+    "flag_mode": "false_flag",
+    "cover": {
+      "ru": "Журналистка женевского бюллетеня сторонников разоружения"
+    },
+    "key_axes": [
+      "ideology"
+    ]
+  },
+  "analysis": {
+    "leading_axis": "ideology",
+    "access_options": [
+      {
+        "id": "polygraph_files",
+        "text": {
+          "ru": "Графики полиграфа и личные дела сотрудников ЦРУ"
+        }
+      },
+      {
+        "id": "station_cables",
+        "text": {
+          "ru": "Телеграммы резидентур ЦРУ за рубежом"
+        }
+      },
+      {
+        "id": "cafeteria",
+        "text": {
+          "ru": "Смены и пропуска столовой в Лэнгли"
+        }
+      }
+    ],
+    "correct_access": "polygraph_files",
+    "hint": {
+      "ru": "Чего Клара боится больше, чем потерять работу?"
+    }
+  },
+  "finance": {
+    "salary_usd": 26000,
+    "promised_usd": 3000,
+    "promise": {
+      "ru": "Оплатить поездку на конференцию сторонников разоружения в Женеве"
+    }
+  },
+  "initial_state": {
+    "rapport": 15,
+    "paranoia": 40
+  }
+}

@@ -68,5 +68,8 @@ func scene_vargas_full_branch_closes_act() -> void:
 	for i in 3:
 		await press("advance-phase")
 	await press("report-truth")
-	eq(node("ending").get_meta("ending"), "campaign_complete", "Акт I пройден")
-	await shot("act1-complete")
+	ok(exists("phase-card"), "первая фаза операции пройдена")
+	has_text("phase-card", "ПЕРВАЯ ФАЗА ОПЕРАЦИИ ЗАВЕРШЕНА")
+	await press("phase-card-continue")
+	has_text("calendar-week", "Неделя 7")
+	await shot("act1-phase-card")

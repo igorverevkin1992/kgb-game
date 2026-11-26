@@ -36,7 +36,7 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 			var src: Dictionary = clue.source
 			var ok: bool = (src.channel == "document" and cables.has(src.from)) \
 				or (src.channel == "field" and st.ops.has(src.from)) \
-				or (src.channel == "agent" and st.recruited.has(src.from)) \
+				or (src.channel == "agent" and st.recruited.has(src.from) and int(clue.get("act", 1)) <= max_act) \
 				or (src.channel == "meeting" and st.unlocked.has(dialog_target.get(src.from, "")))
 			if ok:
 				st.clues[clue.clue_id] = true
@@ -49,8 +49,9 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 				st.unlocked[t.target_id] = true
 				changed = true
 		for t in targets:
+			var contact_op := ops.any(func(o): return o.get("contact_target_id", "") == t.target_id and st.ops.has(o.op_id))
 			if st.recruited.has(t.target_id) or not st.unlocked.has(t.target_id) or failed_targets.has(t.target_id) \
-					or not dialog_target.values().has(t.target_id):
+					or not (dialog_target.values().has(t.target_id) or contact_op):
 				continue
 			var known := true
 			for axis in t.approach.key_axes:

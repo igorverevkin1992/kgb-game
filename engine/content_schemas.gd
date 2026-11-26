@@ -42,6 +42,8 @@ static func _build() -> void:
 			"cover": text,
 			"key_axes": Schema.arr(axis, 1),
 		}),
+		# Что даёт агент после вербовки: sog_schedule — графики наружки ФБР на карте.
+		"perks": Schema.opt(Schema.arr(Schema.e(["sog_schedule"])), []),
 		# Правильное заключение по досье (доска мотивов): ведущий мотив, доступ, подсказка-намёк.
 		# Канал подхода сверяется с approach.flag_mode.
 		"analysis": Schema.obj({
@@ -71,6 +73,8 @@ static func _build() -> void:
 		"title": text,
 		"text": text,
 		"reveals": Schema.opt(Schema.arr(Schema.obj({"target_id": Schema.id("tar"), "axis": axis})), []),
+		# Для донесений агентов: с какой фазы операции агент может это сообщить.
+		"act": Schema.opt(Schema.i(1, 4), 1),
 		# Для улик из документов и оговорок на встречах: фраза из текста, которую игрок «снимает» кликом.
 		"chunk": Schema.opt(Schema.s()),
 	})
@@ -79,12 +83,14 @@ static func _build() -> void:
 		"cable_id": Schema.id("cable"),
 		"act": act,
 		"week": week,
-		"kind": Schema.e(["directive", "vgu_note", "press_clipping", "agent_report", "intercept", "personnel_file", "letter"]),
+		"kind": Schema.e(["directive", "vgu_note", "press_clipping", "agent_report", "intercept", "personnel_file", "letter", "anonymous"]),
 		"sender": text,
 		"subject": text,
 		"body": text,
 		# Подложная директива (шифроузел): контрольная группа не совпадёт с ключевым блокнотом.
 		"forged": Schema.opt({"type": "bool"}, false),
+		# Ориентировка о новом приёме наружки ФБР: приём появляется на маршрутах только после неё.
+		"teaches": Schema.opt(Schema.e(["", "relay", "clothes", "aircraft"]), ""),
 	})
 
 	# Вербовочная беседа (магнитофон «Тембр-2М»): реплики по тонам и козыри из досье.
@@ -132,6 +138,37 @@ static func _build() -> void:
 		"match": Schema.opt({"type": "dict", "of": {"type": "any"}}, {}),
 	})
 
+	# Подчинённые оперработники резидентуры: им можно поручить выход в город.
+	_cache["operative"] = Schema.obj({
+		"operative_id": Schema.s("^op_[a-z0-9_]+$", "id оперработника: op_ и латиница"),
+		"name": text,
+		"bio": text,
+		"notice_chance": Schema.n(0, 1),
+	})
+
+	# Решение резидента: документ с вариантами, видимыми последствиями и условием появления.
+	var fx_dec := Schema.obj({
+		"sog_heat": Schema.opt(delta, 0), "mole_hunt": Schema.opt(delta, 0), "treasury": Schema.opt(delta, 0),
+		"moscow_pressure": Schema.opt(delta, 0), "centre_trust": Schema.opt(delta, 0), "fund_usd": Schema.opt(Schema.i(-1000000, 1000000), 0),
+		"flag_set": Schema.opt(Schema.s(), ""), "operative_out": Schema.opt(Schema.s(), ""),
+		# Каждую ночь до конца кампании (оперативная игра с дезинформацией).
+		"weekly_sog_heat": Schema.opt(delta, 0),
+	})
+	_cache["decision"] = Schema.obj({
+		"decision_id": Schema.s("^dec_[a-z0-9_]+$", "id решения: dec_ и латиница"),
+		"act": act,
+		"trigger": Schema.obj({"week": Schema.opt(Schema.i(0, 30), 0), "clue_id": Schema.opt(Schema.s(), ""), "flag": Schema.opt(Schema.s(), "")}),
+		"sender": text,
+		"title": text,
+		"text": text,
+		"options": Schema.arr(Schema.obj({
+			"option_id": Schema.s("^[a-z0-9_]+$"),
+			"label": text,
+			"outcome": text,
+			"effects": fx_dec,
+		}), 2),
+	})
+
 	# Запросы в Центр, которые резидент может приложить к ночной шифрограмме.
 	_cache["request"] = Schema.obj({
 		"request_id": Schema.id("req"),
@@ -157,7 +194,7 @@ static func _build() -> void:
 		"week": week,
 		"type": Schema.e(["recon", "dead_drop_load", "dead_drop_clear", "signal_check", "personal_meeting"]),
 		"title": text,
-		"operative_id": Schema.opt(Schema.e(["op_resident_player", "op_technician", "op_diplomat"]), "op_resident_player"),
+		"operative_id": Schema.opt(Schema.s("^op_[a-z0-9_]+$", "id оперработника"), "op_resident_player"),
 		"requires_targets_unlocked": Schema.opt(Schema.arr(Schema.id("tar")), []),
 		"location": Schema.obj({
 			"site_id": Schema.id("site"),
@@ -171,7 +208,13 @@ static func _build() -> void:
 			"repeating_cue": Schema.nullable(Schema.s()),
 			"abort_penalty_days": Schema.opt(Schema.i(0), 2),
 			"ignore_consequence": Schema.opt(Schema.obj({"sog_heat_delta": Schema.i(0, 100), "flag_set": Schema.opt(flag)})),
+			# Приём наружки: relay — эстафета машин (повторяется человек), clothes — смена одежды,
+			# aircraft — наблюдение с самолёта.
+			"technique": Schema.opt(Schema.e(["", "relay", "clothes", "aircraft"]), ""),
 		}),
+		# Тайник: связь с бесконтактным агентом. Чистая закладка устанавливает контакт (вербовка).
+		"contact_target_id": Schema.opt(Schema.s(), ""),
+		"drop": Schema.opt(Schema.obj({"codename": Schema.s(), "signal": text, "container": text})),
 		"payload": Schema.opt(Schema.obj({
 			"cash_usd": Schema.opt(Schema.i(0), 0),
 			"diamonds_usd": Schema.opt(Schema.i(0), 0),
@@ -216,6 +259,9 @@ static func _build() -> void:
 				# Задача выполнена, только когда завербованному агенту выплачено обещанное.
 				"settle_promise": Schema.opt({"type": "bool"}, false),
 			}),
+			# Вводная и итог фазы — показываются при смене фаз операции.
+			"intro": Schema.opt(text),
+			"outro": Schema.opt(text),
 		}), 1),
 	})
 
@@ -244,6 +290,7 @@ static func _build() -> void:
 		"treasury": Schema.obj({"audit_mole_hunt_multiplier": Schema.n(1, 5)}),
 		"thresholds": Schema.obj({"warning": scale, "danger": scale}),
 		"meeting": Schema.obj({"anxiety_cooldown": Schema.i(0, 100), "coercion_threshold": Schema.i(1, 20)}),
+		"delegation": Schema.obj({"unlock_after_personal_ops": Schema.i(0, 20), "few_districts_penalty": Schema.n(0, 1)}),
 		"finance": Schema.obj({
 			"ctr_threshold_usd": Schema.i(1), "ctr_treasury": delta, "structuring_treasury": delta,
 			"mlca_date": Schema.s("^\\d{4}-\\d{2}-\\d{2}$", "дата в формате ГГГГ-ММ-ДД"),
@@ -273,4 +320,6 @@ static func _build() -> void:
 		}), 1),
 	})
 
-	_cache["cues"] = Schema.arr(Schema.obj({"tag": tag, "kind": Schema.e(["tail", "noise", "ambient"]), "text": text}))
+	# variants — разные описания одной приметы на разных точках (смена одежды).
+	_cache["cues"] = Schema.arr(Schema.obj({"tag": tag, "kind": Schema.e(["tail", "noise", "ambient"]), "text": text,
+		"variants": Schema.opt(Schema.arr({"type": "text"}), [])}))

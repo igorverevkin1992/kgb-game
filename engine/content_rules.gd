@@ -31,6 +31,7 @@ static func check(content: Dictionary, file_of: Dictionary, opts := {}) -> Array
 	_achievements(ctx)
 	_age16(ctx)
 	_archive(ctx)
+	_act2(ctx)
 	return ctx.issues
 
 
@@ -520,3 +521,49 @@ static func _archive(ctx: Dictionary) -> void:
 				_push(ctx, "error", "archive", "Неизвестная концовка в «%s». Допустимо: %s" % [a.unlock, ", ".join(Archive.ENDINGS)], "%s.unlock" % a.id, a.id)
 		elif a.unlock != "" and not Achievements.EVENTS.has(a.unlock):
 			_push(ctx, "error", "archive", "Запись открывается по неизвестному событию «%s»" % a.unlock, "%s.unlock" % a.id, a.id)
+
+
+## 17. Вторая фаза: приёмы наружки, тайники, подчинённые, решения резидента.
+static func _act2(ctx: Dictionary) -> void:
+	var c: Dictionary = ctx.content
+	var clue_ids := _ids(c.clues, "clue_id")
+	var op_ids := {}
+	for o in c.operatives:
+		op_ids[o.operative_id] = true
+	var tech_ru := {"relay": "эстафета машин", "clothes": "смена одежды", "aircraft": "наблюдение с воздуха"}
+	for op in c.ops:
+		var id: String = op.op_id
+		# Новый приём ФБР — только после ориентировки о нём (раньше по времени, а не в ту же неделю).
+		var tech: String = op.sdr.get("technique", "")
+		if tech != "":
+			var taught: bool = c.cables.any(func(x): return x.teaches == tech and (int(x.act) < int(op.act) or (int(x.act) == int(op.act) and int(x.week) < int(op.week))))
+			if not taught:
+				_push(ctx, "error", "technique", "Приём «%s» на маршруте без ориентировки о нём раньше этой недели (поле teaches у депеши)" % tech_ru[tech], "%s.sdr.technique" % id, id)
+			if not op.sdr.surveillance_present:
+				_push(ctx, "warning", "technique", "Приём наружки указан, но хвоста на маршруте нет", "%s.sdr.technique" % id, id)
+		var who: String = op.get("operative_id", Delegation.RESIDENT)
+		if who != Delegation.RESIDENT and not op_ids.has(who):
+			_push(ctx, "error", "delegation", "Нет оперработника «%s» в operatives/" % who, "%s.operative_id" % id, id)
+		var ct: String = op.get("contact_target_id", "")
+		if ct != "":
+			var t := Campaign.target_by_id(c, ct)
+			if t.is_empty():
+				_push(ctx, "error", "refs", "Тайник для несуществующего кандидата «%s»" % ct, "%s.contact_target_id" % id, id)
+			elif not op.requires_targets_unlocked.has(ct):
+				_push(ctx, "error", "refs", "Тайник для «%s» должен требовать установленного кандидата (requires_targets_unlocked)" % ct, "%s.requires_targets_unlocked" % id, id)
+			if op.get("drop") == null:
+				_push(ctx, "warning", "refs", "У тайника нет описания drop (псевдоним, сигнал, контейнер)", "%s.drop" % id, id)
+	for d in c.decisions:
+		var id: String = d.decision_id
+		var tr: Dictionary = d.trigger
+		if int(tr.week) == 0 and tr.clue_id == "" and tr.flag == "":
+			_push(ctx, "warning", "decisions", "У решения нет условия: появится сразу в начале фазы операции", "%s.trigger" % id, id)
+		if tr.clue_id != "" and not clue_ids.has(tr.clue_id):
+			_push(ctx, "error", "decisions", "Решение ждёт несуществующие сведения «%s»" % tr.clue_id, "%s.trigger.clue_id" % id, id)
+		for o in d.options:
+			var out: String = o.effects.get("operative_out", "")
+			if out != "" and not op_ids.has(out):
+				_push(ctx, "error", "decisions", "Вариант выводит из работы несуществующего оперработника «%s»" % out, "%s.options" % id, id)
+	for cue in c.cues:
+		if not cue.variants.is_empty() and cue.kind != "tail":
+			_push(ctx, "warning", "technique", "Варианты описания нужны только приметам хвоста (смена одежды)", cue.tag, "", "map/cues.json")

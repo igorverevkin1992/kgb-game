@@ -40,6 +40,11 @@ func scene_epilogue_after_phase_one() -> void:
 		{"type": "recruitment", "target_id": C, "result": "success"},
 		{"type": "pay_agent", "target_id": C, "amount": 4800, "instrument": "cash", "parts": 1}, NEXT,
 		{"type": "submit_report", "report": "truth"}])
+	# Финал всей операции (после последней фазы) — ставим его прямо, без прохождения второй фазы.
+	Game.state.ending = "campaign_complete"
+	Game.phase_card = 0
+	Game.changed.emit()
+	await frames()
 	eq(node("ending").get_meta("ending"), "campaign_complete")
 	# Документальный эпилог: хроника дела Эймса по листам.
 	await press("ending-epilogue")

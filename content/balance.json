@@ -82,5 +82,9 @@
     "reports_min_loyalty": 40,
     "coerced_loyalty_penalty": 15,
     "loyalty_coerced_week": 3
+  },
+  "delegation": {
+    "unlock_after_personal_ops": 3,
+    "few_districts_penalty": 0.3
   }
 }

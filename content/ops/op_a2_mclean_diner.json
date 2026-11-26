@@ -1,0 +1,24 @@
+{
+  "op_id": "op_a2_mclean_diner",
+  "act": 2,
+  "week": 10,
+  "type": "recon",
+  "title": {
+    "ru": "Обеденный перерыв в Маклине"
+  },
+  "location": {
+    "site_id": "site_mclean_diner"
+  },
+  "sdr": {
+    "surveillance_present": true,
+    "repeating_cue": "woman_auburn_bob",
+    "technique": "clothes",
+    "abort_penalty_days": 1,
+    "ignore_consequence": {
+      "sog_heat_delta": 15
+    }
+  },
+  "requires_targets_unlocked": [
+    "tar_jenkins_clara"
+  ]
+}

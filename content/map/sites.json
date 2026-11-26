@@ -381,6 +381,45 @@
         "horse_trailer",
         "farm_stand"
       ]
+    },
+    {
+      "site_id": "site_fbi_cafeteria",
+      "name": {
+        "ru": "Кафетерий напротив штаб-квартиры ФБР, Пенсильвания-авеню"
+      },
+      "kind": "cafe",
+      "role": "target",
+      "district": "dc_northwest",
+      "pos": {
+        "x": 35.2,
+        "y": 18.4
+      }
+    },
+    {
+      "site_id": "site_lafayette_square",
+      "name": {
+        "ru": "Площадь Лафайет, напротив Белого дома"
+      },
+      "kind": "park",
+      "role": "target",
+      "district": "dc_northwest",
+      "pos": {
+        "x": 34.6,
+        "y": 17.9
+      }
+    },
+    {
+      "site_id": "site_mclean_diner",
+      "name": {
+        "ru": "Закусочная «Сильвер дайнер», Маклин"
+      },
+      "kind": "cafe",
+      "role": "target",
+      "district": "mclean",
+      "pos": {
+        "x": 26.9,
+        "y": 15.1
+      }
     }
   ]
 }

@@ -6,7 +6,8 @@ class_name Achievements
 ## События движка, на которые можно повесить достижение (проверяет валидатор).
 const EVENTS := ["target_unlocked", "target_recruited", "target_lost", "op_resolved", "act_completed",
 	"directive_verified", "promise_kept", "analysis_approved", "meeting_ended", "lie_uncovered",
-	"game_over", "request_answered", "ctr_filed", "clue_found", "agent_broke"]
+	"game_over", "request_answered", "ctr_filed", "clue_found", "agent_broke",
+	"decision_made", "contact_established", "operative_report"]
 
 
 static func unlocked_by(content: Dictionary, events: Array) -> Array:

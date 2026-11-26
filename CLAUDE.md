@@ -140,6 +140,11 @@ tools/telemetry-report.sh [папка] # сводка журналов плей�
   Документальный эпилог в финале (`ui/epilogue_view.gd`, `Game.epilogue_page`) — листы раздела
   `epilogue` с `unlock: "ending:campaign_complete"`: хроника дела Эймса (реальные люди — только здесь).
 
+- Вторая фаза (шаг 11): `engine/delegation.gd` (поручения подчинённым, `plan_op.operative`),
+  `engine/decisions.gd` (решения резидента, действие `decide`), тайник `op.contact_target_id`,
+  приёмы наружки `sdr.technique` + депеши `teaches`, перк `sog_schedule`; UI — `decision_view.gd`,
+  карточка смены фаз `Overlays.phase_card` (`Game.phase_card`), гул «Монополии» `SoundBank.set_tunnel`.
+
 ## Договорённости
 - Пользователь немного программировал. Объясняй ключевые решения коротко и по-русски.
   Код пишешь ты, а тексты, баланс и решения по дизайну — за пользователем.

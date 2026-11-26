@@ -8,12 +8,13 @@ extends Node
 ## заглушки. Имена и что где звучит — в docs/assets.md.
 
 const RATE := 22050
-const NAMES := ["click", "paper", "stamp", "rotor", "teletype", "reel", "pencil"]
+const NAMES := ["click", "paper", "stamp", "rotor", "teletype", "reel", "pencil", "tunnel"]
 const BUSES := ["SFX", "Ambient"]
 
 var _cache := {}
 var _players: Array[AudioStreamPlayer] = []
 var _ambient: AudioStreamPlayer
+var _tunnel: AudioStreamPlayer
 
 
 func _ready() -> void:
@@ -31,6 +32,10 @@ func _ready() -> void:
 	_ambient = AudioStreamPlayer.new()
 	_ambient.bus = "Ambient"
 	add_child(_ambient)
+	_tunnel = AudioStreamPlayer.new()
+	_tunnel.bus = "Ambient"
+	_tunnel.volume_db = -14.0
+	add_child(_tunnel)
 
 
 ## Громкость шины 0–100 (0 — без звука).
@@ -61,6 +66,15 @@ func start_ambient() -> void:
 		return
 	_ambient.stream = stream("room")
 	_ambient.play()
+
+
+## Низкий гул «работ под зданием» (до раскрытия «Монополии»).
+func set_tunnel(on: bool) -> void:
+	if on and not _tunnel.playing:
+		_tunnel.stream = stream("tunnel")
+		_tunnel.play()
+	elif not on and _tunnel.playing:
+		_tunnel.stop()
 
 
 ## Поток по имени: свой файл из assets/sfx или процедурная заглушка (кэшируется).
@@ -110,9 +124,11 @@ static func synth(name: String) -> AudioStreamWAV:
 			out = _hum(rng, 1.0, 50.0, 0.18)
 		"room":
 			out = _room(rng, 6.0)
+		"tunnel":
+			out = _hum(rng, 4.0, 31.0, 0.22)
 		_:
 			out = _clicks(rng, [0.0], 0.05, 2000.0, 0.3)
-	return _wav(out, name == "room")
+	return _wav(out, name == "room" or name == "tunnel")
 
 
 ## Сухие механические щелчки в моменты t (секунды).

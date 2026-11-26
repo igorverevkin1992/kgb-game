@@ -1,0 +1,21 @@
+{
+  "op_id": "op_a2_rally_lafayette",
+  "act": 2,
+  "week": 8,
+  "type": "recon",
+  "title": {
+    "ru": "Антиядерный пикет у Белого дома"
+  },
+  "location": {
+    "site_id": "site_lafayette_square"
+  },
+  "sdr": {
+    "surveillance_present": true,
+    "repeating_cue": "man_umbrella_cane",
+    "technique": "relay",
+    "abort_penalty_days": 1,
+    "ignore_consequence": {
+      "sog_heat_delta": 15
+    }
+  }
+}

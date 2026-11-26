@@ -97,7 +97,8 @@ static func _plan_panel(panel: VBoxContainer) -> void:
 		panel.add_child(_note(T.t("map.opExpense", {"usd": Fmt.usd(int(Game.content.balance.finance.op_expense_usd)), "fund": Fmt.usd(int(s.fund_usd))})))
 	for op in ops:
 		var cur: bool = op.op_id == draft.op_id
-		var b := Style.button("%s\n%s" % [T.loc(op.title), _site_name(op.location.site_id)], "op-" + op.op_id, Style.PAPER,
+		var sched := _schedule_note(op)
+		var b := Style.button("%s\n%s%s" % [T.loc(op.title), _site_name(op.location.site_id), ("\n" + sched) if sched != "" else ""], "op-" + op.op_id, Style.PAPER,
 			Color(Style.OCHRE, 0.18) if cur else Color(0, 0, 0, 0.25), Style.OCHRE if cur else Color(Style.PAPER, 0.55), 13)
 		b.disabled = limit
 		b.pressed.connect(Game.set_map_draft.bind(op.op_id, []))
@@ -123,14 +124,16 @@ static func _plan_panel(panel: VBoxContainer) -> void:
 				wv.add_child(Style.para("• " + _issue_text(w), PANEL_W - 24, Style.mono(), 13, Style.PAPER))
 			warn.add_child(wv)
 			builder.add_child(warn)
+		builder.add_child(_executor(draft))
 		var actions := Style.hbox(8)
 		var confirm := Style.button(T.t("sdr.plan.confirm"), "confirm-route", Style.PAPER, Color(0, 0, 0, 0.25), Style.PAPER, 13)
 		confirm.disabled = not analysis.blocking.is_empty()
 		confirm.pressed.connect(func():
 			var stops: Array = Game.map_draft.stops.duplicate()
 			var op_id: String = Game.map_draft.op_id
+			var who: String = Game.map_draft.get("operative", Delegation.RESIDENT)
 			Game.map_draft = {"op_id": "", "stops": []}
-			Game.dispatch({"type": "plan_op", "op_id": op_id, "route": stops}))
+			Game.dispatch({"type": "plan_op", "op_id": op_id, "route": stops, "operative": who}))
 		actions.add_child(confirm)
 		var reset := Style.button(T.t("sdr.plan.reset"), "reset-route")
 		reset.pressed.connect(Game.set_map_draft.bind(draft.op_id, []))
@@ -182,22 +185,73 @@ static func _planned(panel: VBoxContainer, cancellable: bool, departable: bool) 
 		var stops: Array = s.routes.get(id, {}).get("stops", []).map(func(x): return _site_name(x).get_slice(",", 0))
 		box.add_child(Style.label(T.loc(op.title), Style.mono(), 14, Style.PAPER_LIGHT))
 		box.add_child(Style.para(" — ".join(stops), PANEL_W, Style.form(), 14, Color(Style.PAPER, 0.75)))
+		var who: String = s.routes.get(id, {}).get("operative", Delegation.RESIDENT)
+		if who != Delegation.RESIDENT:
+			box.add_child(Style.para(T.t("sdr.executor.assigned", {"name": T.loc(Delegation.operative(Game.content, who).name),
+				"p": int(round(Delegation.notice_chance(Game.content, who, s.routes[id].stops) * 100))}), PANEL_W, Style.mono(), 13, Color("#e9d8a6")))
+		if op.get("drop") != null:
+			box.add_child(Style.para(T.t("sdr.drop", {"code": op.drop.codename, "signal": T.loc(op.drop.signal), "container": T.loc(op.drop.container)}), PANEL_W, Style.mono(), 12, Color(Style.PAPER, 0.7)))
 		if cancellable:
 			var c := Style.button(T.t("sdr.cancel"), "cancel-" + id)
 			c.pressed.connect(Game.dispatch.bind({"type": "cancel_op", "op_id": id}))
 			box.add_child(c)
-		if departable:
+		if departable and who != Delegation.RESIDENT:
+			var rb := Style.button(T.t("sdr.executor.report", {"name": T.loc(Delegation.operative(Game.content, who).name).get_slice(" — ", 0)}), "report-" + id, Style.PAPER, Color(0, 0, 0, 0.25), Style.PAPER)
+			rb.pressed.connect(_resolve.bind({"op_id": id, "step": 3, "verdict": false, "marks": [], "result": "", "delegated": true}, "auto"))
+			box.add_child(rb)
+		elif departable:
 			var d := Style.button(T.t("sdr.depart"), "depart-" + id, Style.PAPER, Color(0, 0, 0, 0.25), Style.PAPER)
 			d.pressed.connect(Game.set_sdr_run.bind({"op_id": id, "step": 1, "verdict": false, "marks": [], "result": ""}))
 			box.add_child(d)
 	panel.add_child(box)
 
 
-static func _cue_text(tag: String) -> String:
+## Текст приметы; у сменившего одежду — своё описание на каждой точке.
+static func _cue_text(tag: String, stop := 0) -> String:
 	for c in Game.content.cues:
 		if c.tag == tag:
-			return T.loc(c.text)
+			var vs: Array = c.get("variants", [])
+			return T.loc(vs[stop % vs.size()]) if not vs.is_empty() else T.loc(c.text)
 	return tag
+
+
+## Графики наружки от агента в ФБР: видно, будет ли хвост на этом выходе.
+static func _schedule_note(op: Dictionary) -> String:
+	var s: Dictionary = Game.state
+	var src := ""
+	for t in Game.content.targets:
+		if t.get("perks", []).has("sog_schedule") and s.targets[t.target_id].recruited and not s.targets[t.target_id].lost:
+			src = T.loc(t.name)
+	if src == "":
+		return ""
+	return T.t("sdr.schedule.tail" if Campaign.tail_present(s, op) else "sdr.schedule.clean", {"name": src})
+
+
+## Кто идёт: резидент сам (проверочный маршрут вручную) или подчинённый (с видимой вероятностью).
+static func _executor(draft: Dictionary) -> Control:
+	var s: Dictionary = Game.state
+	var c: Dictionary = Game.content
+	var who: String = draft.get("operative", Delegation.RESIDENT)
+	var box := Style.vbox(6)
+	box.name = "executor"
+	box.add_child(Style.label(T.t("sdr.executor.title").to_upper(), Style.form(true), 14, Color(Style.PAPER, 0.8)))
+	var opts: Array = [[Delegation.RESIDENT, T.t("sdr.executor.self")]]
+	if Delegation.unlocked(s, c):
+		for o in Delegation.available(s, c):
+			var p := int(round(Delegation.notice_chance(c, o.operative_id, draft.stops) * 100))
+			opts.append([o.operative_id, T.t("sdr.executor.other", {"name": T.loc(o.name), "p": p})])
+	for o in opts:
+		var on: bool = who == o[0]
+		var b := Style.button(o[1], "executor-" + o[0], Style.INK if on else Style.PAPER, Style.PAPER if on else Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.5), 12)
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		b.custom_minimum_size.x = PANEL_W
+		b.pressed.connect(Game.set_map_operative.bind(o[0]))
+		box.add_child(b)
+	if not Delegation.unlocked(s, c):
+		box.add_child(_note(T.t("sdr.executor.locked", {"n": c.balance.delegation.unlock_after_personal_ops, "k": int(s.get("personal_ops", 0))})))
+	elif who != Delegation.RESIDENT:
+		box.add_child(_note(T.loc(Delegation.operative(c, who).bio)))
+	return box
 
 
 static func _resolve(run: Dictionary, decision: String) -> void:
@@ -221,7 +275,11 @@ static func _run_panel(panel: VBoxContainer, run: Dictionary) -> void:
 		v.add_child(Style.label(T.t("sdr.result.aborted" if aborted else "sdr.result.done").to_upper(), Style.form(true), 20, Style.INK))
 		v.add_child(Style.para(T.t("sdr.result.abortedText") if aborted else T.t("sdr.result.doneText", {"name": target_name}), PANEL_W - 32, Style.mono(), 14, Style.INK))
 		for e in Game.last_events:
-			if e.type == "clue_found":
+			if e.type == "operative_report":
+				v.add_child(Style.para(T.t("sdr.executor.noticed" if e.noticed else "sdr.executor.notNoticed", {"name": T.loc(Delegation.operative(Game.content, e.operative).name)}), PANEL_W - 32, Style.mono(), 13, Style.INK))
+			elif e.type == "contact_established":
+				v.add_child(Style.para("• " + T.t("event.contact_established", {"name": T.loc(Campaign.target_by_id(Game.content, e.target_id).name)}), PANEL_W - 32, Style.mono(), 13, Style.STAMP_RED))
+			elif e.type == "clue_found":
 				v.add_child(Style.para("• " + T.t("event.clue_found", {"name": T.loc(Campaign.clue_by_id(Game.content, e.clue_id).title)}), PANEL_W - 32, Style.mono(), 13, Style.INK))
 			elif e.type == "target_unlocked":
 				v.add_child(Style.para("• " + T.t("event.target_unlocked", {"name": T.loc(Campaign.target_by_id(Game.content, e.target_id).name)}), PANEL_W - 32, Style.mono(), 13, Style.STAMP_RED))
@@ -251,7 +309,7 @@ static func _run_panel(panel: VBoxContainer, run: Dictionary) -> void:
 			for tag in route.observations[i]:
 				var key := "%d:%s" % [i + 1, tag]
 				var marked: bool = run.marks.has(key)
-				var b := Style.button(_cue_text(tag), "note-%d-%s" % [i + 1, tag], Style.INK,
+				var b := Style.button(_cue_text(tag, i), "note-%d-%s" % [i + 1, tag], Style.INK,
 					Color(Style.THREAD_RED, 0.08) if marked else Color(0, 0, 0, 0), Style.THREAD_RED if marked else Color(0, 0, 0, 0), 12)
 				(b.get_theme_stylebox("normal") as StyleBoxFlat).set_border_width_all(2)
 				(b.get_theme_stylebox("normal") as StyleBoxFlat).set_corner_radius_all(14)
@@ -304,7 +362,7 @@ static func _run_panel(panel: VBoxContainer, run: Dictionary) -> void:
 			var card := Style.panel(Style.PAPER_LIGHT, 7)
 			card.name = "card-" + tag
 			card.set_meta("cue", tag)
-			card.add_child(Style.label(_cue_text(tag), Style.form(), 14, Style.INK))
+			card.add_child(Style.label(_cue_text(tag, i), Style.form(), 14, Style.INK))
 			cards.add_child(card)
 		v.add_child(cards)
 		stop.add_child(v)

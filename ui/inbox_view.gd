@@ -17,6 +17,27 @@ static func build() -> Control:
 	var list := Style.vbox(8)
 	list.name = "inbox-list"
 	list.custom_minimum_size.x = 420
+	# Решения резидента — первыми: ждущие решения отмечены красным.
+	for dec in Decisions.arrived(s, Game.content):
+		var waiting: bool = not s.decisions.has(dec.decision_id)
+		var on: bool = dec.decision_id == Game.inbox_selected
+		var db := Button.new()
+		db.name = "decision-item-" + dec.decision_id
+		db.focus_mode = Control.FOCUS_NONE
+		var dsb := Style.box(Color(Style.STAMP_RED, 0.25 if on else 0.14), Style.STAMP_RED if waiting else Color(0, 0, 0, 0), 0, 0, 10)
+		dsb.border_width_left = 4
+		db.add_theme_stylebox_override("normal", dsb)
+		db.add_theme_stylebox_override("hover", dsb)
+		db.add_theme_stylebox_override("pressed", dsb)
+		db.pressed.connect(Game.select_document.bind(dec.decision_id))
+		var dv := Style.vbox(2)
+		dv.position = Vector2(14, 8)
+		dv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		dv.add_child(Style.label(T.t("decision.waiting") if waiting else T.t("decision.done"), Style.form(), 13, Color(Style.PAPER, 0.75)))
+		dv.add_child(Style.para(T.loc(dec.title), 390, Style.form(waiting), 17, Style.PAPER))
+		db.add_child(dv)
+		db.custom_minimum_size = Vector2(420, 64)
+		list.add_child(db)
 	for d in docs:
 		var unread: bool = not s.read_cables.has(d.cable_id)
 		var cur: bool = d.cable_id == Game.inbox_selected
@@ -58,7 +79,10 @@ static func build() -> Control:
 	var center := CenterContainer.new()
 	center.custom_minimum_size = Vector2(990, 0)
 	var cur_doc := Campaign.cable_by_id(Game.content, Game.inbox_selected)
-	if not cur_doc.is_empty() and s.delivered_cables.has(cur_doc.cable_id) and cur_doc.kind != "directive":
+	var cur_dec := Decisions.by_id(Game.content, Game.inbox_selected)
+	if not cur_dec.is_empty() and Decisions.arrived(s, Game.content).has(cur_dec):
+		center.add_child(DecisionView.build(cur_dec))
+	elif not cur_doc.is_empty() and s.delivered_cables.has(cur_doc.cable_id) and cur_doc.kind != "directive":
 		center.add_child(DocumentView.build(cur_doc))
 	else:
 		var has_unread := not Cipher.unread_mail(s, Game.content).is_empty()

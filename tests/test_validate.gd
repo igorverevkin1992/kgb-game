@@ -142,6 +142,20 @@ func test_perfect_player_act1() -> void:
 	var rec: Array = res.recruited.keys()
 	rec.sort()
 	eq(rec, ["tar_calloway_martin", "tar_vargas_ellen"])
-	eq(res.clues.size(), c.clues.size())
+	eq(res.clues.size(), c.clues.filter(func(x): return x.source.channel != "agent" or int(x.get("act", 1)) <= 1).size() - c.clues.filter(func(x): return x.source.channel in ["document", "field", "meeting"] and _act_of(c, x) > 1).size())
+	var full := ContentSim.run(c, {"max_act": 2})
+	eq(full.clues.size(), c.clues.size(), "во второй фазе находятся все сведения")
+	ok(full.recruited.has("tar_hales_robert") and full.recruited.has("tar_jenkins_clara"), "второй эшелон достижим")
+
+
+func _act_of(c: Dictionary, clue: Dictionary) -> int:
+	var from: String = clue.source.from
+	for k in ["cables", "ops", "dialogs"]:
+		for x in c[k]:
+			if x.get("cable_id", x.get("op_id", x.get("dialog_id", ""))) == from:
+				if k == "dialogs":
+					return Campaign.target_by_id(c, x.target_id).act
+				return int(x.act)
+	return 1
 	var without_vargas := ContentSim.run(c, {"max_act": 1, "failed_targets": ["tar_vargas_ellen"]})
 	ok(without_vargas.recruited.has("tar_calloway_martin"), "Кэллоуэй достижим без Варгас")

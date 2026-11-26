@@ -1,0 +1,90 @@
+{
+  "target_id": "tar_hales_robert",
+  "tier": 2,
+  "act": 2,
+  "name": {
+    "ru": "Роберт Хэйлс"
+  },
+  "role": {
+    "ru": "Аналитик компьютерного учёта контрразведки, Вашингтонское управление ФБР"
+  },
+  "affiliation": "FBI",
+  "unlock": {
+    "clues_required": 2,
+    "clue_ids": [
+      "clue_hales_letter",
+      "clue_hales_mocked",
+      "clue_hales_named_by_calloway",
+      "clue_hales_vargas_mortgage"
+    ]
+  },
+  "mice_profile": {
+    "money": {
+      "true_value": 62,
+      "trigger": "big_family_bills"
+    },
+    "ideology": {
+      "true_value": 10,
+      "trigger": null
+    },
+    "compromise": {
+      "true_value": 20,
+      "trigger": null
+    },
+    "ego": {
+      "true_value": 78,
+      "trigger": "contempt_for_bosses"
+    }
+  },
+  "approach": {
+    "flag_mode": "contactless",
+    "cover": {
+      "ru": "Анонимная переписка и тайники"
+    },
+    "key_axes": [
+      "ego",
+      "money"
+    ]
+  },
+  "perks": [
+    "sog_schedule"
+  ],
+  "analysis": {
+    "leading_axis": "ego",
+    "access_options": [
+      {
+        "id": "sog_schedules",
+        "text": {
+          "ru": "Графики и маршруты бригад наружного наблюдения ФБР"
+        }
+      },
+      {
+        "id": "fbi_budget",
+        "text": {
+          "ru": "Бюджет и штатное расписание штаб-квартиры ФБР"
+        }
+      },
+      {
+        "id": "visa_files",
+        "text": {
+          "ru": "Визовые дела сотрудников посольства"
+        }
+      }
+    ],
+    "correct_access": "sog_schedules",
+    "hint": {
+      "ru": "Почему человек, который знает о наружке всё, пишет анонимно — и на кого он жалуется в каждом письме?"
+    }
+  },
+  "finance": {
+    "salary_usd": 38000,
+    "promised_usd": 15000,
+    "promise": {
+      "ru": "Первое вознаграждение за материалы — наличными через тайник"
+    }
+  },
+  "initial_state": {
+    "rapport": 30,
+    "paranoia": 50
+  }
+}

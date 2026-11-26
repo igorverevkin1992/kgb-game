@@ -24,7 +24,9 @@ func _render() -> void:
 		add_child(Overlays.analyst())
 	if Game.service_open:
 		add_child(Overlays.service())
-	if Game.epilogue_page >= 0:
+	if Game.phase_card > 0 and Game.state.ending == null:
+		add_child(Overlays.phase_card(Game.phase_card))
+	elif Game.epilogue_page >= 0:
 		add_child(EpilogueView.build())
 	elif Game.state.ending != null and not Game.service_open and Game.view != "archive":
 		add_child(Overlays.ending())

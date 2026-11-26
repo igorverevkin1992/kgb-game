@@ -96,5 +96,55 @@
     "match": {
       "ending": "recalled"
     }
+  },
+  {
+    "id": "ACH_PHASE_TWO",
+    "title": {
+      "ru": "Периферия"
+    },
+    "description": {
+      "ru": "Завершить вторую фазу операции."
+    },
+    "event": "act_completed",
+    "match": {
+      "act": 2
+    }
+  },
+  {
+    "id": "ACH_MONOPOLY_GAME",
+    "title": {
+      "ru": "Пустая порода"
+    },
+    "description": {
+      "ru": "Оставить противнику туннель и вести оперативную игру."
+    },
+    "event": "decision_made",
+    "match": {
+      "option_id": "game"
+    }
+  },
+  {
+    "id": "ACH_CONTACTLESS",
+    "title": {
+      "ru": "Без единой встречи"
+    },
+    "description": {
+      "ru": "Установить связь с агентом только через тайник."
+    },
+    "event": "contact_established",
+    "match": {}
+  },
+  {
+    "id": "ACH_COMRADE",
+    "title": {
+      "ru": "Своих не бросаем"
+    },
+    "description": {
+      "ru": "Вывести товарища из-под наблюдения."
+    },
+    "event": "decision_made",
+    "match": {
+      "option_id": "protect"
+    }
   }
 ]

@@ -1,0 +1,35 @@
+{
+  "op_id": "op_a2_drop_ellis",
+  "act": 2,
+  "week": 9,
+  "type": "dead_drop_load",
+  "title": {
+    "ru": "Тайник «ЭЛЛИС» в парке Фокстон"
+  },
+  "location": {
+    "site_id": "site_foxstone_park"
+  },
+  "sdr": {
+    "surveillance_present": true,
+    "repeating_cue": "light_plane",
+    "technique": "aircraft",
+    "abort_penalty_days": 2,
+    "ignore_consequence": {
+      "sog_heat_delta": 25,
+      "flag_set": "fbi_photographed_foxstone"
+    }
+  },
+  "requires_targets_unlocked": [
+    "tar_hales_robert"
+  ],
+  "contact_target_id": "tar_hales_robert",
+  "drop": {
+    "codename": "ЭЛЛИС",
+    "signal": {
+      "ru": "Вертикальная метка мелом на табличке парка"
+    },
+    "container": {
+      "ru": "Полый штырь в земле под мостиком через Вулфтрэп-Крик"
+    }
+  }
+}

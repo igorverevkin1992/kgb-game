@@ -37,7 +37,8 @@ func test_cautious_resident() -> void:
 	var end := H.play(self, s, [{"type": "recruitment", "target_id": "tar_calloway_martin", "result": "success"}, H.pay("tar_calloway_martin"), NEXT, H.report("truth")])
 	ok(end.state.targets.tar_calloway_martin.recruited)
 	ok(end.events.any(func(e): return e.type == "act_completed" and e.act == 1), "акт завершён")
-	eq(end.state.ending, "campaign_complete")
+	eq(end.state.ending, null, "кампания продолжается")
+	eq([end.state.act, end.state.week, end.state.phase], [2, 7, "morning"], "вторая фаза операции, январь 1985 года")
 	eq(end.state.risks.moscow_pressure, 3)
 
 
@@ -60,7 +61,7 @@ func test_reckless_resident() -> void:
 	s = H.play(self, s, [{"type": "recruitment", "target_id": "tar_calloway_martin", "result": "success"}, H.pay("tar_calloway_martin"), NEXT, H.report("silence")]).state
 	ok(s.targets.tar_calloway_martin.recruited)
 	eq(s.lies.size(), 1, "умолчание без сбоев — не ложь")
-	eq(s.ending, "campaign_complete")
+	eq(s.act, 2, "началась вторая фаза операции")
 
 
 func test_idle_recall() -> void:

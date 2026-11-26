@@ -59,6 +59,8 @@ var finance_agent := ""
 var archive_selected := ""
 ## Документальный эпилог после финала: открытый лист (-1 — закрыт).
 var epilogue_page := -1
+## Карточка смены фаз операции: номер завершённой фазы (0 — не показывать).
+var phase_card := 0
 var finance_forms := {}
 var tape_selected := -1
 var tape_cursor := 0
@@ -98,7 +100,20 @@ func _ready() -> void:
 	_start_telemetry()
 
 
+## Фон комнаты: до раскрытия «Монополии» под ним едва слышный низкий гул — работы под зданием.
+func _sync_ambient() -> void:
+	if sound != null and not state.is_empty():
+		sound.set_tunnel(not state.flags.has("monopoly_known"))
+
+
+func close_phase_card() -> void:
+	phase_card = 0
+	sfx("paper")
+	changed.emit()
+
+
 func _start_telemetry() -> void:
+	_sync_ambient()
 	telemetry.enabled = bool(settings.telemetry)
 	telemetry.start_session(state, view)
 
@@ -141,6 +156,11 @@ func dispatch(action: Dictionary) -> void:
 	Saves.persist(storage, prev, r.state, content)
 	state = r.state
 	_event_sound(r.events)
+	if state.ending == null:
+		for e in r.events:
+			if e.type == "act_completed":
+				phase_card = int(e.act)
+	_sync_ambient()
 	# Встреча закончилась — на магнитофоне сразу её катушка, головка на последней строке.
 	if prev.meeting != null and state.meeting == null:
 		meeting_trump = ""
@@ -222,6 +242,7 @@ func open(v: String) -> void:
 
 func close() -> void:
 	epilogue_page = -1
+	phase_card = 0
 	view = ""
 	analyst_open = false
 	service_open = false
@@ -294,6 +315,9 @@ func set_instant_text(on: bool) -> void:
 ## Открыть документ в лотке; непрочитанный отмечается прочитанным.
 func select_document(cable_id: String) -> void:
 	inbox_selected = cable_id
+	if cable_id.begins_with("dec_"):
+		changed.emit()
+		return
 	if not state.read_cables.has(cable_id):
 		dispatch({"type": "read_cable", "cable_id": cable_id})
 	else:
@@ -330,7 +354,14 @@ func set_board_form(field: String, value: String) -> void:
 
 
 func set_map_draft(op_id: String, stops: Array) -> void:
-	map_draft = {"op_id": op_id, "stops": stops}
+	var who: String = map_draft.get("operative", Delegation.RESIDENT) if map_draft.get("op_id", "") == op_id else Delegation.RESIDENT
+	map_draft = {"op_id": op_id, "stops": stops, "operative": who}
+	changed.emit()
+
+
+## Кому поручить выход: резидент сам или подчинённый.
+func set_map_operative(id: String) -> void:
+	map_draft["operative"] = id
 	changed.emit()
 
 

@@ -7,7 +7,7 @@ static func build(cable: Dictionary) -> Control:
 	match cable.kind:
 		"press_clipping":
 			return _clipping(cable)
-		"intercept":
+		"intercept", "anonymous":
 			return _intercept(cable)
 		"letter":
 			return _letter(cable)

@@ -137,6 +137,12 @@ static func _event_text(e: Dictionary) -> String:
 			return T.t("event.report_" + e.report)
 		"request_answered":
 			return T.t("event.request_" + ("granted" if e.granted else "refused"), {"name": T.loc(Cipher.request_by_id(c, e.request_id).title)})
+		"decision_made":
+			return T.t("event.decision_made", {"name": T.loc(Decisions.by_id(c, e.decision_id).get("title", {"ru": e.decision_id}))})
+		"contact_established":
+			return T.t("event.contact_established", {"name": _tname(e.target_id)})
+		"operative_report":
+			return T.t("event.operative_noticed" if e.noticed else "event.operative_missed", {"name": T.loc(Delegation.operative(c, e.operative).get("name", {"ru": e.operative}))})
 		"agent_broke":
 			return T.t("event.agent_broke", {"name": _tname(e.target_id)})
 		"meeting_ended":
@@ -344,6 +350,34 @@ static func _settings_tab(v: VBoxContainer) -> void:
 	box.add_child(build)
 	# Переключатель языка вернётся вместе с английской версией (см. docs/plan.md).
 	v.add_child(box)
+
+
+# ——— Смена фаз операции ———
+
+static func phase_card(done_act: int) -> Control:
+	var o := _overlay("phase-card", false)
+	var v: VBoxContainer = o[1]
+	var c: Dictionary = Game.content
+	var prev := {}
+	var next := Campaign.current_act_def(Game.state, c)
+	for a in c.campaign.acts:
+		if int(a.act) == done_act:
+			prev = a
+	_title(v, T.t("phase.done", {"phase": Fmt.op_phase(done_act)}), T.t("phase.stamp"))
+	if not prev.is_empty() and prev.get("outro") != null:
+		v.add_child(Style.para(T.loc(prev.outro), PANEL_W - 104, Style.mono(), 16, Style.INK))
+	if not next.is_empty():
+		v.add_child(Style.hline(Color(Style.INK, 0.3)))
+		v.add_child(Style.label("%s «%s»" % [Fmt.op_phase(next.act), T.loc(next.title)], Style.serif(true), 22, Style.INK))
+		v.add_child(Style.label(Fmt.date(Campaign.week_date(c, next.act, Game.state.week)), Style.form(), 14, Color(Style.INK, 0.65)))
+		if next.get("intro") != null:
+			v.add_child(Style.para(T.loc(next.intro), PANEL_W - 104, Style.mono(), 16, Style.INK))
+	var row := Style.hbox(12)
+	var go := Style.paper_button(T.t("phase.continue"), "phase-card-continue")
+	go.pressed.connect(Game.close_phase_card)
+	row.add_child(go)
+	v.add_child(row)
+	return o[0]
 
 
 # ——— Итог кампании ———

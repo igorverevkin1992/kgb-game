@@ -91,4 +91,7 @@ func scene_analysis_near_hints_approve_and_meet() -> void:
 	await key(KEY_ESCAPE)
 	await press("advance-phase")
 	await press("report-truth")
-	eq(node("ending").get_meta("ending"), "campaign_complete", "Акт I пройден")
+	ok(exists("phase-card"), "первая фаза операции пройдена")
+	has_text("phase-card", "ПЕРВАЯ ФАЗА ОПЕРАЦИИ ЗАВЕРШЕНА")
+	await press("phase-card-continue")
+	has_text("calendar-week", "Неделя 7")

@@ -1,0 +1,100 @@
+[
+  {
+    "clue_id": "clue_jenkins_letter_post",
+    "source": {
+      "channel": "document",
+      "from": "cable_a2_w7_post_letters"
+    },
+    "title": {
+      "ru": "Письмо в редакцию"
+    },
+    "text": {
+      "ru": "Клара Дженкинс из Маклина пишет в «Вашингтон пост», что «каждая новая ракета в Европе приближает день, когда спорить будет некому». Подпись, адрес и место работы не указаны."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_jenkins_clara",
+        "axis": "ideology"
+      }
+    ],
+    "chunk": "каждая новая ракета в Европе приближает день, когда спорить будет некому"
+  },
+  {
+    "clue_id": "clue_jenkins_rally",
+    "source": {
+      "channel": "field",
+      "from": "op_a2_rally_lafayette"
+    },
+    "title": {
+      "ru": "Пикет у Белого дома"
+    },
+    "text": {
+      "ru": "Среди участников антиядерного пикета — женщина с пропуском ЦРУ под шарфом. Держит плакат «Заморозить ядерные арсеналы» и уходит раньше всех, чтобы не попасть в объективы."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_jenkins_clara",
+        "axis": "ideology"
+      }
+    ]
+  },
+  {
+    "clue_id": "clue_jenkins_bookshop",
+    "source": {
+      "channel": "document",
+      "from": "cable_a2_w9_bookshop_intercept"
+    },
+    "title": {
+      "ru": "Заказ в книжном"
+    },
+    "text": {
+      "ru": "Клара Дженкинс заказывает в книжном на Висконсин-авеню книги о последствиях ядерной войны и просит не присылать уведомления на работу."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_jenkins_clara",
+        "axis": "ideology"
+      }
+    ],
+    "chunk": "просит не присылать уведомления на работу"
+  },
+  {
+    "clue_id": "clue_jenkins_named_by_hales",
+    "source": {
+      "channel": "agent",
+      "from": "tar_hales_robert"
+    },
+    "act": 2,
+    "title": {
+      "ru": "Сообщение «Хэйлса»"
+    },
+    "text": {
+      "ru": "В тайнике — записка: референт архива переаттестаций ЦРУ Клара Дженкинс встречается с женатым начальником отдела; служба безопасности пока не знает. Она же ведёт графики полиграфа."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_jenkins_clara",
+        "axis": "compromise"
+      }
+    ]
+  },
+  {
+    "clue_id": "clue_jenkins_affair",
+    "source": {
+      "channel": "field",
+      "from": "op_a2_mclean_diner"
+    },
+    "title": {
+      "ru": "Обед в Маклине"
+    },
+    "text": {
+      "ru": "В закусочной Дженкинс обедает с мужчиной в форменном галстуке Лэнгли; на его руке обручальное кольцо. Они садятся спиной к окну и уходят порознь."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_jenkins_clara",
+        "axis": "compromise"
+      }
+    ]
+  }
+]

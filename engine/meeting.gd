@@ -47,6 +47,8 @@ static func meet_error(s: Dictionary, content: Dictionary, target_id: String) ->
 	if ts.recruited or ts.lost:
 		return "Работа с этим кандидатом уже закончена"
 	if dialog_for(content, target_id).is_empty():
+		if content.ops.any(func(o): return o.get("contact_target_id", "") == target_id):
+			return "Связь — только бесконтактная, через тайник: выход на карте"
 		return "Для этого кандидата нет беседы"
 	if s.meeting != null:
 		return "Встреча уже идёт"
