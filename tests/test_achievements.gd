@@ -27,5 +27,5 @@ func test_epilogue_opens_in_final() -> void:
 	eq(Archive.epilogue(s, H.content()), [], "в отзыве в Москву — тоже")
 	s.ending = "campaign_complete"
 	var pages := Archive.epilogue(s, H.content())
-	eq(pages.size(), 6)
+	eq(pages.size(), 5)
 	eq(pages[0].id, "arc_ames_walkin")

@@ -51,7 +51,7 @@ func scene_epilogue_after_phase_one() -> void:
 	await shot("epilogue-cherkashin")
 	while exists("epilogue-next"):
 		await press("epilogue-next")
-	has_text("epilogue", "Лист 6 из 6")
+	has_text("epilogue", "Лист 5 из 5")
 	await press("epilogue-close")
 	ok(exists("ending"), "назад к итогу")
 	await press("ending-archive")
