@@ -73,11 +73,11 @@ static func plan(s: Dictionary, content: Dictionary, target_id: String, amount: 
 	elif amount <= 0:
 		out.error = "Сумма должна быть больше нуля"
 	elif amount > int(s.fund_usd):
-		out.error = "В спецфонде только %d долларов" % s.fund_usd
+		out.error = "В валютных средствах только %d долларов" % s.fund_usd
 	elif parts < 1 or parts > int(b.max_parts) or (instrument == "escrow" and parts != 1):
-		out.error = "Эскроу — одним переводом; наличные — от 1 до %d частей" % b.max_parts
+		out.error = "Депонирование — одним переводом; наличные — от 1 до %d частей" % b.max_parts
 	elif instrument == "escrow" and int(ag.loyalty) < int(b.escrow_min_loyalty):
-		out.error = "Эскроу агент примет только при лояльности от %d%%" % b.escrow_min_loyalty
+		out.error = "На депонирование агент согласится только при лояльности от %d%%" % b.escrow_min_loyalty
 	if out.error != "":
 		return out
 	var left_before := promise_left(s, content, target_id)

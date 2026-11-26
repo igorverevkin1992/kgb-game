@@ -47,7 +47,7 @@ static func _plaque() -> Control:
 	v.position = Vector2(16, 12)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(Style.label(T.t("game.title").to_upper(), Style.form(true), 22, Color("#1f1a0f"), false))
-	var act := Style.label("%s · %s" % [T.t("game.subtitle"), T.t("desk.act", {"act": Game.act()})], Style.form(), 14, Color("#1f1a0f"), false)
+	var act := Style.label("%s · %s" % [T.t("game.subtitle"), Fmt.op_phase(Game.act())], Style.form(), 14, Color("#1f1a0f"), false)
 	act.name = "act"
 	v.add_child(act)
 	v.add_child(Style.label("%s  [Esc]" % T.t("service.title"), Style.form(), 13, Color(0.12, 0.1, 0.06, 0.7), false))
@@ -126,7 +126,7 @@ static func _object(v: String) -> Control:
 	var h := Style.hbox(8)
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_child(Style.label(T.t(_key(v, "name")), Style.form(), 15, Style.INK, false))
-	h.add_child(Style.label("[%d]" % Modules.hotkey(v) if unlocked else T.t("desk.locked", {"act": Modules.unlock_act(v)}), Style.form(), 13, Color(Style.INK, 0.7), false))
+	h.add_child(Style.label("[%d]" % Modules.hotkey(v) if unlocked else T.t("desk.locked", {"phase": Fmt.op_phase_in(Modules.unlock_act(v))}), Style.form(), 13, Color(Style.INK, 0.7), false))
 	tag.add_child(h)
 	b.add_child(tag)
 	tag.position = Vector2((b.size.x - tag.get_combined_minimum_size().x) / 2, b.size.y - 16)

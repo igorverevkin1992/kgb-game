@@ -44,7 +44,7 @@ func scene_weak_route_warnings() -> void:
 	for id in ["site_georgetown_post_office", "site_wisconsin_bookshop", "site_leesburg_antiques"]:
 		await press("stop-" + id)
 	has_text("route-warnings", "Точки только в 2 район")
-	has_text("route-warnings", "за 25 милями")
+	has_text("route-warnings", "за пределами 25 миль")
 	await shot("map-warnings")
 
 
@@ -85,7 +85,7 @@ func scene_clean_run_brings_clues() -> void:
 	await press("sdr-verdict-clean")
 	eq(node("sdr-result").get_meta("result"), "done")
 	has_text("sdr-result", "«Они держат меня за официанта»")
-	has_text("sdr-result", "Цель установлена: Мартин Кэллоуэй")
+	has_text("sdr-result", "Установлен кандидат на вербовку: Мартин Кэллоуэй")
 	await shot("map-sdr-result")
 	await press("sdr-done")
 	await key(KEY_ESCAPE)

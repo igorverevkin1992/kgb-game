@@ -53,7 +53,7 @@ func scene_ironman() -> void:
 	await key(KEY_ESCAPE)
 	has_text("saves", "Железный занавес")
 	ok(not enabled("save-manual-1"), "ручные сохранения недоступны")
-	has_text("saves", "чекпоинтов нет")
+	has_text("saves", "контрольных точек нет")
 
 
 func scene_text_scale() -> void:

@@ -43,19 +43,19 @@ static func trump_for(dialog: Dictionary, clue_id: String) -> Dictionary:
 static func meet_error(s: Dictionary, content: Dictionary, target_id: String) -> String:
 	var ts = s.targets.get(target_id)
 	if ts == null or not ts.unlocked:
-		return "Цель ещё не установлена"
+		return "Кандидат ещё не установлен"
 	if ts.recruited or ts.lost:
-		return "С этой целью работа уже закончена"
+		return "Работа с этим кандидатом уже закончена"
 	if dialog_for(content, target_id).is_empty():
-		return "Для этой цели нет беседы"
+		return "Для этого кандидата нет беседы"
 	if s.meeting != null:
 		return "Встреча уже идёт"
 	if s.phase != "evening":
 		return "Встречи назначают на вечер"
 	if not Campaign.analysis_state(s, target_id).approved:
-		return "Сначала утвердите заключение по досье на доске мотивов"
+		return "Сначала утвердите заключение по делу на доске мотивов"
 	if s.tapes.any(func(t): return t.target_id == target_id and t.week == s.week):
-		return "С этой целью вы уже встречались на этой неделе — вернитесь в другой день"
+		return "С этим кандидатом вы уже встречались на этой неделе — вернитесь в другой день"
 	return ""
 
 

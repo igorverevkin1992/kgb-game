@@ -1,6 +1,6 @@
 class_name T
 ## Строки интерфейса из i18n/ru.json (сейчас только русская версия; en.json заморожен).
-## T.t("desk.locked", {"act": 2}) → «Откроется в акте 2».
+## T.t("calendar.week", {"week": 2}) → «Неделя 2».
 
 static var _dict := {}
 static var _en := {}

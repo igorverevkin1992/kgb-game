@@ -26,9 +26,9 @@ func _evening() -> Dictionary:
 func test_meet_conditions() -> void:
 	var s := _evening()
 	eq(Meeting.meet_error(s, H.content(), C), "")
-	has_text(Meeting.meet_error(H.fresh(), H.content(), C), "не установлена")
+	has_text(Meeting.meet_error(H.fresh(), H.content(), C), "не установлен")
 	var day: Dictionary = H.play(self, H.fresh(), H.quiet_week() + H.quiet_week() + [H.NEXT]).state
-	has_text(_do(day, {"type": "start_meeting", "target_id": C}).error, "не установлена")
+	has_text(_do(day, {"type": "start_meeting", "target_id": C}).error, "не установлен")
 	var r := _do(s, {"type": "start_meeting", "target_id": C})
 	eq(r.error, "")
 	eq(r.state.meeting.rapport, 10, "стартовый Раппорт — из досье")
@@ -45,7 +45,7 @@ func test_winning_line_recruits() -> void:
 	var r := _do(s, _turn("ego", "clue_calloway_post_review"))
 	eq(r.error, "")
 	eq(r.state.meeting.rapport, 48, "тон + козырь вовремя")
-	has_text(_do(r.state, _turn("ego", "clue_calloway_post_review")).error, "не выложить")
+	has_text(_do(r.state, _turn("ego", "clue_calloway_post_review")).error, "не предъявить")
 	s = _do(r.state, _turn("ego", "clue_calloway_vgu_profile")).state
 	ok(Meeting.can_offer(Meeting.dialog_for(H.content(), C), s.meeting))
 	r = _do(s, {"type": "meeting_offer"})
@@ -72,7 +72,7 @@ func test_early_trump_and_failure() -> void:
 			break
 		s = r.state
 	eq(s.meeting, null, "собеседник ушёл")
-	ok(s.targets[C].lost, "подход провален")
+	ok(s.targets[C].lost, "подход не удался")
 	eq(s.risks.sog_heat, sog + int(H.content().balance.sog_heat.failed_recruitment))
 	eq(s.tapes[-1].outcome, "failed")
 

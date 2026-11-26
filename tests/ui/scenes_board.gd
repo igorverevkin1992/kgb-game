@@ -24,11 +24,11 @@ func scene_document_chunk_goes_to_board() -> void:
 	await start()
 	await click("desk-object-inbox")
 	await press("inbox-item-cable_a1_w1_file_vargas")
-	has_text("intuition", "ещё не снято улик — 1")
+	has_text("intuition", "ещё не отмечено сведений — 1")
 	await shot("doc-chunk")
 	(node("doc-body") as RichTextLabel).meta_clicked.emit("clue_vargas_bank_position")
 	await frames()
-	has_text("intuition", "все улики из документа сняты")
+	has_text("intuition", "всё ценное из документа отмечено")
 	await key(KEY_ESCAPE)
 	has_text("board-new", "1")
 
@@ -44,7 +44,7 @@ func scene_pin_by_click_and_drag_confirms_motive() -> void:
 	# Промах: улика об аренде ничего не говорит о самолюбии.
 	await click("clue-clue_calloway_rent_call")
 	await click("drop-%s-ego" % C)
-	has_text("board-message", "ничего не говорит об этом мотиве")
+	has_text("board-message", "ничего не говорят об этом мотиве")
 	# Перетаскивание (drop) ещё двух улик — мотив подтверждён, видна истинная цифра.
 	node("drop-%s-ego" % C)._drop_data(Vector2.ZERO, {"clue_id": "clue_calloway_vgu_profile"})
 	await frames()
@@ -68,8 +68,8 @@ func scene_analysis_near_hints_approve_and_meet() -> void:
 	for i in 3:
 		await press("analysis-hint")
 	has_text("analysis-hints", "Почему он читает лекции")
-	has_text("analysis-hints", "Перечитайте улику")
-	has_text("analysis-hints", "Ведущий мотив — Самолюбие")
+	has_text("analysis-hints", "Перечитайте сведения")
+	has_text("analysis-hints", "Основа вербовки — Самолюбие")
 	await shot("board-analysis")
 	await press("form-axis-ego")
 	await press("analysis-submit")

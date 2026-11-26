@@ -51,4 +51,6 @@ func test_money_and_dates() -> void:
 	eq(Fmt.usd(12), "12 долларов")
 	eq(Fmt.date(Campaign.week_date(H.content(), 1, 1)), "1 октября 1984 г.")
 	eq(Fmt.date(Campaign.week_date(H.content(), 1, 6)), "5 ноября 1984 г.")
-	eq(T.t("desk.locked", {"act": 2}), "Откроется в акте 2")
+	eq(T.t("desk.locked", {"phase": Fmt.op_phase_in(2)}), "Откроется во второй фазе операции")
+	eq(Fmt.op_phase(1), "Первая фаза операции")
+	eq(Fmt.op_phase_gen(3), "третьей фазы операции")

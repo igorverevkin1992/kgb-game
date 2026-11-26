@@ -23,7 +23,7 @@ func test_take_clue_from_document() -> void:
 	eq(r.error, "")
 	ok(r.state.clues.has("clue_vargas_bank_position"))
 	eq(Campaign.untaken_chunks(r.state, H.content(), "cable_a1_w1_file_vargas"), [])
-	has_text(Campaign.dispatch(r.state, H.content(), {"type": "take_clue", "clue_id": "clue_vargas_bank_position"}).error, "уже снята")
+	has_text(Campaign.dispatch(r.state, H.content(), {"type": "take_clue", "clue_id": "clue_vargas_bank_position"}).error, "уже отмечены")
 	has_text(Campaign.dispatch(s, H.content(), {"type": "take_clue", "clue_id": "clue_vargas_clinic_debt"}).error, "не поступал")
 	has_text(Campaign.dispatch(s, H.content(), {"type": "take_clue", "clue_id": "clue_vargas_mortgage_desk"}).error, "нельзя взять")
 
@@ -39,12 +39,12 @@ func test_unlock_needs_taken_clues() -> void:
 func test_pin_rules() -> void:
 	var s := _week3_evening()
 	eq(_pin(s, "clue_vargas_hospital_calls", VARGAS, "money").error, "")
-	has_text(_pin(s, "clue_vargas_hospital_calls", VARGAS, "ego").error, "ничего не говорит об этом мотиве")
-	has_text(_pin(s, "clue_vargas_hospital_calls", CALLOWAY, "money").error, "не относится к этой цели")
+	has_text(_pin(s, "clue_vargas_hospital_calls", VARGAS, "ego").error, "ничего не говорят об этом мотиве")
+	has_text(_pin(s, "clue_vargas_hospital_calls", CALLOWAY, "money").error, "не относятся к этому кандидату")
 	eq(_pin(s, "clue_vargas_bank_position", VARGAS, "").error, "", "общее поле досье")
-	has_text(_pin(s, "clue_vargas_closing_recount", VARGAS, "compromise").error, "ещё не найдена")
+	has_text(_pin(s, "clue_vargas_closing_recount", VARGAS, "compromise").error, "ещё не добыты")
 	var s2: Dictionary = _pin(s, "clue_vargas_hospital_calls", VARGAS, "money").state
-	has_text(_pin(s2, "clue_vargas_hospital_calls", VARGAS, "money").error, "уже приколота")
+	has_text(_pin(s2, "clue_vargas_hospital_calls", VARGAS, "money").error, "уже приобщены")
 
 
 func test_board_knowledge_grows_with_pins() -> void:
@@ -62,7 +62,7 @@ func test_board_knowledge_grows_with_pins() -> void:
 func test_analysis_needs_three_pins() -> void:
 	var s := _week3_evening()
 	s = _pin(s, "clue_calloway_post_review", CALLOWAY, "ego").state
-	has_text(Campaign.dispatch(s, H.content(), {"type": "submit_analysis", "target_id": CALLOWAY, "axis": "ego", "access": "se_division_habits", "channel": "false_flag"}).error, "минимум три")
+	has_text(Campaign.dispatch(s, H.content(), {"type": "submit_analysis", "target_id": CALLOWAY, "axis": "ego", "access": "se_division_habits", "channel": "false_flag"}).error, "не меньше трёх")
 
 
 func test_analysis_soft_hint_and_approval() -> void:

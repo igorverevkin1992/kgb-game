@@ -82,7 +82,7 @@ func test_phase_rules_reject_without_change() -> void:
 
 func test_evening_requires_resolved_ops() -> void:
 	var s: Dictionary = H.play(self, H.fresh(), H.quiet_week() + [NEXT, H.plan("op_a1_recon_first_virginia"), NEXT]).state
-	has_text(Campaign.dispatch(s, H.content(), NEXT).error, "Не разыграны")
+	has_text(Campaign.dispatch(s, H.content(), NEXT).error, "Не проведены выходы")
 
 
 func test_ops_per_week_limit() -> void:

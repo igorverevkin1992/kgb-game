@@ -86,7 +86,7 @@ func test_escrow() -> void:
 func test_rejections() -> void:
 	var s := _agent()
 	has_text(_do(s, H.pay("tar_calloway_martin")).error, "только завербованным")
-	has_text(_do(s, H.pay(V, 999999)).error, "В спецфонде только")
+	has_text(_do(s, H.pay(V, 999999)).error, "В валютных средствах только")
 	has_text(_do(s, H.pay(V, 0)).error, "больше нуля")
 	var night: Dictionary = _do(s, H.NEXT).state
 	has_text(_do(night, H.pay(V)).error, "днём или вечером")

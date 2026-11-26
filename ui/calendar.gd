@@ -26,7 +26,7 @@ static func build() -> Control:
 	v.add_child(phase)
 	var def := Campaign.current_act_def(s, Game.content)
 	if not def.is_empty():
-		v.add_child(Style.label("%s · %s" % [T.t("desk.act", {"act": s.act}), T.loc(def.title)], Style.form(), 14, Color(Style.INK, 0.75), false))
+		v.add_child(Style.label("%s · %s" % [Fmt.op_phase(s.act), T.loc(def.title)], Style.form(), 14, Color(Style.INK, 0.75), false))
 	sheet.add_child(v)
 	root.add_child(sheet)
 
@@ -47,7 +47,7 @@ static func build() -> Control:
 		cb.pressed.connect(Game.open_cipher.bind("outgoing"))
 		c.add_child(cb)
 	else:
-		var nb := Style.button(T.t("calendar.next"), "advance-phase", Style.PAPER, Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.55), 13)
+		var nb := Style.button(T.t("calendar.next", {"next": T.t("phase." + Campaign.NEXT_PHASE[s.phase]).to_lower()}), "advance-phase", Style.PAPER, Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.55), 13)
 		nb.pressed.connect(Game.dispatch.bind({"type": "advance_phase"}))
 		c.add_child(nb)
 	var ab := Style.button(T.t("analyst.open"), "analyst-toggle", Color(Style.PAPER, 0.85), Color(0, 0, 0, 0.15), Color(Style.PAPER, 0.35), 13)

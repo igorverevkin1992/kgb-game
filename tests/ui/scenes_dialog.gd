@@ -40,10 +40,10 @@ func scene_meeting_with_trumps_recruits() -> void:
 	await press("tone-ego")
 	eq(node("meeting-rapport").get_meta("value"), 22)
 	await press("trump-clue_calloway_post_review")
-	has_text("meeting", "Выложить козырь")
+	has_text("meeting", "Предъявить сведения")
 	await press("tone-ego")
 	eq(node("meeting-rapport").get_meta("value"), 48)
-	has_text("transcript", "козырь сработал")
+	has_text("transcript", "сведения подействовали")
 	await press("trump-clue_calloway_vgu_profile")
 	await press("tone-ego")
 	ok(enabled("meeting-offer"), "Раппорт выше порога")
@@ -60,12 +60,12 @@ func scene_early_blackmail_breaks_contact() -> void:
 	await press("meet-" + C)
 	await press("trump-clue_calloway_rent_call")
 	await press("tone-pressure")
-	has_text("transcript", "козырь выложен рано")
+	has_text("transcript", "сведения предъявлены рано")
 	for i in 3:
 		if exists("tone-pressure"):
 			await press("tone-pressure")
 	ok(not exists("meeting"), "собеседник ушёл")
-	has_text("tape-review", "подход провален")
+	has_text("tape-review", "подход не удался")
 	ok(Game.state.targets[C].lost)
 
 
@@ -78,7 +78,7 @@ func scene_abort_and_tape_slip() -> void:
 	ok(exists("meeting-abort"))
 	await press("meeting-abort")
 	has_text("tape-review", "контакт прерван")
-	has_text("tape-review", "Неснятых оговорок: 1")
+	has_text("tape-review", "Неотмеченных оговорок: 1")
 	eq(Game.state.targets[V].rapport, 30, "Раппорт сохранён")
 	await key(KEY_SPACE)
 	var cur := -1
@@ -94,7 +94,7 @@ func scene_abort_and_tape_slip() -> void:
 		rich[0].meta_clicked.emit("clue_vargas_slip_cash")
 		await frames()
 	ok(Game.state.clues.has("clue_vargas_slip_cash"), "оговорка снята на доску")
-	has_text("tape-review", "Неснятых оговорок: 0")
+	has_text("tape-review", "Неотмеченных оговорок: 0")
 	await key(KEY_LEFT)
 	eq(Game.tape_cursor, cur - 1, "перемотка назад")
 	await key(KEY_ESCAPE)

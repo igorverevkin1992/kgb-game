@@ -130,7 +130,7 @@ static func _event_text(e: Dictionary) -> String:
 		"lie_uncovered":
 			return T.t("event.lie_uncovered", {"week": e.lie_week})
 		"act_completed":
-			return T.t("event.act_completed", {"act": e.act})
+			return T.t("event.act_completed", {"phase": Fmt.op_phase_gen(e.act)})
 		"directive_verified":
 			return T.t("event.directive_" + e.outcome, {"name": T.loc(Campaign.cable_by_id(c, e.cable_id).subject)})
 		"report_submitted":
@@ -189,7 +189,7 @@ static func service() -> Control:
 
 static func _slot_label(info: Dictionary) -> String:
 	var at: String = String(info.saved_at).replace("T", " ").substr(0, 16)
-	return "%s · %s · %s — %s" % [T.t("desk.act", {"act": info.act}), T.t("calendar.week", {"week": info.week}), T.t("phase." + info.phase), at]
+	return "%s · %s · %s — %s" % [Fmt.op_phase(info.act), T.t("calendar.week", {"week": info.week}), T.t("phase." + info.phase), at]
 
 
 static func _saves_tab(v: VBoxContainer) -> void:

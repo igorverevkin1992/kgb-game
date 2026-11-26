@@ -35,3 +35,25 @@ static func date(d: Dictionary) -> String:
 	if d.is_empty():
 		return ""
 	return "%d %s %d г." % [d.day, MONTHS_GEN[d.month - 1], d.year]
+
+
+## Фазы операции вместо актов: 1 → «первая», в нужном падеже.
+const ORD_NOM := ["первая", "вторая", "третья", "четвёртая"]
+const ORD_GEN := ["первой", "второй", "третьей", "четвёртой"]
+
+
+## «Первая фаза операции».
+static func op_phase(n: int) -> String:
+	var w: String = ORD_NOM[clampi(n, 1, 4) - 1]
+	return "%s фаза операции" % (w.substr(0, 1).to_upper() + w.substr(1))
+
+
+## «первой фазы операции» (задача первой фазы операции).
+static func op_phase_gen(n: int) -> String:
+	return "%s фазы операции" % ORD_GEN[clampi(n, 1, 4) - 1]
+
+
+## «во второй фазе операции» (откроется во второй фазе операции).
+static func op_phase_in(n: int) -> String:
+	var w: String = ORD_GEN[clampi(n, 1, 4) - 1]
+	return "%s %s фазе операции" % ["во" if w.begins_with("в") else "в", w]

@@ -75,7 +75,7 @@ func scene_mice_dossiers_and_sog_marks() -> void:
 	eq(marks[0].count if not marks.is_empty() else -1, 1, "отметок наружки на карте")
 	await key(KEY_2)
 	has_text("dossier-tar_vargas_ellen", "Элен Варгас")
-	has_text("dossier-tar_calloway_martin", "туман")
+	has_text("dossier-tar_calloway_martin", "нет данных")
 	ok(exists("board-new") or true)
 
 
@@ -98,7 +98,7 @@ func scene_week_flow_and_analyst() -> void:
 	has_text("risk-moscow_pressure", "20%")
 	has_text("risk-sog_heat", "При 100%: нота Госдепа")
 	has_text("centre-trust", "52%")
-	has_text("journal", "Кредитная история: Варгас Э.")
+	has_text("journal", "О финансовом положении Э. Варгас")
 	await shot("analyst")
 	await key(KEY_ESCAPE)
 	ok(not exists("analyst"), "Esc закрыл сводку")

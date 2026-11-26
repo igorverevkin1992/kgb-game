@@ -88,18 +88,18 @@ static func initial_target_state(t: Dictionary) -> Dictionary:
 
 static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary) -> Dictionary:
 	if state.ending != null:
-		return _reject(state, "Кампания окончена")
+		return _reject(state, "Операция завершена")
 	var s: Dictionary = state.duplicate(true)
 	var ctx := _ctx(s, content)
 	var phase_ru: String = PHASE_RU[s.phase]
 	match action.type:
 		"advance_phase":
 			if not NEXT_PHASE.has(s.phase):
-				return _reject(state, "Ночью неделя завершается донесением в Центр")
+				return _reject(state, "Ночью неделя закрывается докладом в Центр")
 			if s.meeting != null:
-				return _reject(state, "Идёт встреча: сделайте предложение или прервите контакт")
+				return _reject(state, "Идёт встреча: сделайте вербовочное предложение или прервите контакт")
 			if s.phase == "evening" and not s.planned_ops.is_empty():
-				return _reject(state, "Не разыграны операции: %s" % ", ".join(s.planned_ops.map(func(id): return _op_title(content, id))))
+				return _reject(state, "Не проведены выходы: %s" % ", ".join(s.planned_ops.map(func(id): return _op_title(content, id))))
 			_set_phase(ctx, NEXT_PHASE[s.phase])
 
 		"read_cable":
@@ -110,14 +110,14 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 
 		"plan_op":
 			if s.phase != "day":
-				return _reject(state, "Операции планируют днём, а сейчас %s" % phase_ru)
+				return _reject(state, "Выходы в город готовят днём, а сейчас %s" % phase_ru)
 			if not available_ops(s, content).any(func(o): return o.op_id == action.op_id):
-				return _reject(state, "Операция «%s» сейчас недоступна" % _op_title(content, action.op_id))
+				return _reject(state, "Мероприятие «%s» сейчас недоступно" % _op_title(content, action.op_id))
 			if s.planned_ops.size() >= int(content.balance.ops.per_week):
-				return _reject(state, "На неделю можно запланировать не больше %d операций" % content.balance.ops.per_week)
+				return _reject(state, "На неделю можно подготовить не больше %d выходов" % content.balance.ops.per_week)
 			var expense := int(content.balance.finance.op_expense_usd)
 			if int(s.fund_usd) < expense:
-				return _reject(state, "В спецфонде нет %d долларов на оперативные расходы" % expense)
+				return _reject(state, "В валютных средствах нет %d долларов на оперативные расходы" % expense)
 			var route: Array = action.get("route", [])
 			if not MapGeo.analyze_route(content, route).blocking.is_empty():
 				return _reject(state, "Проверочный маршрут — это три разные бытовые точки на карте")
@@ -129,18 +129,18 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 
 		"cancel_op":
 			if s.phase != "day":
-				return _reject(state, "Отменить операцию можно только днём")
+				return _reject(state, "Отменить выход можно только днём")
 			if not s.planned_ops.has(action.op_id):
-				return _reject(state, "Эта операция не запланирована")
+				return _reject(state, "Этот выход не готовился")
 			s.planned_ops = Util.without(s.planned_ops, action.op_id)
 			s.routes.erase(action.op_id)
 			_emit(ctx, {"type": "op_cancelled", "op_id": action.op_id})
 
 		"resolve_op":
 			if s.phase != "evening":
-				return _reject(state, "Операции проводятся вечером, а сейчас %s" % phase_ru)
+				return _reject(state, "В город выходят вечером, а сейчас %s" % phase_ru)
 			if not s.planned_ops.has(action.op_id):
-				return _reject(state, "Эта операция не запланирована")
+				return _reject(state, "Этот выход не готовился")
 			_resolve_op(ctx, op_by_id(content, action.op_id), action.decision)
 
 		"recruitment":
@@ -148,16 +148,16 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 				return _reject(state, "Вербовочные беседы проводятся вечером, а сейчас %s" % phase_ru)
 			var target := target_by_id(content, action.target_id)
 			if target.is_empty() or not s.targets.has(action.target_id):
-				return _reject(state, "Такой цели нет")
+				return _reject(state, "Такого кандидата нет")
 			var ts: Dictionary = s.targets[action.target_id]
 			if ts.recruited or ts.lost:
-				return _reject(state, "С этой целью работа уже закончена")
+				return _reject(state, "Работа с этим кандидатом уже закончена")
 			if not ts.unlocked:
-				return _reject(state, "Цель ещё не установлена: не хватает улик")
+				return _reject(state, "Кандидат ещё не установлен: не хватает сведений")
 			match action.result:
 				"success":
 					if not analysis_state(s, target.target_id).approved:
-						return _reject(state, "Заключение по досье ещё не утверждено: сначала доска мотивов")
+						return _reject(state, "Заключение по делу ещё не утверждено: сначала доска мотивов")
 					var missing: Array = target.approach.key_axes.filter(func(a): return not ts.discovered_axes.has(a))
 					if not missing.is_empty():
 						return _reject(state, "Не вскрыты ведущие мотивы: %s" % ", ".join(missing.map(func(a): return AXIS_NAME_RU[a])))
@@ -170,13 +170,13 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 		"take_clue":
 			var clue := clue_by_id(content, action.clue_id)
 			if clue.is_empty() or not ["document", "meeting"].has(clue.source.channel):
-				return _reject(state, "Эту улику нельзя взять из документов")
+				return _reject(state, "Эти сведения нельзя взять из документов")
 			if clue.source.channel == "document" and not s.delivered_cables.has(clue.source.from):
 				return _reject(state, "Этот документ ещё не поступал")
 			if clue.source.channel == "meeting" and not Meeting.heard(s, content, clue):
 				return _reject(state, "Эта фраза ещё не прозвучала на встречах")
 			if s.clues.has(clue.clue_id):
-				return _reject(state, "Эта улика уже снята")
+				return _reject(state, "Эти сведения уже отмечены")
 			_give_clue(ctx, clue.clue_id)
 
 		"pin_clue":
@@ -189,12 +189,12 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 		"submit_analysis":
 			var target := target_by_id(content, action.target_id)
 			if target.is_empty() or not s.targets.has(action.target_id) or not s.targets[action.target_id].unlocked:
-				return _reject(state, "Досье ещё не заведено: цель не установлена")
+				return _reject(state, "Дело ещё не заведено: кандидат не установлен")
 			var an: Dictionary = analysis_state(s, action.target_id)
 			if an.approved:
-				return _reject(state, "Заключение по этому досье уже утверждено")
+				return _reject(state, "Заключение по этому делу уже утверждено")
 			if pinned_clue_count(s, action.target_id) < ContentRules.THREE_CLUES:
-				return _reject(state, "Мало улик на досье: для заключения нужно минимум три")
+				return _reject(state, "Мало сведений в деле: для заключения нужно не меньше трёх")
 			var right := 0
 			right += 1 if action.axis == target.analysis.leading_axis else 0
 			right += 1 if action.access == target.analysis.correct_access else 0
@@ -210,7 +210,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 
 		"use_hint":
 			if not s.targets.has(action.target_id) or not s.targets[action.target_id].unlocked:
-				return _reject(state, "Досье ещё не заведено: цель не установлена")
+				return _reject(state, "Дело ещё не заведено: кандидат не установлен")
 			var an: Dictionary = analysis_state(s, action.target_id)
 			if an.hint_level >= 3:
 				return _reject(state, "Подсказок больше нет")
@@ -230,12 +230,12 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 				return _reject(state, "Встреча не идёт")
 			var d := Meeting.dialog_by_id(content, s.meeting.dialog_id)
 			if not Meeting.topics_left(d, s.meeting):
-				return _reject(state, "Темы для разговора исчерпаны: сделайте предложение или прервите контакт")
+				return _reject(state, "Темы для разговора исчерпаны: сделайте вербовочное предложение или прервите контакт")
 			if not Meeting.TONES.has(action.get("tone", "")):
 				return _reject(state, "Выберите тон ответа")
 			var clue_id: String = action.get("clue_id", "")
 			if clue_id != "" and not Meeting.available_trumps(s, content, s.meeting).any(func(t): return t.clue_id == clue_id):
-				return _reject(state, "Этот козырь сейчас не выложить: улика должна быть приколота к досье и ещё не использована")
+				return _reject(state, "Эти сведения сейчас не предъявить: они должны быть приобщены к делу и ещё не использованы")
 			s.meeting = Meeting.apply_turn(d, s.meeting, action.tone, clue_id)
 			if s.meeting.anxiety >= Meeting.max_anxiety(d):
 				_finish_meeting(ctx, "failed")
@@ -245,7 +245,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 				return _reject(state, "Встреча не идёт")
 			var d := Meeting.dialog_by_id(content, s.meeting.dialog_id)
 			if not Meeting.can_offer(d, s.meeting):
-				return _reject(state, "Рано: Раппорт ниже %d%%" % d.offer_rapport)
+				return _reject(state, "Рано: контакт ниже %d%%" % d.offer_rapport)
 			var target := target_by_id(content, s.meeting.target_id)
 			var missing: Array = target.approach.key_axes.filter(func(a): return not s.targets[target.target_id].discovered_axes.has(a))
 			if not missing.is_empty():
@@ -261,7 +261,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 
 		"pay_agent":
 			if s.phase != "day" and s.phase != "evening":
-				return _reject(state, "Транши передают днём или вечером, а сейчас %s" % phase_ru)
+				return _reject(state, "Выплаты производят днём или вечером, а сейчас %s" % phase_ru)
 			var plan := Finance.plan(s, content, action.get("target_id", ""), int(action.get("amount", 0)), action.get("instrument", ""), int(action.get("parts", 1)))
 			if plan.error != "":
 				return _reject(state, plan.error)
@@ -274,29 +274,29 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 		"verify_cable":
 			var cable := cable_by_id(content, action.cable_id)
 			if cable.is_empty() or cable.kind != "directive" or not s.delivered_cables.has(cable.cable_id):
-				return _reject(state, "Такой директивы не поступало")
+				return _reject(state, "Такого указания не поступало")
 			if not s.read_cables.has(cable.cable_id):
-				return _reject(state, "Сначала расшифруйте директиву")
+				return _reject(state, "Сначала расшифруйте указание")
 			if s.verified.has(cable.cable_id):
-				return _reject(state, "Решение по этой директиве уже принято")
+				return _reject(state, "Решение по этому указанию уже принято")
 			if not ["accept", "query"].has(action.get("decision", "")):
-				return _reject(state, "Директиву можно принять к исполнению или запросить подтверждение")
+				return _reject(state, "Указание можно принять к исполнению или запросить подтверждение")
 			_verify(ctx, cable, action.decision)
 
 		"submit_report":
 			if s.phase != "night":
-				return _reject(state, "Донесение в Центр отправляют ночью, а сейчас %s" % phase_ru)
+				return _reject(state, "Доклад в Центр отправляют ночью, а сейчас %s" % phase_ru)
 			var report: String = action.get("report", "")
 			if action.has("choices"):
 				var choices: Dictionary = action.choices
 				if choices.values().any(func(c): return not Cipher.CHOICES.has(c)):
-					return _reject(state, "По каждому факту: как есть, приукрасить или умолчать")
+					return _reject(state, "По каждому пункту: как есть, приукрасить или умолчать")
 				report = Cipher.classify(Cipher.week_facts(s), choices)
 			if not Cipher.REPORTS.has(report):
-				return _reject(state, "Неизвестный вид донесения")
+				return _reject(state, "Неизвестный вид доклада")
 			var request: String = action.get("request", "")
 			if request != "" and not Cipher.available_requests(s, content).any(func(r): return r.request_id == request):
-				return _reject(state, "Этот запрос сейчас отправить нельзя")
+				return _reject(state, "Это ходатайство сейчас направить нельзя")
 			_end_week(ctx, report, request)
 
 		_:
@@ -794,15 +794,15 @@ static func clue_relevant(content: Dictionary, clue: Dictionary, target_id: Stri
 static func _pin_error(s: Dictionary, content: Dictionary, clue_id: String, target_id: String, axis: String) -> String:
 	var clue := clue_by_id(content, clue_id)
 	if clue.is_empty() or not s.clues.has(clue_id):
-		return "Улика ещё не найдена"
+		return "Сведения ещё не добыты"
 	if not s.targets.has(target_id) or not s.targets[target_id].unlocked:
-		return "Досье ещё не заведено: цель не установлена"
+		return "Дело ещё не заведено: кандидат не установлен"
 	if s.pinned.any(func(p): return p.clue_id == clue_id and p.target_id == target_id and p.axis == axis):
-		return "Эта улика уже приколота сюда"
+		return "Эти сведения уже приобщены сюда"
 	if axis == "":
-		return "" if clue_relevant(content, clue, target_id) else "Не вяжется: улика не относится к этой цели"
+		return "" if clue_relevant(content, clue, target_id) else "Не вяжется: сведения не относятся к этому кандидату"
 	if not clue.reveals.any(func(r): return r.target_id == target_id and r.axis == axis):
-		return "Не вяжется: эта улика ничего не говорит об этом мотиве" if clue_relevant(content, clue, target_id) else "Не вяжется: улика не относится к этой цели"
+		return "Не вяжется: эти сведения ничего не говорят об этом мотиве" if clue_relevant(content, clue, target_id) else "Не вяжется: сведения не относятся к этому кандидату"
 	return ""
 
 
