@@ -1,4 +1,4 @@
-import type { Cable, Campaign, Clue, Op, PolygraphExam, Target } from '../../schemas';
+import type { Balance, Cable, Campaign, Clue, Op, PolygraphExam, Target } from '../../schemas';
 
 /** Сырой файл контента: путь относительно `src/content/` и разобранный JSON. */
 export interface RawFile {
@@ -8,6 +8,7 @@ export interface RawFile {
 
 export interface RawBundle {
   campaign: RawFile[];
+  balance: RawFile[];
   targets: RawFile[];
   clues: RawFile[];
   cables: RawFile[];
@@ -20,6 +21,7 @@ export interface RawBundle {
 /** Проверенный контент, с которым работает движок. */
 export interface ContentBundle {
   campaign: Campaign;
+  balance: Balance;
   targets: Target[];
   clues: Clue[];
   cables: Cable[];
@@ -44,7 +46,8 @@ export type RuleId =
   | 'weeks'
   | 'text-length'
   | 'translation'
-  | 'polygraph';
+  | 'polygraph'
+  | 'balance';
 
 export interface Issue {
   level: IssueLevel;

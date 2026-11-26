@@ -33,7 +33,15 @@ npm run e2e        # Playwright (собирает и поднимает preview 
   «Правило трёх улик», SDR, недели, длина текстов, полиграф), `simulate.ts` («идеальный игрок»
   для поиска софтлоков). CLI: `tools/validate.ts`. Новое правило — сразу с тестом в
   `tests/unit/validate.test.ts`, который портит настоящий контент.
-- `src/ui/`: React. Стор `src/ui/store.ts` хранит состояние UI, а логику берёт из engine.
+- `src/engine/campaign/`: движок кампании. `dispatch(state, content, action)` — чистая функция:
+  возвращает новое состояние + события или `error` по-русски, исходное состояние не мутирует.
+  Неделя: утро (почта, донесения агентов) → день (`plan_op`) → вечер (`resolve_op`, `recruitment`)
+  → ночь (`submit_report` завершает неделю: сверка лжи, пересчёт 4 рисков, концовки, следующий акт).
+  Все числа — из `src/content/balance.json`, случайность — детерминированный `rng` в состоянии.
+  Сохранения: `serialize` / `deserialize` (проверка Zod + ссылок на контент), `SaveStorage`.
+- `src/ui/`: React. Стор `src/ui/store.ts` держит `CampaignState`, вызывает движок и
+  автосохраняет в localStorage (`?new` — начать заново). Календарь недели — `ui/desk/Calendar.tsx`,
+  сводка рисков и журнал — `ui/desk/AnalystSummary.tsx`.
 - `src/i18n/ru.json` + `en.json`: все видимые строки. Ключи должны совпадать (это проверяет тест).
 
 ## Договорённости

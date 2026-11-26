@@ -388,6 +388,14 @@ function checkPolygraph(ctx: Ctx) {
   }
 }
 
+/** 9. Пороги сигналов баланса идут по возрастанию. */
+function checkBalance(ctx: Ctx) {
+  const { warning, danger } = ctx.content.balance.thresholds;
+  if (warning >= danger) {
+    push(ctx, { level: 'error', rule: 'balance', file: 'balance.json', where: 'thresholds', message: `Порог «warning» (${warning}) должен быть меньше порога «danger» (${danger})` });
+  }
+}
+
 export function checkRules(content: ContentBundle, fileOf: Map<string, string>): Issue[] {
   const ctx: Ctx = { content, fileOf, issues: [] };
   checkReferences(ctx);
@@ -398,5 +406,6 @@ export function checkRules(content: ContentBundle, fileOf: Map<string, string>):
   checkWeeks(ctx);
   checkTexts(ctx);
   checkPolygraph(ctx);
+  checkBalance(ctx);
   return ctx.issues;
 }

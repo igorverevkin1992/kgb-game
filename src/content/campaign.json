@@ -4,6 +4,7 @@
       "act": 1,
       "title": { "ru": "Пристрелка", "en": "Ranging Shot" },
       "weeks": { "from": 1, "to": 6 },
+      "start_date": "1984-10-01",
       "goal": { "recruit_any_of": ["tar_vargas_ellen", "tar_calloway_martin"] }
     }
   ]

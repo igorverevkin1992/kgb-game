@@ -224,3 +224,171 @@ body {
 .module-panel small {
   opacity: 0.6;
 }
+
+/* Перекидной календарь и донесение (шаг 2). */
+.room__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.calendar {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.calendar__sheet {
+  min-width: 190px;
+  padding: 10px 14px;
+  background: var(--paper);
+  color: var(--paper-ink);
+  border-top: 8px solid var(--stamp-red);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+
+.calendar__week {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.calendar__date,
+.calendar__act {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.calendar__phase {
+  margin: 4px 0;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--stamp-red);
+}
+
+.calendar__controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 420px;
+}
+
+.calendar__hint {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.calendar__reports {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.calendar button,
+.ending button {
+  padding: 6px 12px;
+  border: 1px solid var(--paper);
+  background: transparent;
+  color: var(--paper);
+  font-family: var(--type);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.calendar button:hover {
+  background: rgba(217, 212, 197, 0.12);
+}
+
+.calendar .calendar__analyst {
+  border-style: dashed;
+  opacity: 0.8;
+}
+
+.calendar__error {
+  margin: 0;
+  font-size: 12px;
+  color: #e2826f;
+}
+
+/* Сводка аналитика. */
+.analyst {
+  min-height: 0;
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+}
+
+.analyst__risks {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.analyst__risk {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.analyst__risk dd {
+  position: relative;
+  margin: 0;
+  height: 18px;
+  background: rgba(42, 38, 32, 0.12);
+}
+
+.analyst__risk b {
+  position: absolute;
+  right: 6px;
+  top: 0;
+  font-size: 12px;
+}
+
+.analyst__bar {
+  display: block;
+  height: 100%;
+  background: #6b7356;
+}
+
+.analyst__risk--warning .analyst__bar {
+  background: var(--ochre);
+}
+
+.analyst__risk--danger .analyst__bar {
+  background: var(--stamp-red);
+}
+
+.analyst__bar--trust {
+  background: #3d5a73;
+}
+
+.analyst__fund {
+  margin: 14px 0 0;
+  font-size: 14px;
+}
+
+.analyst h3 {
+  margin: 20px 0 6px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.analyst__journal {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.analyst__journal span {
+  opacity: 0.55;
+}
+
+.ending button {
+  border-color: var(--paper-ink);
+  color: var(--paper-ink);
+}

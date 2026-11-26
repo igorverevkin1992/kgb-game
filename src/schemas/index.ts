@@ -5,3 +5,4 @@ export * from './cable';
 export * from './op';
 export * from './polygraph';
 export * from './campaign';
+export * from './balance';

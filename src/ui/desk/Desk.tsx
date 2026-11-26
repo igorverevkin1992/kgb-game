@@ -2,6 +2,9 @@ import { useEffect } from 'react';
 import { DESK_MODULES, isModuleUnlocked, type ModuleId } from '../../engine/modules';
 import type { I18nKey } from '../../i18n';
 import { useDeskStore, useT } from '../store';
+import { AnalystSummary } from './AnalystSummary';
+import { Calendar } from './Calendar';
+import { EndingScreen } from './EndingScreen';
 import { ModulePanel } from './ModulePanel';
 import './desk.css';
 
@@ -9,7 +12,8 @@ const key = (id: ModuleId, part: 'name' | 'object' | 'details') => `module.${id}
 
 export function Desk() {
   const t = useT();
-  const act = useDeskStore((s) => s.act);
+  const act = useDeskStore((s) => s.debugAct ?? s.game.act);
+  const analystOpen = useDeskStore((s) => s.analystOpen);
   const openModule = useDeskStore((s) => s.openModule);
   const open = useDeskStore((s) => s.open);
   const close = useDeskStore((s) => s.close);
@@ -25,10 +29,13 @@ export function Desk() {
   return (
     <main className="room">
       <header className="room__header">
-        <h1>{t('game.title')}</h1>
-        <p>
-          {t('game.subtitle')} · <span data-testid="act">{t('desk.act', { act })}</span>
-        </p>
+        <div>
+          <h1>{t('game.title')}</h1>
+          <p>
+            {t('game.subtitle')} · <span data-testid="act">{t('desk.act', { act })}</span>
+          </p>
+        </div>
+        <Calendar />
       </header>
 
       <section className="desk" aria-label="desk">
@@ -64,6 +71,8 @@ export function Desk() {
           onClose={close}
         />
       )}
+      {analystOpen && <AnalystSummary />}
+      <EndingScreen />
     </main>
   );
 }

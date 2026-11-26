@@ -1,0 +1,39 @@
+{
+  "start": {
+    "fund_usd": 40000,
+    "centre_trust": 50,
+    "risks": { "sog_heat": 10, "mole_hunt": 0, "treasury": 0, "moscow_pressure": 20 },
+    "seed": 1985
+  },
+  "ops": { "per_week": 2 },
+  "sog_heat": {
+    "missed_tail_default": 20,
+    "outside_25_mile_zone": 10,
+    "site_reuse_per_use": 5,
+    "quiet_week": -4,
+    "failed_recruitment": 15
+  },
+  "moscow_pressure": {
+    "grace_weeks": 3,
+    "per_week_without_goal": 4,
+    "per_week_overdue": 12,
+    "act_goal_reached": -25,
+    "report_truth_with_failures": 8,
+    "report_embellished": -5,
+    "lie_uncovered": 20
+  },
+  "centre_trust": {
+    "report_truth": 2,
+    "report_truth_with_failures": -5,
+    "report_embellished": 6,
+    "report_silence": 0,
+    "lie_uncovered": -25
+  },
+  "lies": {
+    "check_every_weeks": 4,
+    "uncover_chance_embellished": 0.35,
+    "uncover_chance_silence": 0.2
+  },
+  "treasury": { "audit_mole_hunt_multiplier": 2 },
+  "thresholds": { "warning": 50, "danger": 75 }
+}

@@ -1,17 +1,17 @@
 import type { z } from 'zod';
-import { Cable, CableFile, Campaign, Clue, ClueFile, Op, PolygraphExam, Target } from '../../schemas';
+import { Balance, Cable, CableFile, Campaign, Clue, ClueFile, Op, PolygraphExam, Target } from '../../schemas';
 import type { ContentBundle, Issue, RawBundle, RawFile } from './types';
 
 const FOLDERS = ['targets', 'clues', 'cables', 'ops', 'polygraph'] as const;
 
 /** Раскладывает файлы по типам контента по их пути (`targets/x.json`, `campaign.json` и т. д.). */
 export function bundleFromEntries(entries: RawFile[]): RawBundle {
-  const raw: RawBundle = { campaign: [], targets: [], clues: [], cables: [], ops: [], polygraph: [], unknown: [] };
+  const raw: RawBundle = { campaign: [], balance: [], targets: [], clues: [], cables: [], ops: [], polygraph: [], unknown: [] };
   for (const entry of entries) {
     const path = entry.path.replace(/\\/g, '/').replace(/^\.\//, '');
     const file = { ...entry, path };
-    if (path === 'campaign.json') {
-      raw.campaign.push(file);
+    if (path === 'campaign.json' || path === 'balance.json') {
+      raw[path === 'campaign.json' ? 'campaign' : 'balance'].push(file);
       continue;
     }
     const folder = FOLDERS.find((f) => path.startsWith(`${f}/`));
@@ -53,7 +53,7 @@ export function parseBundle(raw: RawBundle): ParseResult {
       level: 'error',
       rule: 'layout',
       file: f.path,
-      message: 'Файл лежит вне известных папок. Допустимо: campaign.json, targets/, clues/, cables/, ops/, polygraph/',
+      message: 'Файл лежит вне известных папок. Допустимо: campaign.json, balance.json, targets/, clues/, cables/, ops/, polygraph/',
     });
   }
 
@@ -72,6 +72,14 @@ export function parseBundle(raw: RawBundle): ParseResult {
   } else {
     const first = raw.campaign[0];
     if (first) campaign = parseFile(Campaign, first, issues);
+  }
+
+  let balance: Balance | null = null;
+  if (raw.balance.length === 0) {
+    issues.push({ level: 'error', rule: 'layout', message: 'Нет файла balance.json с числами баланса' });
+  } else {
+    const first = raw.balance[0];
+    if (first) balance = parseFile(Balance, first, issues);
   }
 
   const targets: Target[] = [];
@@ -131,6 +139,6 @@ export function parseBundle(raw: RawBundle): ParseResult {
     }
   }
 
-  const bundle = campaign ? { campaign, targets, clues, cables, ops, polygraph } : null;
+  const bundle = campaign && balance ? { campaign, balance, targets, clues, cables, ops, polygraph } : null;
   return { bundle, issues, fileOf };
 }
