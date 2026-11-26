@@ -25,6 +25,10 @@ var last_error := ""
 var saved_at := 0
 ## Открытый документ в лотке входящих.
 var inbox_selected := ""
+## Доска мотивов: выбранная улика из стопки, открытое заключение и его черновик.
+var board_selected := ""
+var board_analysis := ""
+var board_form := {}
 ## Черновик маршрута (день): {op_id, stops}.
 var map_draft := {"op_id": "", "stops": []}
 ## Идущий выезд (вечер): {op_id, step, verdict, marks, result} или пустой словарь.
@@ -32,6 +36,9 @@ var sdr_run := {}
 
 
 func _ready() -> void:
+	# Консольные инструменты (validate, unit-тесты) запускаются через --script: игре там делать нечего.
+	if OS.get_cmdline_args().has("--script"):
+		return
 	content = ContentLoader.game_content()
 	if content.is_empty():
 		return
@@ -165,6 +172,35 @@ func select_document(cable_id: String) -> void:
 		changed.emit()
 
 
+## Снять улику-фрагмент из документа (клик по подсвеченной фразе).
+func take_clue(clue_id: String) -> void:
+	dispatch({"type": "take_clue", "clue_id": clue_id})
+
+
+func select_board_clue(clue_id: String) -> void:
+	board_selected = "" if board_selected == clue_id else clue_id
+	changed.emit()
+
+
+## Приколоть улику (выбранную или перетащенную) к досье: axis "" — общее поле.
+func pin_clue(clue_id: String, target_id: String, axis: String) -> void:
+	if clue_id == "":
+		return
+	board_selected = ""
+	dispatch({"type": "pin_clue", "clue_id": clue_id, "target_id": target_id, "axis": axis})
+
+
+func open_analysis(target_id: String) -> void:
+	board_analysis = target_id
+	board_form = {}
+	changed.emit()
+
+
+func set_board_form(field: String, value: String) -> void:
+	board_form[field] = value
+	changed.emit()
+
+
 func set_map_draft(op_id: String, stops: Array) -> void:
 	map_draft = {"op_id": op_id, "stops": stops}
 	changed.emit()
@@ -181,6 +217,9 @@ func _clear_ui() -> void:
 	service_open = false
 	last_error = ""
 	inbox_selected = ""
+	board_selected = ""
+	board_analysis = ""
+	board_form = {}
 	map_draft = {"op_id": "", "stops": []}
 	sdr_run = {}
 

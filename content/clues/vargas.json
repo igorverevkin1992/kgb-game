@@ -13,7 +13,8 @@
       "ru": "Варгас ведёт кассовые операции отделения, которое обслуживает ипотеки служащих федеральных ведомств в Арлингтоне. Через её руки проходят формы о крупных наличных вкладах.",
       "en": "Vargas runs cash operations at the branch that services mortgages of federal employees in Arlington. Large cash deposit reports pass through her hands."
     },
-    "reveals": []
+    "reveals": [],
+    "chunk": "Старший операционист — Элен Варгас"
   },
   {
     "clue_id": "clue_vargas_mortgage_desk",
@@ -71,7 +72,8 @@
         "target_id": "tar_vargas_ellen",
         "axis": "money"
       }
-    ]
+    ],
+    "chunk": "просрочен долг частной клинике в Бетесде — 11 400 долларов за лечение матери"
   },
   {
     "clue_id": "clue_vargas_drawer_memo",
@@ -92,7 +94,8 @@
         "target_id": "tar_vargas_ellen",
         "axis": "compromise"
       }
-    ]
+    ],
+    "chunk": "недостача 340 долларов в кассе № 2"
   },
   {
     "clue_id": "clue_vargas_closing_recount",

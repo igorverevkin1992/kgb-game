@@ -41,7 +41,7 @@ static func _content(view: String) -> Control:
 		"map":
 			return MapModule.build()
 		"mice":
-			return Shells.mice()
+			return BoardView.build()
 		"inbox":
 			return InboxView.build()
 		"cipher":

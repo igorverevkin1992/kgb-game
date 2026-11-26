@@ -53,6 +53,37 @@
       "compromise"
     ]
   },
+  "analysis": {
+    "leading_axis": "money",
+    "access_options": [
+      {
+        "id": "cia_staff_accounts",
+        "text": {
+          "ru": "Ипотечные и зарплатные счета сотрудников ЦРУ",
+          "en": "Mortgage and payroll accounts of CIA staff"
+        }
+      },
+      {
+        "id": "branch_vault",
+        "text": {
+          "ru": "Хранилище и инкассация отделения",
+          "en": "The branch vault and cash collection"
+        }
+      },
+      {
+        "id": "bank_board",
+        "text": {
+          "ru": "Решения правления банка",
+          "en": "Decisions of the bank's board"
+        }
+      }
+    ],
+    "correct_access": "cia_staff_accounts",
+    "hint": {
+      "ru": "Что Варгас нужнее всего прямо сейчас — и что она прячет от управляющего?",
+      "en": "What does Vargas need most right now, and what is she hiding from her manager?"
+    }
+  },
   "initial_state": {
     "rapport": 0,
     "paranoia": 35

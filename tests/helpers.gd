@@ -55,9 +55,13 @@ static func resolve(op_id: String, decision := "continue") -> Dictionary:
 
 
 ## Применяет действия по очереди. Отклонённое действие — ошибка в t.failures и остановка.
-static func play(t: TestCase, state: Dictionary, actions: Array) -> Dictionary:
+## collect: после каждого действия снимать улики-фрагменты из пришедших документов
+## (как внимательный игрок), чтобы старые сценарии не зависели от доски.
+static func play(t: TestCase, state: Dictionary, actions: Array, collect := true) -> Dictionary:
 	var s := state
 	var events: Array = []
+	if collect:
+		s = _collect(s, events)
 	for a in actions:
 		var r := Campaign.dispatch(s, content(), a)
 		if r.error != "":
@@ -65,7 +69,42 @@ static func play(t: TestCase, state: Dictionary, actions: Array) -> Dictionary:
 			break
 		s = r.state
 		events.append_array(r.events)
+		if collect:
+			s = _collect(s, events)
 	return {"state": s, "events": events}
+
+
+static func _collect(s: Dictionary, events: Array) -> Dictionary:
+	if s.ending != null:
+		return s
+	for cable_id in s.delivered_cables:
+		for clue in Campaign.untaken_chunks(s, content(), cable_id):
+			var r := Campaign.dispatch(s, content(), {"type": "take_clue", "clue_id": clue.clue_id})
+			s = r.state
+			events.append_array(r.events)
+	return s
+
+
+## Приколоть все найденные улики к досье цели и утвердить верное заключение.
+static func approve(t: TestCase, s: Dictionary, target_id: String) -> Dictionary:
+	var c := content()
+	var target := Campaign.target_by_id(c, target_id)
+	for clue in c.clues:
+		if not s.clues.has(clue.clue_id) or not Campaign.clue_relevant(c, clue, target_id):
+			continue
+		var axes: Array = clue.reveals.filter(func(r): return r.target_id == target_id).map(func(r): return r.axis)
+		if axes.is_empty():
+			axes = [""]
+		for axis in axes:
+			var r := Campaign.dispatch(s, c, {"type": "pin_clue", "clue_id": clue.clue_id, "target_id": target_id, "axis": axis})
+			if r.error == "":
+				s = r.state
+	var res := Campaign.dispatch(s, c, {"type": "submit_analysis", "target_id": target_id,
+		"axis": target.analysis.leading_axis, "access": target.analysis.correct_access, "channel": target.approach.flag_mode})
+	if res.error != "":
+		t.failures.append("заключение по %s отклонено: %s" % [target_id, res.error])
+		return s
+	return res.state
 
 
 static func fresh() -> Dictionary:

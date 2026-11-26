@@ -52,6 +52,37 @@
       "money"
     ]
   },
+  "analysis": {
+    "leading_axis": "ego",
+    "access_options": [
+      {
+        "id": "se_division_habits",
+        "text": {
+          "ru": "Привычки и графики сотрудников отдела СССР и Восточной Европы ЦРУ",
+          "en": "Habits and schedules of CIA Soviet and East European Division staff"
+        }
+      },
+      {
+        "id": "state_dept_files",
+        "text": {
+          "ru": "Документы Государственного департамента",
+          "en": "State Department papers"
+        }
+      },
+      {
+        "id": "wine_imports",
+        "text": {
+          "ru": "Поставки вин из Европы",
+          "en": "Wine imports from Europe"
+        }
+      }
+    ],
+    "correct_access": "se_division_habits",
+    "hint": {
+      "ru": "Почему он читает лекции посетителям — и почему его это злит?",
+      "en": "Why does he lecture his patrons, and why does it make him angry?"
+    }
+  },
   "initial_state": {
     "rapport": 10,
     "paranoia": 20

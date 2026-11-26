@@ -18,7 +18,8 @@
         "target_id": "tar_calloway_martin",
         "axis": "ego"
       }
-    ]
+    ],
+    "chunk": "цитирует Монтескьё и спорит с посетителями о внешней политике"
   },
   {
     "clue_id": "clue_calloway_bar_regulars",
@@ -60,7 +61,8 @@
         "target_id": "tar_calloway_martin",
         "axis": "ego"
       }
-    ]
+    ],
+    "chunk": "диссертацию о советской внешней политике не защитил в 1979 году"
   },
   {
     "clue_id": "clue_calloway_rent_call",
@@ -81,7 +83,8 @@
         "target_id": "tar_calloway_martin",
         "axis": "money"
       }
-    ]
+    ],
+    "chunk": "Мартин, три месяца"
   },
   {
     "clue_id": "clue_calloway_eviction_notice",

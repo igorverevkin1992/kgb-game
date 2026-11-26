@@ -11,9 +11,8 @@ func test_new_campaign() -> void:
 	var cables: Array = s.delivered_cables.duplicate()
 	cables.sort()
 	eq(cables, ["cable_a1_w1_directive", "cable_a1_w1_file_vargas", "cable_a1_w1_post_clipping"])
-	var clues: Array = s.clues.duplicate()
-	clues.sort()
-	eq(clues, ["clue_calloway_post_review", "clue_vargas_bank_position"])
+	eq(s.clues, [], "улики из документов игрок снимает сам")
+	eq(Campaign.untaken_chunks(s, H.content(), "cable_a1_w1_file_vargas").size(), 1)
 	eq(Campaign.unread_cables(s).size(), 3)
 	eq(Campaign.available_ops(s, H.content()), [])
 
@@ -29,8 +28,12 @@ func test_cautious_resident() -> void:
 	eq(s.op_results.op_a1_recon_first_virginia, "clean", "повторный выход чистый")
 	eq(s.risks.sog_heat, 6, "свёрнутый выход не считается посещением")
 	ok(s.targets.tar_vargas_ellen.unlocked and s.targets.tar_calloway_martin.unlocked, "обе цели установлены")
-	eq(Campaign.axis_knowledge(s, H.content(), "tar_calloway_martin", "ego"), "confirmed")
-	eq(Campaign.axis_knowledge(s, H.content(), "tar_calloway_martin", "money"), "hypothesis")
+	var axes: Array = s.targets.tar_calloway_martin.discovered_axes.duplicate()
+	axes.sort()
+	eq(axes, ["ego", "money"], "мотивы Кэллоуэя вскрыты уликами")
+	var no_board := Campaign.dispatch(s, H.content(), {"type": "recruitment", "target_id": "tar_calloway_martin", "result": "success"})
+	has_text(no_board.error, "доска мотивов")
+	s = H.approve(self, s, "tar_calloway_martin")
 	var end := H.play(self, s, [{"type": "recruitment", "target_id": "tar_calloway_martin", "result": "success"}, NEXT, H.report("truth")])
 	ok(end.state.targets.tar_calloway_martin.recruited)
 	ok(end.events.any(func(e): return e.type == "act_completed" and e.act == 1), "акт завершён")
@@ -44,6 +47,7 @@ func test_reckless_resident() -> void:
 	eq(s.op_results.op_a1_recon_first_virginia, "tail_missed")
 	eq(s.risks.sog_heat, 31)
 	ok(s.flags.has("fbi_noted_arlington_bank_visit"))
+	s = H.approve(self, s, "tar_vargas_ellen")
 	var premature := Campaign.dispatch(s, H.content(), {"type": "recruitment", "target_id": "tar_vargas_ellen", "result": "success"})
 	has_text(premature.error, "компромат")
 	ok(premature.state == s, "состояние не меняется")
@@ -51,8 +55,9 @@ func test_reckless_resident() -> void:
 	ok(s.targets.tar_vargas_ellen.lost)
 	eq([s.risks.sog_heat, s.centre_trust], [46, 58])
 	eq(s.lies, [{"week": 2, "kind": "embellished"}])
-	s = H.play(self, s, [NEXT, H.plan("op_a1_recon_potomac_cellar"), NEXT, H.resolve("op_a1_recon_potomac_cellar"),
-		{"type": "recruitment", "target_id": "tar_calloway_martin", "result": "success"}, NEXT, H.report("silence")]).state
+	s = H.play(self, s, [NEXT, H.plan("op_a1_recon_potomac_cellar"), NEXT, H.resolve("op_a1_recon_potomac_cellar")]).state
+	s = H.approve(self, s, "tar_calloway_martin")
+	s = H.play(self, s, [{"type": "recruitment", "target_id": "tar_calloway_martin", "result": "success"}, NEXT, H.report("silence")]).state
 	ok(s.targets.tar_calloway_martin.recruited)
 	eq(s.lies.size(), 1, "умолчание без сбоев — не ложь")
 	eq(s.ending, "campaign_complete")

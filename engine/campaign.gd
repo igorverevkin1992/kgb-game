@@ -8,6 +8,10 @@ class_name Campaign
 ##   {type: "plan_op", op_id, route: [3 site_id]} · {type: "cancel_op", op_id}
 ##   {type: "resolve_op", op_id, decision: "continue"|"abort"}
 ##   {type: "recruitment", target_id, result: "success"|"failed"|"postponed"}
+##   {type: "take_clue", clue_id} — снять улику-фрагмент из документа (любая фаза)
+##   {type: "pin_clue", clue_id, target_id, axis} — приколоть улику к досье (axis "" — общее поле)
+##   {type: "submit_analysis", target_id, axis, access, channel} — заключение по досье (проверка тройкой)
+##   {type: "use_hint", target_id} — подсказка: намёк → документ → ответ
 ##   {type: "submit_report", report: "truth"|"embellished"|"silence"}
 
 const PHASES := ["morning", "day", "evening", "night"]
@@ -49,6 +53,8 @@ static func new_campaign(content: Dictionary) -> Dictionary:
 		"week_field_activity": false,
 		"lies": [],
 		"goal_reached": false,
+		"pinned": [],
+		"analysis": {},
 		"rng": b.start.seed,
 		"ending": null,
 		"log": [],
@@ -132,6 +138,8 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 				return _reject(state, "Цель ещё не установлена: не хватает улик")
 			match action.result:
 				"success":
+					if not analysis_state(s, target.target_id).approved:
+						return _reject(state, "Заключение по досье ещё не утверждено: сначала доска мотивов")
 					var missing: Array = target.approach.key_axes.filter(func(a): return not ts.discovered_axes.has(a))
 					if not missing.is_empty():
 						return _reject(state, "Не вскрыты ведущие мотивы: %s" % ", ".join(missing.map(func(a): return AXIS_NAME_RU[a])))
@@ -147,6 +155,55 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 					_add_risk(ctx, "sog_heat", content.balance.sog_heat.failed_recruitment, "failed_recruitment")
 				_:
 					_emit(ctx, {"type": "recruitment_postponed", "target_id": target.target_id})
+
+		"take_clue":
+			var clue := clue_by_id(content, action.clue_id)
+			if clue.is_empty() or clue.source.channel != "document":
+				return _reject(state, "Эту улику нельзя взять из документов")
+			if not s.delivered_cables.has(clue.source.from):
+				return _reject(state, "Этот документ ещё не поступал")
+			if s.clues.has(clue.clue_id):
+				return _reject(state, "Эта улика уже снята")
+			_give_clue(ctx, clue.clue_id)
+
+		"pin_clue":
+			var err := _pin_error(s, content, action.clue_id, action.target_id, action.get("axis", ""))
+			if err != "":
+				return _reject(state, err)
+			s.pinned.append({"clue_id": action.clue_id, "target_id": action.target_id, "axis": action.get("axis", "")})
+			_emit(ctx, {"type": "clue_pinned", "clue_id": action.clue_id, "target_id": action.target_id, "axis": action.get("axis", "")})
+
+		"submit_analysis":
+			var target := target_by_id(content, action.target_id)
+			if target.is_empty() or not s.targets.has(action.target_id) or not s.targets[action.target_id].unlocked:
+				return _reject(state, "Досье ещё не заведено: цель не установлена")
+			var an: Dictionary = analysis_state(s, action.target_id)
+			if an.approved:
+				return _reject(state, "Заключение по этому досье уже утверждено")
+			if pinned_clue_count(s, action.target_id) < ContentRules.THREE_CLUES:
+				return _reject(state, "Мало улик на досье: для заключения нужно минимум три")
+			var right := 0
+			right += 1 if action.axis == target.analysis.leading_axis else 0
+			right += 1 if action.access == target.analysis.correct_access else 0
+			right += 1 if action.channel == target.approach.flag_mode else 0
+			an.attempts += 1
+			an.wrong = 3 - right
+			s.analysis[action.target_id] = an
+			if right == 3:
+				an.approved = true
+				_emit(ctx, {"type": "analysis_approved", "target_id": action.target_id})
+			else:
+				_emit(ctx, {"type": "analysis_rejected", "target_id": action.target_id, "wrong": 3 - right})
+
+		"use_hint":
+			if not s.targets.has(action.target_id) or not s.targets[action.target_id].unlocked:
+				return _reject(state, "Досье ещё не заведено: цель не установлена")
+			var an: Dictionary = analysis_state(s, action.target_id)
+			if an.hint_level >= 3:
+				return _reject(state, "Подсказок больше нет")
+			an.hint_level += 1
+			s.analysis[action.target_id] = an
+			_emit(ctx, {"type": "hint_used", "target_id": action.target_id, "level": an.hint_level})
 
 		"submit_report":
 			if s.phase != "night":
@@ -252,9 +309,7 @@ static func _start_morning(ctx: Dictionary) -> void:
 		if cable.act <= s.act and cable.week <= s.week and not s.delivered_cables.has(cable.cable_id):
 			s.delivered_cables.append(cable.cable_id)
 			_emit(ctx, {"type": "cable_delivered", "cable_id": cable.cable_id})
-			for clue in content.clues:
-				if clue.source.channel == "document" and clue.source.from == cable.cable_id:
-					_give_clue(ctx, clue.clue_id)
+			# Улики из документов игрок снимает сам (подсвеченные фрагменты, take_clue).
 	# Каждый завербованный агент приносит по одному донесению в неделю.
 	for t in content.targets:
 		var ts = s.targets.get(t.target_id)
@@ -488,15 +543,73 @@ static func tail_present(s: Dictionary, op: Dictionary) -> bool:
 	return op.sdr.surveillance_present and s.op_results.get(op.op_id) != "aborted"
 
 
-## Что игрок знает о мотиве цели: unknown → hypothesis (1–2 улики) → confirmed (3+).
-static func axis_knowledge(s: Dictionary, content: Dictionary, target_id: String, axis: String) -> String:
-	var n := 0
-	for c in content.clues:
-		if s.clues.has(c.clue_id) and c.reveals.any(func(r): return r.target_id == target_id and r.axis == axis):
-			n += 1
+## Что игрок знает о мотиве цели по своей доске: unknown → hypothesis (1–2 приколотые улики)
+## → confirmed (3+, «Правило трёх улик»: открывается истинная цифра уязвимости).
+static func axis_knowledge(s: Dictionary, _content: Dictionary, target_id: String, axis: String) -> String:
+	var n := axis_pin_count(s, target_id, axis)
 	if n == 0:
 		return "unknown"
 	return "confirmed" if n >= ContentRules.THREE_CLUES else "hypothesis"
+
+
+static func axis_pin_count(s: Dictionary, target_id: String, axis: String) -> int:
+	return s.pinned.filter(func(p): return p.target_id == target_id and p.axis == axis).size()
+
+
+## Сколько разных улик приколото к досье (для заключения нужно три).
+static func pinned_clue_count(s: Dictionary, target_id: String) -> int:
+	var ids := {}
+	for p in s.pinned:
+		if p.target_id == target_id:
+			ids[p.clue_id] = true
+	return ids.size()
+
+
+## Относится ли улика к цели: вскрывает её мотив или входит в улики, по которым цель устанавливают.
+static func clue_relevant(content: Dictionary, clue: Dictionary, target_id: String) -> bool:
+	if clue.reveals.any(func(r): return r.target_id == target_id):
+		return true
+	var t := target_by_id(content, target_id)
+	return not t.is_empty() and t.unlock.clue_ids.has(clue.clue_id)
+
+
+## Почему нельзя приколоть улику (пустая строка — можно).
+static func _pin_error(s: Dictionary, content: Dictionary, clue_id: String, target_id: String, axis: String) -> String:
+	var clue := clue_by_id(content, clue_id)
+	if clue.is_empty() or not s.clues.has(clue_id):
+		return "Улика ещё не найдена"
+	if not s.targets.has(target_id) or not s.targets[target_id].unlocked:
+		return "Досье ещё не заведено: цель не установлена"
+	if s.pinned.any(func(p): return p.clue_id == clue_id and p.target_id == target_id and p.axis == axis):
+		return "Эта улика уже приколота сюда"
+	if axis == "":
+		return "" if clue_relevant(content, clue, target_id) else "Не вяжется: улика не относится к этой цели"
+	if not clue.reveals.any(func(r): return r.target_id == target_id and r.axis == axis):
+		return "Не вяжется: эта улика ничего не говорит об этом мотиве" if clue_relevant(content, clue, target_id) else "Не вяжется: улика не относится к этой цели"
+	return ""
+
+
+## Улики, которые ещё лежат в стопке «Новые улики»: найдены, но ни разу не приколоты.
+static func unpinned_clues(s: Dictionary, content: Dictionary) -> Array:
+	var pinned := {}
+	for p in s.pinned:
+		pinned[p.clue_id] = true
+	return content.clues.filter(func(c): return s.clues.has(c.clue_id) and not pinned.has(c.clue_id))
+
+
+## Улики-фрагменты в документе, которые игрок ещё не снял («Интуиция»).
+static func untaken_chunks(s: Dictionary, content: Dictionary, cable_id: String) -> Array:
+	return content.clues.filter(func(c): return c.source.channel == "document" and c.source.from == cable_id and not s.clues.has(c.clue_id))
+
+
+## Сколько улик по цели ещё не найдено («Интуиция» на досье).
+static func undiscovered_for_target(s: Dictionary, content: Dictionary, target_id: String) -> int:
+	return content.clues.filter(func(c): return clue_relevant(content, c, target_id) and not s.clues.has(c.clue_id)).size()
+
+
+static func analysis_state(s: Dictionary, target_id: String) -> Dictionary:
+	var a: Dictionary = s.analysis.get(target_id, {})
+	return {"approved": a.get("approved", false), "attempts": a.get("attempts", 0), "wrong": a.get("wrong", -1), "hint_level": a.get("hint_level", 0)}
 
 
 static func risk_level(value: int, content: Dictionary) -> String:

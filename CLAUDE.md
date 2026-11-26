@@ -25,7 +25,8 @@ tools/test.sh [фильтр]       # unit-тесты движка (tests/test_*.
 tools/ui-test.sh [фильтр]    # сценарии интерфейса под Xvfb + OpenGL, скриншоты в build/screens/
 tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
 ```
-Шаг готов, когда зелёные все три проверки и снят скриншот нового экрана. Прогон, в выводе
+Шаг готов, когда зелёные все три проверки и снят скриншот нового экрана. `test.sh` и `ui-test.sh`
+сначала запускают `tools/check_scripts.tscn` — проверку, что все скрипты компилируются. Прогон, в выводе
 которого есть `SCRIPT ERROR`, считается проваленным (скрипты это проверяют).
 
 ## Архитектура
@@ -40,8 +41,12 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
   - `campaign.gd` — `dispatch(state, content, action)` → `{state, events, error}`; исходное
     состояние не мутирует, error по-русски. Неделя: утро → день (`plan_op` с маршрутом) →
     вечер (`resolve_op`, `recruitment`) → ночь (`submit_report`). Наблюдения на маршруте —
-    `_build_observations` при планировании, хранятся в `state.routes`;
-  - `saves.gd` — формат v3, проверка при загрузке, автосейв, чекпоинты месяц/акт (до 12),
+    `_build_observations` при планировании, хранятся в `state.routes`. Доска мотивов (шаг 5):
+    улики из документов игрок снимает сам (`take_clue`, поле `chunk`), прикалывает к досье
+    (`pin_clue` с осью или "" — общее поле), утверждает заключение (`submit_analysis`: мотив,
+    доступ, канал — проверка тройкой) и берёт подсказки (`use_hint`). Вербовка `success` требует
+    утверждённого заключения. Знание о мотиве на доске — по приколотым уликам (`axis_knowledge`);
+  - `saves.gd` — формат v4 (pinned, analysis), проверка при загрузке, автосейв, чекпоинты месяц/акт (до 12),
     3 слота, «Железный занавес» (флаг `mode_ironman`); `FileStorage` (user://saves), `MemoryStorage`;
   - `map_geo.gd` — мили, 25-мильная зона, разбор маршрута; `rng.gd` — mulberry32; `util.gd` —
     JSON (числа из JSON приходят float — `normalize_numbers` делает целые int); `modules.gd`.
@@ -54,13 +59,15 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
     `calendar-week`, `report-truth`, `site-<id>`, `stop-<id>` и т. д. Тесты ищут по ним.
   - `desk_view.gd` (кабинет), `calendar.gd`, `module_view.gd` (рамка + край стола, клавиши 1–7,
     Esc), `inbox_view.gd` + `document_view.gd` (бланк / вырезка / перехват), `shells.gd`
-    (доска мотивов и оболочки модулей), `map_canvas.gd` + `map_module.gd` (карта, «Сбор» →
+    (оболочки модулей), `board_view.gd` (доска мотивов: стопка улик, ячейки Д/И/К/С как
+    DropZone с drag&drop и кликом, заключение тройкой, подсказки), `map_canvas.gd` + `map_module.gd` (карта, «Сбор» →
     «Вердикт»), `overlays.gd` (сводка аналитика, служебная папка, итог).
   - `style.gd` — палитра, шрифты PT (кириллица + латинский запасной файл), фабрики элементов;
     `Style.fs()` применяет масштаб текста 100–130 %. `i18n.gd` (`T.t`, `T.loc`), `fmt.gd` (суммы,
     даты), `signals.gd` (диегетические сигналы рисков).
 - Арт-плейсхолдеры — `assets/art/*.svg` (текст и узоры внутри SVG Godot не рисует).
-- `tests/` — unit-тесты (`TestCase`, помощники `H`); `tests/ui/` — сценарии (`UiTest`:
+- `tests/` — unit-тесты (`TestCase`, помощники `H`: `play()` сам снимает улики-фрагменты,
+  `approve()` прикалывает улики и утверждает заключение); `tests/ui/` — сценарии (`UiTest`:
   `start(actions)` собирает состояние движком, `press`, `click`, `key`, `has_text`, `shot`).
   После действия экран перестроен — узлы, найденные до него, уже удалены: ищи заново по имени.
 - Сборки: `export_presets.cfg` — Windows (`.exe` со встроенным pck) и Web (без потоков, для Pages).

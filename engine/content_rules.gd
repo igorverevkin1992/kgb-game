@@ -24,6 +24,7 @@ static func check(content: Dictionary, file_of: Dictionary, opts := {}) -> Array
 	_texts(ctx, opts.get("translation", false))
 	_polygraph(ctx)
 	_balance(ctx)
+	_board(ctx)
 	return ctx.issues
 
 
@@ -312,3 +313,32 @@ static func _balance(ctx: Dictionary) -> void:
 	var th: Dictionary = ctx.content.balance.thresholds
 	if th.warning >= th.danger:
 		_push(ctx, "error", "balance", "Порог «warning» (%d) должен быть меньше порога «danger» (%d)" % [th.warning, th.danger], "thresholds", "", "balance.json")
+
+
+## 10. Доска мотивов: фрагменты-улики есть в документах, заключение по досье согласовано.
+static func _board(ctx: Dictionary) -> void:
+	var c: Dictionary = ctx.content
+	var cables := {}
+	for x in c.cables:
+		cables[x.cable_id] = x
+	for clue in c.clues:
+		var where: String = "%s.chunk" % clue.clue_id
+		if clue.source.channel == "document":
+			if not clue.has("chunk"):
+				_push(ctx, "error", "board", "Улика из документа без фрагмента chunk: игроку нечего выделить в тексте", where, clue.clue_id)
+			elif cables.has(clue.source.from) and not String(cables[clue.source.from].body.ru).contains(clue.chunk):
+				_push(ctx, "error", "board", "Фрагмента «%s» нет в тексте документа «%s» (нужно дословное совпадение)" % [clue.chunk, clue.source.from], where, clue.clue_id)
+		elif clue.has("chunk"):
+			_push(ctx, "warning", "board", "Фрагмент chunk нужен только уликам из документов", where, clue.clue_id)
+	for t in c.targets:
+		var a: Dictionary = t.analysis
+		if not t.approach.key_axes.has(a.leading_axis):
+			_push(ctx, "error", "board", "Ведущий мотив заключения «%s» не входит в ведущие мотивы подхода (approach.key_axes)" % AXIS_RU[a.leading_axis], "analysis.leading_axis", t.target_id)
+		if not a.access_options.any(func(o): return o.id == a.correct_access):
+			_push(ctx, "error", "board", "Правильного варианта доступа «%s» нет среди access_options" % a.correct_access, "analysis.correct_access", t.target_id)
+		var relevant := 0
+		for clue in c.clues:
+			if clue.reveals.any(func(r): return r.target_id == t.target_id) or t.unlock.clue_ids.has(clue.clue_id):
+				relevant += 1
+		if relevant < THREE_CLUES:
+			_push(ctx, "error", "board", "По цели всего %d улик(и): для заключения на доске нужно минимум %d" % [relevant, THREE_CLUES], "", t.target_id)

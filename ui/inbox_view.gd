@@ -36,7 +36,11 @@ static func build() -> Control:
 		var v := Style.vbox(2)
 		v.position = Vector2(14, 8)
 		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(Style.label("%s · %s" % [T.t("doc.kind." + d.kind), T.t("calendar.week", {"week": d.week})], Style.form(), 13, Color(Style.PAPER, 0.7)))
+		var left := Campaign.untaken_chunks(s, Game.content, d.cable_id).size()
+		var meta := "%s · %s" % [T.t("doc.kind." + d.kind), T.t("calendar.week", {"week": d.week})]
+		if left > 0:
+			meta += " · " + T.t("inbox.chunks", {"n": left})
+		v.add_child(Style.label(meta, Style.form(), 13, Color(Style.PAPER, 0.7)))
 		var subj := Style.para(T.loc(d.subject), 390, Style.form(unread), 17, Style.PAPER)
 		subj.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		v.add_child(subj)

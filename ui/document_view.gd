@@ -19,6 +19,59 @@ static func _wrap(p: PanelContainer, cable: Dictionary) -> PanelContainer:
 	return p
 
 
+## Текст документа с подсвеченными фрагментами-уликами (Orwell): клик снимает улику на доску.
+## Снятые фрагменты остаются подчёркнутыми.
+static func body(cable: Dictionary, width: float, font: Font, size: int, color: Color, upper := false, indent := "") -> RichTextLabel:
+	var text: String = T.loc(cable.body)
+	var marks: Array = []
+	for clue in Game.content.clues:
+		if clue.source.channel == "document" and clue.source.from == cable.cable_id and clue.has("chunk"):
+			var at := text.find(clue.chunk)
+			if at >= 0:
+				marks.append({"at": at, "len": String(clue.chunk).length(), "id": clue.clue_id, "taken": Game.state.clues.has(clue.clue_id)})
+	marks.sort_custom(func(a, b): return a.at < b.at)
+	var out := indent
+	var pos := 0
+	for m in marks:
+		out += _esc(text.substr(pos, m.at - pos), upper)
+		var piece := _esc(text.substr(m.at, m.len), upper)
+		if m.taken:
+			out += "[u]%s[/u]" % piece
+		else:
+			out += "[url=%s][bgcolor=#e9c46a99]%s[/bgcolor][/url]" % [m.id, piece]
+		pos = m.at + m.len
+	out += _esc(text.substr(pos), upper)
+	var r := RichTextLabel.new()
+	r.name = "doc-body"
+	r.bbcode_enabled = true
+	r.fit_content = true
+	r.scroll_active = false
+	r.custom_minimum_size.x = width
+	r.add_theme_font_override("normal_font", font)
+	r.add_theme_font_size_override("normal_font_size", Style.fs(size))
+	r.add_theme_color_override("default_color", color)
+	r.add_theme_constant_override("line_separation", 8)
+	r.meta_underlined = false
+	r.text = out
+	r.meta_clicked.connect(func(meta): Game.take_clue(str(meta)))
+	r.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	return r
+
+
+static func _esc(t: String, upper: bool) -> String:
+	return (t.to_upper() if upper else t).replace("[", "[lb]")
+
+
+## «Интуиция» (Roottrees): сколько улик в документе ещё не снято.
+static func intuition(cable: Dictionary, width: float, color: Color) -> Label:
+	var n := Campaign.untaken_chunks(Game.state, Game.content, cable.cable_id).size()
+	var total: int = Game.content.clues.filter(func(c): return c.source.channel == "document" and c.source.from == cable.cable_id).size()
+	var text := T.t("doc.intuition", {"n": n}) if n > 0 else (T.t("doc.intuitionDone") if total > 0 else T.t("doc.intuitionNone"))
+	var l := Style.para(text, width, Style.form(), 14, color)
+	l.name = "intuition"
+	return l
+
+
 static func _form(cable: Dictionary) -> Control:
 	var w := 720.0
 	var sb := Style.box(Style.PAPER, Color(0, 0, 0, 0), 0, 0, 0)
@@ -49,9 +102,8 @@ static func _form(cable: Dictionary) -> Control:
 	var subject := Style.para(T.loc(cable.subject), w - 136, Style.mono(), 18, Style.INK)
 	subject.add_theme_constant_override("line_spacing", 4)
 	v.add_child(subject)
-	var body := Style.para("      " + T.loc(cable.body), w - 136, Style.mono(), 17, Style.INK)
-	body.add_theme_constant_override("line_spacing", 10)
-	v.add_child(body)
+	v.add_child(body(cable, w - 136, Style.mono(), 17, Style.INK, false, "      "))
+	v.add_child(intuition(cable, w - 136, Color(Style.INK, 0.6)))
 	var stamp_row := Style.hbox()
 	stamp_row.alignment = BoxContainer.ALIGNMENT_END
 	var st := Style.stamp(T.t("doc.stamp"), Color(0.18, 0.29, 0.55, 0.8), 15, -7)
@@ -74,9 +126,8 @@ static func _clipping(cable: Dictionary) -> Control:
 	v.add_child(mast)
 	v.add_child(Style.hline(Style.INK, 3))
 	v.add_child(Style.para(T.loc(cable.subject), 470, Style.serif(true), 26, Style.INK))
-	var body := Style.para(T.loc(cable.body), 470, Style.serif(), 18, Style.INK)
-	body.add_theme_constant_override("line_spacing", 6)
-	v.add_child(body)
+	v.add_child(body(cable, 470, Style.serif(), 18, Style.INK))
+	v.add_child(intuition(cable, 470, Color(Style.INK, 0.6)))
 	p.add_child(v)
 	p.rotation_degrees = -0.8
 	return _wrap(p, cable)
@@ -93,8 +144,7 @@ static func _intercept(cable: Dictionary) -> Control:
 	var v := Style.vbox(10)
 	v.custom_minimum_size.x = 640
 	v.add_child(Style.para("%s · %s" % [T.loc(cable.sender).to_upper(), T.loc(cable.subject).to_upper()], 640, Style.mono(), 14, Color(Style.INK, 0.7)))
-	var body := Style.para(T.loc(cable.body).to_upper(), 640, Style.mono(), 17, Style.INK)
-	body.add_theme_constant_override("line_spacing", 8)
-	v.add_child(body)
+	v.add_child(body(cable, 640, Style.mono(), 17, Style.INK, true))
+	v.add_child(intuition(cable, 640, Color(Style.INK, 0.6)))
 	p.add_child(v)
 	return _wrap(p, cable)

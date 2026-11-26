@@ -5,8 +5,8 @@ class_name Saves
 ## FileStorage (user://saves) в игре, MemoryStorage в тестах.
 
 const FORMAT := "liniya-kr-save"
-## v3: первая версия на Godot.
-const VERSION := 3
+## v3: первая версия на Godot. v4 (шаг 5): доска мотивов — pinned, analysis.
+const VERSION := 4
 const AUTOSAVE := "autosave"
 const MANUAL_SLOTS := ["manual-1", "manual-2", "manual-3"]
 const MAX_CHECKPOINTS := 12
@@ -108,6 +108,8 @@ static func _state_spec() -> Dictionary:
 		"week_failures": Schema.i(0), "week_field_activity": {"type": "bool"},
 		"lies": Schema.arr(Schema.obj({"week": Schema.i(), "kind": Schema.e(["embellished", "silence"])})),
 		"goal_reached": {"type": "bool"}, "rng": Schema.i(0),
+		"pinned": Schema.arr(Schema.obj({"clue_id": Schema.s(), "target_id": Schema.s(), "axis": Schema.s()})),
+		"analysis": {"type": "dict", "of": Schema.obj({"approved": {"type": "bool"}, "attempts": Schema.i(0), "wrong": Schema.i(-1, 3), "hint_level": Schema.i(0, 3)})},
 		"ending": Schema.nullable(Schema.e(["persona_non_grata", "recalled", "mole_arrested", "campaign_complete"])),
 		"log": Schema.arr({"type": "dict", "of": {"type": "any"}}),
 	})

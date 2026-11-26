@@ -84,6 +84,15 @@ static func _object(v: String) -> Control:
 		cork.position = Vector2(12, 12)
 		b.add_child(cork)
 		b.add_child(CorkCards.new(Game.state.targets.values().filter(func(t): return t.unlocked).size(), b.size))
+	if v == "mice":
+		var fresh := Campaign.unpinned_clues(Game.state, Game.content).size()
+		if fresh > 0:
+			var nb := Style.panel(Style.STAMP_RED, 6)
+			nb.name = "board-new"
+			nb.position = Vector2(b.size.x - 60, 24)
+			nb.add_child(Style.label(str(fresh), Style.form(true), 20, Style.PAPER_LIGHT, false))
+			nb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			b.add_child(nb)
 	if v == "inbox":
 		var unread := Campaign.unread_cables(Game.state).size()
 		if unread > 0:

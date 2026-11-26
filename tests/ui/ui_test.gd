@@ -80,6 +80,8 @@ func text_of(name: String) -> String:
 func _collect(n: Node, parts: Array) -> void:
 	if n is Label or n is Button:
 		parts.append(n.text)
+	elif n is RichTextLabel:
+		parts.append(n.get_parsed_text())
 	for c in n.get_children():
 		_collect(c, parts)
 
@@ -115,17 +117,29 @@ func shot(file: String) -> void:
 
 
 ## Игра с заданного момента кампании (состояние собирает движок, как в unit-тестах).
-func seed_state(actions: Array) -> Dictionary:
+## collect: снимать улики-фрагменты из пришедших документов, как внимательный игрок.
+func seed_state(actions: Array, collect := true) -> Dictionary:
 	var s: Dictionary = Campaign.new_campaign(Game.content).state
+	if collect:
+		s = _collect_docs(s)
 	for a in actions:
 		var r := Campaign.dispatch(s, Game.content, a)
 		if r.error != "":
 			failures.append("подготовка: %s — %s" % [JSON.stringify(a), r.error])
 			break
 		s = r.state
+		if collect:
+			s = _collect_docs(s)
 	return s
 
 
-func start(actions: Array = []) -> void:
-	Game.reset_for_test(seed_state(actions) if not actions.is_empty() else {})
+func _collect_docs(s: Dictionary) -> Dictionary:
+	for cable_id in s.delivered_cables:
+		for clue in Campaign.untaken_chunks(s, Game.content, cable_id):
+			s = Campaign.dispatch(s, Game.content, {"type": "take_clue", "clue_id": clue.clue_id}).state
+	return s
+
+
+func start(actions: Array = [], collect := true) -> void:
+	Game.reset_for_test(seed_state(actions, collect) if not actions.is_empty() else {})
 	await frames(3)

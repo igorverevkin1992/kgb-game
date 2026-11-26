@@ -42,6 +42,14 @@ static func _build() -> void:
 			"cover": text,
 			"key_axes": Schema.arr(axis, 1),
 		}),
+		# Правильное заключение по досье (доска мотивов): ведущий мотив, доступ, подсказка-намёк.
+		# Канал подхода сверяется с approach.flag_mode.
+		"analysis": Schema.obj({
+			"leading_axis": axis,
+			"access_options": Schema.arr(Schema.obj({"id": Schema.s("^[a-z0-9_]+$", "id варианта: латиница, цифры и «_»"), "text": text}), 2),
+			"correct_access": Schema.s(),
+			"hint": text,
+		}),
 		"initial_state": Schema.obj({
 			"rapport": scale,
 			"paranoia": scale,
@@ -57,6 +65,8 @@ static func _build() -> void:
 		"title": text,
 		"text": text,
 		"reveals": Schema.opt(Schema.arr(Schema.obj({"target_id": Schema.id("tar"), "axis": axis})), []),
+		# Для улик из документов: фраза из текста документа, которую игрок «снимает» кликом.
+		"chunk": Schema.opt(Schema.s()),
 	})
 
 	_cache["cable"] = Schema.obj({
