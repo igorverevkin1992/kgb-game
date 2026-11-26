@@ -139,10 +139,11 @@ static func _state_spec() -> Dictionary:
 		"requests": Schema.arr(Schema.obj({"request_id": Schema.s(), "act": Schema.i(1, 4), "week": Schema.i(1), "granted": {"type": "bool"}})),
 		"meeting": Schema.nullable(Schema.obj({
 			"target_id": Schema.s(), "dialog_id": Schema.s(), "beat": Schema.i(0), "rapport": pct, "anxiety": pct,
-			"used": strs, "lines": Schema.arr({"type": "dict", "of": {"type": "any"}}),
+			"used": strs, "lines": Schema.arr({"type": "dict", "of": {"type": "any"}}), "coercion": Schema.opt(Schema.i(0), 0),
 		})),
 		"agents": {"type": "dict", "of": Schema.obj({
 			"loyalty": pct, "paid_usd": Schema.i(0), "lifestyle": pct, "trace": pct, "since_week": Schema.i(1), "promise_kept": {"type": "bool"},
+			"coerced": Schema.opt({"type": "bool"}, false),
 		})},
 		"payments": Schema.arr(Schema.obj({
 			"target_id": Schema.s(), "week": Schema.i(1), "amount": Schema.i(1), "instrument": Schema.e(["cash", "escrow"]),

@@ -187,8 +187,8 @@
     {
       "site_id": "site_m_street_tobacconist",
       "name": {
-        "ru": "Табачная лавка на М-стрит",
-        "en": "Tobacconist on M Street"
+        "ru": "Газетный киоск на М-стрит",
+        "en": "Newsstand on M Street"
       },
       "kind": "tobacconist",
       "role": "stop",
@@ -198,8 +198,8 @@
         "y": 18.3
       },
       "cover_reason": {
-        "ru": "Трубочный табак для посла",
-        "en": "Pipe tobacco for the ambassador"
+        "ru": "Свежие газеты для посольства",
+        "en": "Fresh newspapers for the embassy"
       },
       "ambient_tags": [
         "tourists_camera",

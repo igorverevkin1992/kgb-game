@@ -64,7 +64,7 @@ static func start(s: Dictionary, content: Dictionary, target_id: String) -> Dict
 	var d := dialog_for(content, target_id)
 	return {
 		"target_id": target_id, "dialog_id": d.dialog_id, "beat": 0,
-		"rapport": int(ts.rapport), "anxiety": int(ts.paranoia), "used": [],
+		"rapport": int(ts.rapport), "anxiety": int(ts.paranoia), "used": [], "coercion": 0,
 		"lines": [{"kind": "setting"}, {"kind": "prompt", "beat": 0}],
 	}
 
@@ -94,8 +94,20 @@ static func turn_effects(d: Dictionary, m: Dictionary, tone: String, clue_id: St
 
 
 ## Ход резидента: возвращает новую встречу (исходную не меняет).
-static func apply_turn(d: Dictionary, meeting: Dictionary, tone: String, clue_id: String) -> Dictionary:
+## Принуждение на встрече: каждый ответ нажимом и каждые предъявленные компрометирующие
+## сведения. От порога (balance.meeting.coercion_threshold) агент получится неустойчивым.
+static func is_coercive(content: Dictionary, target_id: String, tone: String, clue_id: String) -> int:
+	var n := 1 if tone == "pressure" else 0
+	if clue_id != "":
+		var clue := Campaign.clue_by_id(content, clue_id)
+		if clue.get("reveals", []).any(func(r): return r.target_id == target_id and r.axis == "compromise"):
+			n += 1
+	return n
+
+
+static func apply_turn(d: Dictionary, meeting: Dictionary, tone: String, clue_id: String, coercion := 0) -> Dictionary:
 	var m: Dictionary = meeting.duplicate(true)
+	m.coercion = int(m.get("coercion", 0)) + coercion
 	var fx := turn_effects(d, m, tone, clue_id)
 	if clue_id == "":
 		m.lines.append({"kind": "my_tone", "beat": m.beat, "tone": tone})

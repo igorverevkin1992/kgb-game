@@ -145,6 +145,10 @@ static func _agent_card(s: Dictionary, id: String) -> Control:
 		pl.name = "promise-" + id
 		v.add_child(pl)
 	var th: int = c.balance.thresholds.danger
+	if ag.get("coerced", false):
+		var cn := Style.para(T.t("finance.coercedNote", {"w": b.loyalty_coerced_week}), RIGHT_W - 36, Style.mono(), 13, Style.STAMP_RED)
+		cn.name = "coerced-" + id
+		v.add_child(cn)
 	v.add_child(_scale("scale-loyalty-" + id, T.t("finance.loyalty"), int(ag.loyalty), T.t("finance.loyaltyMarks", {"r": b.reports_min_loyalty, "e": b.escrow_min_loyalty}), Color("#4f7a3e")))
 	v.add_child(_scale("scale-trace-" + id, T.t("finance.trace"), int(ag.trace), T.t("finance.traceNote"), Color("#8e2b22")))
 	v.add_child(_scale("scale-lifestyle-" + id, T.t("finance.lifestyle"), int(ag.lifestyle), T.t("finance.lifestyleNote", {"n": th, "t": b.lifestyle_danger_treasury, "d": b.lifestyle_decay}), Color("#b07a2a")))

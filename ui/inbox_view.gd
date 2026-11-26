@@ -45,7 +45,9 @@ static func build() -> Control:
 		subj.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		v.add_child(subj)
 		b.add_child(v)
-		b.custom_minimum_size.y = maxf(64, v.get_combined_minimum_size().y + 16)
+		# Высота по реальному числу строк темы (перенос по ширине 390).
+		var subj_h := Style.form(unread).get_multiline_string_size(T.loc(d.subject), HORIZONTAL_ALIGNMENT_LEFT, 390, Style.fs(17)).y
+		b.custom_minimum_size.y = maxf(64, subj_h + Style.fs(13) + 30)
 		list.add_child(b)
 	scroll.add_child(list)
 	root.add_child(scroll)

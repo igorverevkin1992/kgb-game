@@ -236,7 +236,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			var clue_id: String = action.get("clue_id", "")
 			if clue_id != "" and not Meeting.available_trumps(s, content, s.meeting).any(func(t): return t.clue_id == clue_id):
 				return _reject(state, "Эти сведения сейчас не предъявить: они должны быть приобщены к делу и ещё не использованы")
-			s.meeting = Meeting.apply_turn(d, s.meeting, action.tone, clue_id)
+			s.meeting = Meeting.apply_turn(d, s.meeting, action.tone, clue_id, Meeting.is_coercive(content, s.meeting.target_id, action.tone, clue_id))
 			if s.meeting.anxiety >= Meeting.max_anxiety(d):
 				_finish_meeting(ctx, "failed")
 
@@ -510,16 +510,17 @@ static func _finish_meeting(ctx: Dictionary, outcome: String) -> void:
 	_emit(ctx, {"type": "meeting_ended", "target_id": m.target_id, "outcome": outcome})
 	match outcome:
 		"recruited":
-			_recruit(ctx, m.target_id)
+			_recruit(ctx, m.target_id, int(m.get("coercion", 0)) >= int(ctx.content.balance.meeting.coercion_threshold))
 		"failed":
 			_lose(ctx, m.target_id)
 
 
-static func _recruit(ctx: Dictionary, target_id: String) -> void:
+## coerced — завербован принуждением: агент неустойчив (ниже лояльность, она падает каждую неделю).
+static func _recruit(ctx: Dictionary, target_id: String, coerced := false) -> void:
 	var s: Dictionary = ctx.s
 	s.targets[target_id].recruited = true
-	s.agents[target_id] = Finance.new_agent(s, ctx.content, target_id)
-	_emit(ctx, {"type": "target_recruited", "target_id": target_id})
+	s.agents[target_id] = Finance.new_agent(s, ctx.content, target_id, coerced)
+	_emit(ctx, {"type": "target_recruited", "target_id": target_id, "coerced": coerced})
 	_check_goal(ctx)
 
 
@@ -588,6 +589,15 @@ static func _agents_night(ctx: Dictionary) -> void:
 			ag.trace = Util.clamp100(int(ag.trace) + int(b.lifestyle_danger_treasury))
 			_add_risk(ctx, "treasury", int(b.lifestyle_danger_treasury), "lifestyle")
 		ag.lifestyle = maxi(0, int(ag.lifestyle) - int(b.lifestyle_decay))
+		# Завербованный принуждением служит из страха, а не по согласию: лояльность тает.
+		if ag.get("coerced", false):
+			var from: int = ag.loyalty
+			ag.loyalty = Util.clamp100(from - int(b.loyalty_coerced_week))
+			_emit(ctx, {"type": "loyalty_changed", "target_id": id, "from": from, "to": ag.loyalty, "reason": "coerced"})
+		# Лояльность на нуле — агент рвёт связь (и может пойти в ФБР).
+		if int(ag.loyalty) <= 0:
+			_emit(ctx, {"type": "agent_broke", "target_id": id})
+			_lose(ctx, id)
 
 
 static func _lose(ctx: Dictionary, target_id: String) -> void:

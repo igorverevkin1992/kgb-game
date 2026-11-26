@@ -3,10 +3,10 @@ class_name ModuleView
 ## остальными предметами (переход одним кликом или клавишей 1–7), Esc — к столу. Без меню.
 
 const FRAME := Rect2(32, 24, 1536, 756)
-const MINI := {"map": "map", "mice": "corkboard_mini", "cipher": "fialka", "finance": "ledger", "dialog": "recorder", "counterintel": "console", "inbox": "inbox_full"}
+const MINI := {"map": "map", "mice": "corkboard_mini", "cipher": "fialka", "finance": "ledger", "dialog": "recorder", "counterintel": "console", "inbox": "inbox_full", "archive": "archive"}
 const BG := {
 	"map": Color("#3b2d20"), "mice": Color("#4a3421"), "cipher": Color("#1d1e1b"), "finance": Color("#8a6a3b"),
-	"dialog": Color("#454b38"), "counterintel": Color("#3b3f35"), "inbox": Color("#2a2119"),
+	"dialog": Color("#454b38"), "counterintel": Color("#3b3f35"), "inbox": Color("#2a2119"), "archive": Color("#2f2a22"),
 }
 
 
@@ -50,6 +50,8 @@ static func _content(view: String) -> Control:
 			return FinanceView.build()
 		"dialog":
 			return DialogView.build()
+		"archive":
+			return ArchiveView.build()
 		_:
 			return Shells.counterintel()
 
@@ -100,14 +102,14 @@ static func _edge(current: String) -> Control:
 		b.add_theme_stylebox_override("disabled", Style.box(Color(0, 0, 0, 0)))
 		b.set_meta("current", cur)
 		b.pressed.connect(Game.open.bind(v))
-		var h := Style.hbox(10)
-		h.position = Vector2(8, 6)
+		var h := Style.hbox(6)
+		h.position = Vector2(6, 10)
 		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var tex := Style.art(MINI[v], Rect2(0, 0, 72, 64))
-		tex.custom_minimum_size = Vector2(72, 64)
+		var tex := Style.art(MINI[v], Rect2(0, 0, 50, 46))
+		tex.custom_minimum_size = Vector2(50, 46)
 		h.add_child(tex)
 		var name_key: String = "inbox.name" if v == "inbox" else "module.%s.name" % v
-		var lbl := Style.para(T.t(name_key) + ("\n[%d]" % Modules.hotkey(v) if unlocked else ""), 110, Style.form(), 15, Style.PAPER)
+		var lbl := Style.para(T.t(name_key) + ("\n[%d]" % Modules.hotkey(v) if unlocked else ""), 96, Style.form(), 13, Style.PAPER)
 		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		h.add_child(lbl)
 		b.add_child(h)

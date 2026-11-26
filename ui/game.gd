@@ -5,7 +5,7 @@ extends Node
 
 signal changed
 
-const VIEWS := ["map", "mice", "cipher", "finance", "dialog", "counterintel", "inbox"]
+const VIEWS := ["map", "mice", "cipher", "finance", "dialog", "counterintel", "inbox", "archive"]
 const SETTINGS_SLOT := "settings"
 const TEXT_SCALES := [1.0, 1.15, 1.3]
 
@@ -55,6 +55,8 @@ var cipher_draft := {"week": 0, "choices": {}, "request": ""}
 var meeting_trump := ""
 ## Финансовый журнал: выбранный агент и черновики траншей {target_id: {amount, instrument, parts}}.
 var finance_agent := ""
+## «Архив 1985»: открытая запись.
+var archive_selected := ""
 var finance_forms := {}
 var tape_selected := -1
 var tape_cursor := 0
@@ -201,7 +203,7 @@ func is_unlocked(v: String) -> bool:
 	return v == "inbox" or act() >= Modules.unlock_act(v)
 
 
-const OPEN_SOUNDS := {"map": "paper", "mice": "paper", "inbox": "paper", "finance": "paper", "cipher": "click", "dialog": "reel", "counterintel": "click"}
+const OPEN_SOUNDS := {"archive": "paper", "map": "paper", "mice": "paper", "inbox": "paper", "finance": "paper", "cipher": "click", "dialog": "reel", "counterintel": "click"}
 
 
 func open(v: String) -> void:
@@ -361,6 +363,17 @@ func send_tranche(id: String) -> void:
 		"parts": int(f.parts) if f.instrument == "cash" else 1})
 
 
+func open_archive(entry_id: String) -> void:
+	archive_selected = entry_id
+	open("archive")
+
+
+func select_archive(entry_id: String) -> void:
+	archive_selected = entry_id
+	sfx("paper")
+	changed.emit()
+
+
 # ——— Беседа ———
 
 func start_meeting(target_id: String) -> void:
@@ -499,6 +512,7 @@ func _clear_ui() -> void:
 	tape_cursor = 0
 	finance_agent = ""
 	finance_forms = {}
+	archive_selected = ""
 
 
 func _load_settings() -> void:

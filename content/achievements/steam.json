@@ -48,6 +48,19 @@
     "match": {}
   },
   {
+    "id": "ACH_CLEAN_HANDS",
+    "title": {
+      "ru": "Чистые руки"
+    },
+    "description": {
+      "ru": "Завербовать агента без нажима и компромата."
+    },
+    "event": "target_recruited",
+    "match": {
+      "coerced": false
+    }
+  },
+  {
     "id": "ACH_PROMISE",
     "title": {
       "ru": "Слово резидента"

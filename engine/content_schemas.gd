@@ -79,7 +79,7 @@ static func _build() -> void:
 		"cable_id": Schema.id("cable"),
 		"act": act,
 		"week": week,
-		"kind": Schema.e(["directive", "vgu_note", "press_clipping", "agent_report", "intercept", "personnel_file"]),
+		"kind": Schema.e(["directive", "vgu_note", "press_clipping", "agent_report", "intercept", "personnel_file", "letter"]),
 		"sender": text,
 		"subject": text,
 		"body": text,
@@ -109,6 +109,17 @@ static func _build() -> void:
 			"ready": fx,
 			"early": fx,
 		})), []),
+	})
+
+	# «Архив эпохи: 1985» — справочник: техника, история, законы и эпилог «факт и вымысел».
+	_cache["archive"] = Schema.obj({
+		"id": Schema.s("^arc_[a-z0-9_]+$", "id записи архива: arc_ и латиница, цифры, «_»"),
+		"section": Schema.e(["history", "technique", "law", "fiction"]),
+		"status": Schema.e(["fact", "fiction", "mixed"]),
+		"title": text,
+		"text": text,
+		# Событие движка, после которого запись открывается (пусто — открыта сразу).
+		"unlock": Schema.opt(Schema.s(), ""),
 	})
 
 	# Достижения Steam: какое событие движка (и с какими полями) их открывает.
@@ -231,7 +242,7 @@ static func _build() -> void:
 		"lies": Schema.obj({"check_every_weeks": Schema.i(1), "uncover_chance_embellished": chance, "uncover_chance_silence": chance}),
 		"treasury": Schema.obj({"audit_mole_hunt_multiplier": Schema.n(1, 5)}),
 		"thresholds": Schema.obj({"warning": scale, "danger": scale}),
-		"meeting": Schema.obj({"anxiety_cooldown": Schema.i(0, 100)}),
+		"meeting": Schema.obj({"anxiety_cooldown": Schema.i(0, 100), "coercion_threshold": Schema.i(1, 20)}),
 		"finance": Schema.obj({
 			"ctr_threshold_usd": Schema.i(1), "ctr_treasury": delta, "structuring_treasury": delta,
 			"mlca_date": Schema.s("^\\d{4}-\\d{2}-\\d{2}$", "дата в формате ГГГГ-ММ-ДД"),
@@ -239,6 +250,7 @@ static func _build() -> void:
 			"lifestyle_factor": Schema.n(0, 5), "lifestyle_decay": Schema.i(0, 100), "lifestyle_danger_treasury": delta,
 			"loyalty_unpaid_week": Schema.i(0, 100), "loyalty_promise_cash": delta, "loyalty_promise_escrow": delta,
 			"loyalty_per_1000_extra": Schema.n(0, 10), "escrow_min_loyalty": scale, "reports_min_loyalty": scale,
+			"coerced_loyalty_penalty": Schema.i(0, 100), "loyalty_coerced_week": Schema.i(0, 100),
 		}),
 		"cipher": Schema.obj({
 			"accept_forged_sog_heat": delta, "accept_forged_flag": flag,

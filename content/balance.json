@@ -61,7 +61,8 @@
     "query_forged_trust": 5
   },
   "meeting": {
-    "anxiety_cooldown": 20
+    "anxiety_cooldown": 20,
+    "coercion_threshold": 2
   },
   "finance": {
     "ctr_threshold_usd": 10000,
@@ -78,6 +79,8 @@
     "loyalty_promise_escrow": 5,
     "loyalty_per_1000_extra": 1,
     "escrow_min_loyalty": 60,
-    "reports_min_loyalty": 40
+    "reports_min_loyalty": 40,
+    "coerced_loyalty_penalty": 15,
+    "loyalty_coerced_week": 3
   }
 }

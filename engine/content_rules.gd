@@ -29,6 +29,8 @@ static func check(content: Dictionary, file_of: Dictionary, opts := {}) -> Array
 	_dialogs(ctx)
 	_finance(ctx)
 	_achievements(ctx)
+	_age16(ctx)
+	_archive(ctx)
 	return ctx.issues
 
 
@@ -438,3 +440,80 @@ static func _achievements(ctx: Dictionary) -> void:
 	for a in ctx.content.achievements:
 		if not Achievements.EVENTS.has(a.event):
 			_push(ctx, "error", "achievements", "Неизвестное событие «%s». Допустимо: %s" % [a.event, ", ".join(Achievements.EVENTS)], "%s.event" % a.id, a.id)
+
+
+## 15. Возрастная категория 16+ (436-ФЗ, 15-ФЗ; требование грантов ИРИ и ПФКИ):
+## нецензурная лексика — ошибка; табак, курение и употребление алкоголя — предупреждение
+## (в тексте допустимы как сведения о слабостях противника, но не как сцена или романтизация).
+## «^» — начало слова, «$» — конец (граница \\b в RegEx не видит кириллицу); текст сравнивается в нижнем регистре.
+const AGE16_OBSCENE := ["^х[уy][йеёяию]", "^пизд", "^[ьъ]?еб[аеиоуы][лнтшщ]", "^бля[дт]?", "^муд[аио]"]
+const AGE16_WARN := {
+	"табак и курение": ["^кур(ит|ят|ил|ила|ение|ения|ящ|ильщ)", "^сигарет", "^сигар[аыу]?$", "табак", "^пепельниц", "^затяну"],
+	"употребление алкоголя": ["^пь(ёт|ют|ян)", "^выпи(л|ть|вк|ва)", "^напи(лся|лась|ться)", "^рюмк", "^водк", "^виск[иь]$", "^коньяк", "^пив[оа]$", "^бокал", "^налива", "^разлива"],
+}
+const _WORD_START := "(?<![а-яёa-z])"
+const _WORD_END := "(?![а-яёa-z])"
+static var _age16_re := {}
+
+
+static func _age16(ctx: Dictionary) -> void:
+	if _age16_re.is_empty():
+		_age16_re["obscene"] = AGE16_OBSCENE.map(_age16_compile)
+		for k in AGE16_WARN:
+			_age16_re[k] = AGE16_WARN[k].map(_age16_compile)
+	var c: Dictionary = ctx.content
+	var texts: Array = []
+	for key in ["targets", "clues", "cables", "ops", "polygraph", "requests", "dialogs", "achievements", "archive"]:
+		for item in c.get(key, []):
+			var id := _item_id(item)
+			_collect_ru(item, id, id, texts)
+	for key in ["campaign", "map", "cues"]:
+		if c.has(key):
+			_collect_ru(c[key], "", key, texts)
+	for t in texts:
+		var low: String = String(t.text).to_lower()
+		for re in _age16_re.obscene:
+			if re.search(low) != null:
+				_push(ctx, "error", "age16", "Нецензурная лексика переводит игру в 18+ — уберите слово", t.where, t.id)
+				break
+		for k in AGE16_WARN:
+			for re in _age16_re[k]:
+				var m: RegExMatch = re.search(low)
+				if m != null:
+					_push(ctx, "warning", "age16", "16+: %s («%s») — допустимо только как сведения в документе, без сцены и романтизации" % [k, m.get_string()], t.where, t.id)
+					break
+
+
+static func _age16_compile(p: String) -> RegEx:
+	var body := p
+	if body.begins_with("^"):
+		body = _WORD_START + body.substr(1)
+	if body.ends_with("$"):
+		body = body.substr(0, body.length() - 1) + _WORD_END
+	return RegEx.create_from_string(body)
+
+
+static func _item_id(item: Dictionary) -> String:
+	for k in ["target_id", "clue_id", "cable_id", "op_id", "exam_id", "request_id", "dialog_id", "id"]:
+		if item.has(k):
+			return str(item[k])
+	return ""
+
+
+static func _collect_ru(v: Variant, id: String, where: String, out: Array) -> void:
+	if typeof(v) == TYPE_DICTIONARY:
+		if v.has("ru") and typeof(v.ru) == TYPE_STRING:
+			out.append({"id": id, "where": where, "text": v.ru})
+			return
+		for k in v:
+			_collect_ru(v[k], id, "%s.%s" % [where, k], out)
+	elif typeof(v) == TYPE_ARRAY:
+		for i in v.size():
+			_collect_ru(v[i], id, "%s[%d]" % [where, i], out)
+
+
+## 16. Архив: записи открываются по событиям, которые движок испускает.
+static func _archive(ctx: Dictionary) -> void:
+	for a in ctx.content.archive:
+		if a.unlock != "" and not Achievements.EVENTS.has(a.unlock):
+			_push(ctx, "error", "archive", "Запись открывается по неизвестному событию «%s»" % a.unlock, "%s.unlock" % a.id, a.id)

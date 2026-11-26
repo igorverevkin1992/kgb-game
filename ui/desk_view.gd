@@ -11,6 +11,7 @@ const OBJECTS := {
 	"inbox": [610, 650, 290, 222, 0.0, "inbox"],
 	"finance": [950, 560, 230, 280, 5.0, "ledger"],
 	"dialog": [1230, 590, 320, 260, 0.0, "recorder"],
+	"archive": [40, 166, 300, 118, 0.0, "archive"],
 }
 
 
@@ -27,6 +28,8 @@ static func build() -> Control:
 	room.add_child(_plaque())
 	for v in OBJECTS:
 		room.add_child(_object(v))
+	# Стакан крепкого чая в подстаканнике — ночная смена без пепельницы (контент 16+).
+	room.add_child(TeaGlass.new(Rect2(930, 440, 62, 92)))
 	room.add_child(_lamp_light())
 	room.add_child(Calendar.build())
 	return room
@@ -188,3 +191,36 @@ class CorkCards extends Control:
 			for k in 3:
 				draw_line(p + Vector2(10, 22 + k * 12), p + Vector2(78 - k * 9, 22 + k * 12), Color("#8a8578"), 1)
 			draw_circle(p + Vector2(45, 8), 5, Style.THREAD_RED)
+
+
+
+## Гранёный стакан с чаем в мельхиоровом подстаканнике.
+class TeaGlass extends Control:
+	func _init(r: Rect2) -> void:
+		name = "tea-glass"
+		position = r.position
+		size = r.size
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+	func _draw() -> void:
+		var w := size.x - 16
+		var h := size.y
+		# Тень на столе.
+		draw_circle(Vector2(w / 2 + 4, h - 4), w * 0.55, Color(0, 0, 0, 0.25))
+		# Стекло и чай.
+		var glass := Rect2(6, 4, w - 12, h * 0.55)
+		draw_rect(glass, Color(0.85, 0.9, 0.92, 0.25))
+		draw_rect(Rect2(glass.position + Vector2(2, glass.size.y * 0.18), glass.size - Vector2(4, glass.size.y * 0.18)), Color("#7a3b12"))
+		for i in 4:
+			var x := glass.position.x + 4 + i * (glass.size.x - 8) / 3.0
+			draw_line(Vector2(x, glass.position.y), Vector2(x, glass.end.y), Color(1, 1, 1, 0.18), 1)
+		# Подстаканник: корпус с узором и ручка.
+		var holder := Rect2(2, h * 0.5, w - 4, h * 0.46)
+		draw_rect(holder, Color("#a8a59a"))
+		draw_rect(Rect2(holder.position, Vector2(holder.size.x, 4)), Color("#d6d3c6"))
+		for i in 5:
+			var cx := holder.position.x + 6 + i * (holder.size.x - 12) / 4.0
+			draw_circle(Vector2(cx, holder.position.y + holder.size.y * 0.5), 3, Color("#7d7a70"))
+		draw_rect(Rect2(holder.position.x - 2, holder.end.y - 5, holder.size.x + 4, 5), Color("#8f8c81"))
+		draw_arc(Vector2(w + 2, h * 0.68), h * 0.15, -PI / 2, PI / 2, 12, Color("#a8a59a"), 4)
+		# Ложечка.
+		draw_line(Vector2(w * 0.62, -6), Vector2(w * 0.55, h * 0.4), Color("#c9c6b9"), 2)

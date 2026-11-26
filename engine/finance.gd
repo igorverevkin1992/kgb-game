@@ -17,9 +17,10 @@ const INSTRUMENTS := ["cash", "escrow"]
 const DEFAULT_SALARY := 30000
 
 
-static func new_agent(s: Dictionary, content: Dictionary, target_id: String) -> Dictionary:
-	return {"loyalty": int(s.targets[target_id].rapport), "paid_usd": 0, "lifestyle": 0, "trace": 0,
-		"since_week": int(s.week), "promise_kept": promised(content, target_id) == 0}
+static func new_agent(s: Dictionary, content: Dictionary, target_id: String, coerced := false) -> Dictionary:
+	var loyalty := int(s.targets[target_id].rapport) - (int(content.balance.finance.coerced_loyalty_penalty) if coerced else 0)
+	return {"loyalty": clampi(loyalty, 1, 100), "paid_usd": 0, "lifestyle": 0, "trace": 0,
+		"since_week": int(s.week), "promise_kept": promised(content, target_id) == 0, "coerced": coerced}
 
 
 static func profile(content: Dictionary, target_id: String) -> Dictionary:

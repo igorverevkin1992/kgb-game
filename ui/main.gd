@@ -24,7 +24,7 @@ func _render() -> void:
 		add_child(Overlays.analyst())
 	if Game.service_open:
 		add_child(Overlays.service())
-	if Game.state.ending != null and not Game.service_open:
+	if Game.state.ending != null and not Game.service_open and Game.view != "archive":
 		add_child(Overlays.ending())
 	if Game.notice != "" and Time.get_ticks_msec() - Game.notice_at < 2500:
 		add_child(_notice())
@@ -89,7 +89,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			Game.tape_next_slip()
 			get_viewport().set_input_as_handled()
 			return
-	if key >= KEY_1 and key <= KEY_7:
+	if key >= KEY_1 and key <= KEY_8:
 		var v := Modules.by_hotkey(key - KEY_0)
 		if v != "":
 			Game.open(v)

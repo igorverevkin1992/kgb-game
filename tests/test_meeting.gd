@@ -130,3 +130,31 @@ func test_save_v5_migrates() -> void:
 	var r := Saves.deserialize(JSON.stringify({"format": Saves.FORMAT, "version": 5, "saved_at": "", "state": old}), H.content())
 	ok(r.ok, r.get("error", ""))
 	eq(r.state.tapes, [])
+
+
+func test_coercion_makes_unstable_agent() -> void:
+	var c := H.content()
+	eq(Meeting.is_coercive(c, V, "pressure", ""), 1)
+	eq(Meeting.is_coercive(c, V, "empathy", "clue_vargas_drawer_memo"), 1, "компромат — принуждение")
+	eq(Meeting.is_coercive(c, V, "empathy", "clue_vargas_clinic_debt"), 0)
+	# Кэллоуэй: эго и деньги без нажима — чистая вербовка.
+	var s: Dictionary = _do(_evening(), {"type": "start_meeting", "target_id": C}).state
+	for a in [_turn("ego"), _turn("ego", "clue_calloway_post_review"), _turn("ego", "clue_calloway_vgu_profile")]:
+		s = _do(s, a).state
+	var clean := _do(s, {"type": "meeting_offer"})
+	eq(clean.state.agents[C].coerced, false)
+	ok(clean.events.any(func(e): return e.type == "target_recruited" and e.coerced == false))
+	# Тот же путь, но дважды нажимом (ставим счётчик, как после двух ответов нажимом).
+	s.meeting.coercion = 2
+	var forced := _do(s, {"type": "meeting_offer"})
+	eq(forced.state.agents[C].coerced, true)
+	eq(forced.state.agents[C].loyalty, clean.state.agents[C].loyalty - int(c.balance.finance.coerced_loyalty_penalty))
+	# Неделя: лояльность принуждённого падает, на нуле агент рвёт связь.
+	var st: Dictionary = forced.state.duplicate(true)
+	st.agents[C].promise_kept = true
+	var night: Dictionary = H.play(self, st, [H.NEXT, H.report("truth")]).state
+	eq(night.agents[C].loyalty, forced.state.agents[C].loyalty - int(c.balance.finance.loyalty_coerced_week))
+	st.agents[C].loyalty = 2
+	var gone := H.play(self, st, [H.NEXT, H.report("truth")])
+	ok(gone.state.targets[C].lost, "агент порвал связь")
+	ok(gone.events.any(func(e): return e.type == "agent_broke"))

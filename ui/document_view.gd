@@ -9,6 +9,8 @@ static func build(cable: Dictionary) -> Control:
 			return _clipping(cable)
 		"intercept":
 			return _intercept(cable)
+		"letter":
+			return _letter(cable)
 		_:
 			return _form(cable)
 
@@ -135,6 +137,52 @@ static func _clipping(cable: Dictionary) -> Control:
 	p.add_child(v)
 	p.rotation_degrees = -0.8
 	return _wrap(p, cable)
+
+
+## Письмо из дома: тетрадный лист в линейку, синяя шариковая ручка.
+static func _letter(cable: Dictionary) -> Control:
+	var sb := Style.box(Color("#f3ecd8"), Color(0, 0, 0, 0), 0, 0, 0)
+	sb.content_margin_left = 64
+	sb.content_margin_right = 48
+	sb.content_margin_top = 36
+	sb.content_margin_bottom = 44
+	sb.shadow_color = Color(0, 0, 0, 0.5)
+	sb.shadow_size = 12
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", sb)
+	var ink := Color("#2c3e66")
+	var v := Style.vbox(12)
+	v.custom_minimum_size.x = 560
+	var head := Style.label(T.t("doc.letterFrom", {"from": T.loc(cable.sender), "date": Fmt.date(Campaign.week_date(Game.content, cable.act, cable.week))}), Style.serif(false, true), 14, Color(ink, 0.7))
+	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	v.add_child(head)
+	v.add_child(body(cable, 560, Style.serif(false, true), 19, ink))
+	# Линейки — под строками текста: шаг = высота строки шрифта плюс межстрочный интервал.
+	var font := Style.serif(false, true)
+	var line_h := font.get_height(Style.fs(19)) + 8
+	var first := head.get_combined_minimum_size().y + 12 + font.get_ascent(Style.fs(19)) + font.get_descent(Style.fs(19)) + 2
+	var lines := LinedPaper.new(first, line_h)
+	p.add_child(lines)
+	p.move_child(lines, 0)
+	p.add_child(v)
+	p.rotation_degrees = 0.6
+	return _wrap(p, cable)
+
+
+## Линейки тетрадного листа и красное поле.
+class LinedPaper extends Control:
+	var first := 30.0
+	var step := 30.0
+	func _init(f: float, st: float) -> void:
+		first = f
+		step = st
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+	func _draw() -> void:
+		var y := first
+		while y < size.y + 20:
+			draw_line(Vector2(-40, y), Vector2(size.x + 30, y), Color(0.45, 0.6, 0.8, 0.35), 1)
+			y += step
+		draw_line(Vector2(-18, -36), Vector2(-18, size.y + 44), Color(0.8, 0.3, 0.3, 0.45), 1)
 
 
 static func _intercept(cable: Dictionary) -> Control:

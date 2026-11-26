@@ -102,12 +102,21 @@ static func _meeting(s: Dictionary) -> Control:
 			var on: bool = Game.meeting_trump == tr.clue_id
 			var axes: Array = clue.reveals.filter(func(r): return r.target_id == m.target_id).map(func(r): return T.t("mice.axis.%s.short" % r.axis))
 			var label := "%s%s · %s" % [("[%s] " % "/".join(axes)) if not axes.is_empty() else "", T.loc(clue.title), T.t("dialog.trumpReady", {"n": tr.min_rapport})]
+			if Meeting.is_coercive(c, m.target_id, "", tr.clue_id) > 0:
+				label += " · " + T.t("dialog.coerciveMark")
 			var b := Style.button(label, "trump-" + tr.clue_id, Style.INK if on else Style.PAPER, Style.PAPER if on else Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.5), 13)
 			b.pressed.connect(Game.select_trump.bind(tr.clue_id))
 			row.add_child(b)
 		row.custom_minimum_size.x = RIGHT_W
 		v.add_child(row)
 	if topics:
+		var mb: Dictionary = c.balance
+		var co := Style.para(T.t("dialog.coercion", {"n": int(m.get("coercion", 0)), "max": mb.meeting.coercion_threshold,
+			"p": mb.finance.coerced_loyalty_penalty, "w": mb.finance.loyalty_coerced_week}), RIGHT_W, Style.mono(), 12,
+			Color("#e2a27f") if int(m.get("coercion", 0)) >= int(mb.meeting.coercion_threshold) else Color(Style.PAPER, 0.65))
+		co.name = "meeting-coercion"
+		co.set_meta("value", int(m.get("coercion", 0)))
+		v.add_child(co)
 		v.add_child(Style.label(T.t("dialog.toneHint") if Game.meeting_trump == "" else T.t("dialog.toneWithTrump"), Style.form(true), 14, Color(Style.PAPER, 0.85)))
 		var tones := Style.hbox(8)
 		for tone in Meeting.TONES:

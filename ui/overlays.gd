@@ -137,6 +137,8 @@ static func _event_text(e: Dictionary) -> String:
 			return T.t("event.report_" + e.report)
 		"request_answered":
 			return T.t("event.request_" + ("granted" if e.granted else "refused"), {"name": T.loc(Cipher.request_by_id(c, e.request_id).title)})
+		"agent_broke":
+			return T.t("event.agent_broke", {"name": _tname(e.target_id)})
 		"meeting_ended":
 			return T.t("event.meeting_" + e.outcome, {"name": T.loc(Campaign.target_by_id(c, e.target_id).name)})
 		"tranche_sent":
@@ -358,6 +360,12 @@ static func ending() -> Control:
 		var ld := Style.paper_button(T.t("ending.load"), "ending-load")
 		ld.pressed.connect(Game.open_service)
 		row.add_child(ld)
+	# Документальный эпилог: факт и вымысел (открывается вместе с концом фазы операции).
+	var epi := Archive.entry_by_id(Game.content, "arc_epilogue_real")
+	if not epi.is_empty() and Archive.is_open(Game.state, epi):
+		var ab := Style.paper_button(T.t("ending.archive"), "ending-archive")
+		ab.pressed.connect(Game.open_archive.bind("arc_epilogue_fiction"))
+		row.add_child(ab)
 	var nb := Style.paper_button(T.t("ending.new_game"), "new-game")
 	nb.pressed.connect(func(): Game.new_game(false))
 	row.add_child(nb)

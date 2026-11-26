@@ -11,7 +11,7 @@ const DIR := "user://telemetry"
 const IDLE_SECONDS := 120
 ## События, которые стоит видеть в отчёте о плейтесте.
 const NOTABLE := ["target_unlocked", "analysis_approved", "analysis_rejected", "target_recruited", "target_lost",
-	"op_resolved", "act_completed", "game_over", "directive_verified", "promise_kept", "hint_used", "meeting_ended"]
+	"op_resolved", "act_completed", "game_over", "directive_verified", "promise_kept", "hint_used", "meeting_ended", "agent_broke"]
 
 var enabled := true
 var _file: FileAccess = null

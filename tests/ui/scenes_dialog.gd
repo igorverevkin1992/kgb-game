@@ -61,6 +61,8 @@ func scene_early_blackmail_breaks_contact() -> void:
 	await press("trump-clue_calloway_rent_call")
 	await press("tone-pressure")
 	has_text("transcript", "сведения предъявлены рано")
+	eq(node("meeting-coercion").get_meta("value"), 1, "нажим — принуждение")
+	has_text("meeting-coercion", "неустойчив")
 	for i in 3:
 		if exists("tone-pressure"):
 			await press("tone-pressure")
