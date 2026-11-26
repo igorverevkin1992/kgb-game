@@ -1,0 +1,28 @@
+; Линия КР: Вашингтон, 1985 — проект Godot 4.7 (GDScript, рендерер Compatibility).
+config_version=5
+
+[application]
+
+config/name="Линия КР: Вашингтон, 1985"
+config/description="Диегетический UI-симулятор резидента ПГУ КГБ в Вашингтоне, 1984–1986."
+run/main_scene="res://ui/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0.043, 0.035, 0.027, 1)
+boot_splash/show_image=false
+
+[autoload]
+
+Game="*res://ui/game.gd"
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.043, 0.035, 0.027, 1)

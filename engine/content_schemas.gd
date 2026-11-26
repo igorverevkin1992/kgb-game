@@ -1,0 +1,176 @@
+class_name ContentSchemas
+## Схемы всех файлов контента (`content/`). Описание полей — в docs/content-guide.md.
+
+static var _cache: Dictionary = {}
+
+
+static func get_spec(name: String) -> Dictionary:
+	if _cache.is_empty():
+		_build()
+	return _cache[name]
+
+
+static func _build() -> void:
+	var text := {"type": "text"}
+	var act := Schema.i(1, 4)
+	var week := Schema.i(1, 30)
+	var scale := Schema.i(0, 100)
+	var flag := Schema.s("^[a-z0-9_]+$", "флаг: латиница в нижнем регистре, цифры и «_»")
+	var tag := Schema.s("^[a-z0-9_]+$", "примета: латиница в нижнем регистре, цифры и «_»")
+	var axis := Schema.e(["money", "ideology", "compromise", "ego"])
+	var delta := Schema.i(-100, 100)
+	var chance := Schema.n(0, 1)
+
+	var mice_entry := Schema.obj({
+		"true_value": scale,
+		"trigger": Schema.nullable(flag),
+		"backfire_risk": Schema.opt(Schema.n(0, 1)),
+	})
+	_cache["target"] = Schema.obj({
+		"target_id": Schema.id("tar"),
+		"codename_kgb": Schema.opt(Schema.s()),
+		"tier": Schema.i(1, 3),
+		"act": act,
+		"name": text,
+		"role": text,
+		"affiliation": Schema.s(),
+		"access_tags": Schema.opt(Schema.arr(Schema.s()), []),
+		"unlock": Schema.obj({"clues_required": Schema.i(1), "clue_ids": Schema.arr(Schema.id("clue"), 1)}),
+		"mice_profile": Schema.obj({"money": mice_entry, "ideology": mice_entry, "compromise": mice_entry, "ego": mice_entry}),
+		"approach": Schema.obj({
+			"flag_mode": Schema.e(["false_flag", "true_flag", "contactless", "indirect"]),
+			"cover": text,
+			"key_axes": Schema.arr(axis, 1),
+		}),
+		"initial_state": Schema.obj({
+			"rapport": scale,
+			"paranoia": scale,
+			"lifestyle_spending_index": Schema.opt(scale, 0),
+			"cover_story_strength": Schema.opt(scale, 0),
+			"polygraph_scheduled_week": Schema.opt(week),
+		}),
+	})
+
+	_cache["clue"] = Schema.obj({
+		"clue_id": Schema.id("clue"),
+		"source": Schema.obj({"channel": Schema.e(["agent", "document", "field"]), "from": Schema.s("^(tar|cable|op)_[a-z0-9_]+$", "источник: id цели (tar_), депеши (cable_) или операции (op_)")}),
+		"title": text,
+		"text": text,
+		"reveals": Schema.opt(Schema.arr(Schema.obj({"target_id": Schema.id("tar"), "axis": axis})), []),
+	})
+
+	_cache["cable"] = Schema.obj({
+		"cable_id": Schema.id("cable"),
+		"act": act,
+		"week": week,
+		"kind": Schema.e(["directive", "vgu_note", "press_clipping", "agent_report", "intercept", "personnel_file"]),
+		"sender": text,
+		"subject": text,
+		"body": text,
+	})
+
+	_cache["op"] = Schema.obj({
+		"op_id": Schema.id("op"),
+		"act": act,
+		"week": week,
+		"type": Schema.e(["recon", "dead_drop_load", "dead_drop_clear", "signal_check", "personal_meeting"]),
+		"title": text,
+		"operative_id": Schema.opt(Schema.e(["op_resident_player", "op_technician", "op_diplomat"]), "op_resident_player"),
+		"requires_targets_unlocked": Schema.opt(Schema.arr(Schema.id("tar")), []),
+		"location": Schema.obj({
+			"site_id": Schema.id("site"),
+			"codename": Schema.opt(Schema.s()),
+			"signal_site": Schema.opt(Schema.s()),
+			"signal_type": Schema.opt(Schema.s()),
+			"container_type": Schema.opt(Schema.s()),
+		}),
+		"sdr": Schema.obj({
+			"surveillance_present": {"type": "bool"},
+			"repeating_cue": Schema.nullable(Schema.s()),
+			"abort_penalty_days": Schema.opt(Schema.i(0), 2),
+			"ignore_consequence": Schema.opt(Schema.obj({"sog_heat_delta": Schema.i(0, 100), "flag_set": Schema.opt(flag)})),
+		}),
+		"payload": Schema.opt(Schema.obj({
+			"cash_usd": Schema.opt(Schema.i(0), 0),
+			"diamonds_usd": Schema.opt(Schema.i(0), 0),
+			"escrow_moscow_usd": Schema.opt(Schema.i(0), 0),
+			"ctr_4789_trigger_if_deposited_lump": Schema.opt({"type": "bool"}, false),
+			"mlca_1986_structuring_risk": Schema.opt(Schema.n(0, 1), 0),
+		})),
+	})
+
+	var effects := Schema.obj({
+		"rapport": Schema.opt(Schema.i()), "skepticism": Schema.opt(Schema.i()), "control_peak": Schema.opt(Schema.i()), "relevant_peak": Schema.opt(Schema.i()),
+	})
+	_cache["polygraph"] = Schema.obj({
+		"exam_id": Schema.id("exam"),
+		"examiner_profile": Schema.obj({
+			"name": text,
+			"archetype": Schema.e(["chummy_veteran", "rigid_formalist"]),
+			"rapport_threshold_pass": scale,
+			"skepticism_fail_limit": scale,
+		}),
+		"pre_test_modifiers": {"type": "dict", "of": Schema.obj({
+			"baseline_stability": Schema.opt(Schema.i()), "chart_authenticity": Schema.opt(Schema.i()), "finance_question_stress": Schema.opt(Schema.i()),
+			"required_prep_id": Schema.opt(Schema.s()), "condition": Schema.opt(Schema.s()),
+		})},
+		"question_sequence": Schema.arr(Schema.obj({
+			"q_id": Schema.s("^q_[a-z0-9_]+$", "q_id должен начинаться с «q_»"),
+			"category": Schema.e(["neutral", "control_comparison", "relevant_critical"]),
+			"text": text,
+			"choices": Schema.opt(Schema.arr(Schema.obj({"choice_id": Schema.s("^[a-z0-9_]+$"), "label": text, "effects": effects})), []),
+			"pass_formula": Schema.opt(Schema.s()),
+		}), 1),
+	})
+
+	_cache["campaign"] = Schema.obj({
+		"acts": Schema.arr(Schema.obj({
+			"act": act,
+			"title": text,
+			"weeks": Schema.obj({"from": week, "to": week}),
+			"start_date": Schema.s("^\\d{4}-\\d{2}-\\d{2}$", "дата в формате ГГГГ-ММ-ДД"),
+			"goal": Schema.obj({"recruit_any_of": Schema.arr(Schema.id("tar"), 1)}),
+		}), 1),
+	})
+
+	_cache["balance"] = Schema.obj({
+		"start": Schema.obj({
+			"fund_usd": Schema.i(0),
+			"centre_trust": scale,
+			"risks": Schema.obj({"sog_heat": scale, "mole_hunt": scale, "treasury": scale, "moscow_pressure": scale}),
+			"seed": Schema.opt(Schema.i(0), 1985),
+		}),
+		"ops": Schema.obj({"per_week": Schema.i(1, 5)}),
+		"sdr": Schema.obj({"embassy_site": Schema.s(), "zone_radius_miles": Schema.n(0.1), "min_districts_for_double_sighting": Schema.i(1, 3)}),
+		"sog_heat": Schema.obj({
+			"missed_tail_default": delta, "outside_25_mile_zone": delta, "site_reuse_per_use": delta,
+			"quiet_week": delta, "failed_recruitment": delta,
+		}),
+		"moscow_pressure": Schema.obj({
+			"grace_weeks": Schema.i(0), "per_week_without_goal": delta, "per_week_overdue": delta, "act_goal_reached": delta,
+			"report_truth_with_failures": delta, "report_embellished": delta, "lie_uncovered": delta,
+		}),
+		"centre_trust": Schema.obj({
+			"report_truth": delta, "report_truth_with_failures": delta, "report_embellished": delta,
+			"report_silence": delta, "lie_uncovered": delta,
+		}),
+		"lies": Schema.obj({"check_every_weeks": Schema.i(1), "uncover_chance_embellished": chance, "uncover_chance_silence": chance}),
+		"treasury": Schema.obj({"audit_mole_hunt_multiplier": Schema.n(1, 5)}),
+		"thresholds": Schema.obj({"warning": scale, "danger": scale}),
+	})
+
+	_cache["map"] = Schema.obj({
+		"districts": {"type": "dict", "of": text},
+		"sites": Schema.arr(Schema.obj({
+			"site_id": Schema.id("site"),
+			"name": text,
+			"kind": Schema.e(["embassy", "fbi", "cia", "bank", "bar", "park", "pharmacy", "post_office", "bookshop", "tobacconist", "cleaners", "grocery", "gas_station", "hardware", "antiques", "cafe"]),
+			"role": Schema.e(["stop", "target", "landmark"]),
+			"district": Schema.s("^[a-z_]+$", "район: латиница в нижнем регистре и «_»"),
+			"pos": Schema.obj({"x": Schema.n(0, 60), "y": Schema.n(0, 40)}),
+			"cover_reason": Schema.opt(text),
+			"ambient_tags": Schema.opt(Schema.arr(tag), []),
+		}), 1),
+	})
+
+	_cache["cues"] = Schema.arr(Schema.obj({"tag": tag, "kind": Schema.e(["tail", "noise", "ambient"]), "text": text}))
