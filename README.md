@@ -1,4 +1,4 @@
-# Вашингтон, 1985
+# Год шпионов
 
 Диегетический UI-симулятор офицера линии контрразведки Вашингтонской резидентуры ПГУ КГБ,
 1984–1986. Движок — Godot 4.7. Платформа: Windows (Steam, VK Play).
@@ -11,8 +11,8 @@
 
 - **В браузере:** https://igorverevkin1992.github.io/kgb-game/ (обновляется после каждого
   слияния в `main`).
-- **На Windows:** скачайте артефакт `Washington1985-windows` из последнего успешного запуска CI
-  (вкладка Actions): `Washington1985.exe`, `steam_api64.dll` и `steam_appid.txt`. Сборки для
+- **На Windows:** скачайте артефакт `GodShpionov-windows` из последнего успешного запуска CI
+  (вкладка Actions): `GodShpionov.exe`, `steam_api64.dll` и `steam_appid.txt`. Сборки для
   плейтеста — на странице Releases (см. `docs/playtest.md`).
 - **В редакторе Godot:** установите [Godot 4.7](https://godotengine.org/download) (обычная
   версия, не .NET), откройте папку репозитория как проект и нажмите F5.

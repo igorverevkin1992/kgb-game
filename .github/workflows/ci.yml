@@ -36,6 +36,6 @@ jobs:
       - name: Windows-сборка
         uses: actions/upload-artifact@v4
         with:
-          name: Washington1985-windows
+          name: GodShpionov-windows
           path: build/windows/
           retention-days: 30

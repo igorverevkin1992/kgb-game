@@ -1,4 +1,4 @@
-# «Вашингтон, 1985» — заметки для Claude
+# «Год шпионов» — заметки для Claude
 
 Диегетический UI-симулятор резидента ПГУ КГБ в Вашингтоне 1984–1986. Однопользовательская
 кампания на 7–10 часов, 4 акта. Платформа: **только Windows x64** (Steam + VK Play),
@@ -23,7 +23,7 @@ macOS и Linux не делаем. Движок: **Godot 4.7 (GDScript, ренд�
 tools/validate.sh            # проверка контента (--dir=путь, --en — напомнить о переводе)
 tools/test.sh [фильтр]       # unit-тесты движка (tests/test_*.gd), headless
 tools/ui-test.sh [фильтр]    # сценарии интерфейса под Xvfb + OpenGL, скриншоты в build/screens/
-tools/export.sh windows|web|all   # build/windows/Washington1985.exe (+ Steam), build/web/
+tools/export.sh windows|web|all   # build/windows/GodShpionov.exe (+ Steam), build/web/
 tools/telemetry-report.sh [папка] # сводка журналов плейтеста (session-*.jsonl)
 ```
 Шаг готов, когда зелёные все три проверки и снят скриншот нового экрана. `test.sh` и `ui-test.sh`
@@ -96,7 +96,7 @@ tools/telemetry-report.sh [папка] # сводка журналов плей�
   `start(actions)` собирает состояние движком, `press`, `click`, `key`, `has_text`, `shot`).
   `Game.reset_for_test` включает «Мгновенный вывод текста» (лента шифроузла без анимации). После действия экран перестроен — узлы, найденные до него, уже удалены: ищи заново по имени.
 - Сборки: `export_presets.cfg` — Windows (`.exe` со встроенным pck) и Web (без потоков, для Pages).
-  Каталог данных — `user://` = `%APPDATA%\Washington1985` (`custom_user_dir_name`). Сборка для
+  Каталог данных — `user://` = `%APPDATA%\GodShpionov` (`custom_user_dir_name`). Сборка для
   тестеров — тег `playtest-N` (workflow «Playtest», архив в Releases); памятки `docs/playtest.md`, `docs/steam.md`.
 
 ## Язык: сейчас только русская версия

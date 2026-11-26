@@ -17,7 +17,7 @@ git push origin playtest-1
 ```
 
 Или на GitHub: Actions → **Playtest** → Run workflow. Через 5–10 минут на странице Releases
-репозитория появится архив `Washington1985-playtest-1.zip`: игра, библиотека Steam и инструкция
+репозитория появится архив `GodShpionov-playtest-1.zip`: игра, библиотека Steam и инструкция
 для тестера `ПРОЧТИ.txt` (её текст — `docs/playtest-tester.txt`, можно править).
 
 ## 2. Что проверить самому до рассылки (на Windows)
@@ -54,5 +54,5 @@ tools/telemetry-report.sh путь/к/папке
 
 ## Журнал на компьютере тестера
 
-Папка (Windows): `%APPDATA%\Washington1985\telemetry\`. Сохранения — `%APPDATA%\Washington1985\saves\`.
+Папка (Windows): `%APPDATA%\GodShpionov\telemetry\`. Сохранения — `%APPDATA%\GodShpionov\saves\`.
 Журнал выключается в настройках («Журнал плейтеста»).

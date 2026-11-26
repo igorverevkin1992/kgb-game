@@ -10,9 +10,9 @@
    `content/achievements/steam.json`; название и описание — оттуда же. Иконки (64×64, цветная и
    серая) — авторские.
 3. **Облачные сохранения (Steam Auto-Cloud)** — Steamworks → Steam Cloud → Root: `WinAppDataRoaming`,
-   Subdirectory: `Washington1985/saves`, Pattern: `*.json`. (Журнал плейтеста `telemetry/` в облако
+   Subdirectory: `GodShpionov/saves`, Pattern: `*.json`. (Журнал плейтеста `telemetry/` в облако
    не нужен.)
-4. **Depot**: содержимое `build/windows/` без `steam_appid.txt`: `Washington1985.exe`, `steam_api64.dll`.
+4. **Depot**: содержимое `build/windows/` без `steam_appid.txt`: `GodShpionov.exe`, `steam_api64.dll`.
 
 Если Steam не запущен или игра собрана без него, она работает как обычно — без достижений и
 оверлея. Статус виден внизу настроек: «Steam: подключён / не запущен / нет в этой сборке».

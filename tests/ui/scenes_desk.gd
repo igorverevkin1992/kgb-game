@@ -7,7 +7,7 @@ const QUIET := [NEXT, NEXT, NEXT, {"type": "submit_report", "report": "truth"}]
 
 func scene_desk_act1() -> void:
 	await start()
-	has_text("plaque", "ВАШИНГТОН, 1985")
+	has_text("plaque", "ГОД ШПИОНОВ")
 	for v in ["map", "mice", "cipher", "finance", "dialog", "inbox"]:
 		ok(enabled("desk-object-" + v), v + " открыт")
 	for v in ["counterintel"]:

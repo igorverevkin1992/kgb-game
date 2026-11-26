@@ -32,7 +32,7 @@ jobs:
           TAG="${GITHUB_REF_NAME}"
           [[ "$TAG" == playtest-* ]] || TAG="playtest-$(date -u +%Y%m%d-%H%M)"
           cp docs/playtest-tester.txt build/windows/ПРОЧТИ.txt
-          (cd build/windows && zip -q -r "../../Washington1985-$TAG.zip" .)
+          (cd build/windows && zip -q -r "../../GodShpionov-$TAG.zip" .)
           gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --prerelease \
             --title "Плейтест: $TAG" --notes "Сборка для закрытого плейтеста (Windows). Инструкция — файл ПРОЧТИ.txt в архиве."
-          gh release upload "$TAG" "Washington1985-$TAG.zip" --clobber
+          gh release upload "$TAG" "GodShpionov-$TAG.zip" --clobber

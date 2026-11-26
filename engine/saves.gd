@@ -56,7 +56,7 @@ static func deserialize(text: String, content: Dictionary) -> Dictionary:
 		return {"ok": false, "error": "Сохранение повреждено: это не JSON"}
 	var data = r.data
 	if typeof(data) != TYPE_DICTIONARY or data.get("format") != FORMAT:
-		return {"ok": false, "error": "Это не сохранение игры «Вашингтон, 1985»"}
+		return {"ok": false, "error": "Это не сохранение игры «Год шпионов»"}
 	if data.get("version") == 4 and typeof(data.get("state")) == TYPE_DICTIONARY:
 		data.state["verified"] = {}
 		data.state["requests"] = []

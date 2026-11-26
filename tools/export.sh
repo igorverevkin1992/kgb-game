@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Сборки игры: tools/export.sh windows | web | all  → build/windows/Washington1985.exe, build/web/
+# Сборки игры: tools/export.sh windows | web | all  → build/windows/GodShpionov.exe, build/web/
 # Windows-сборка — на шаблоне GodotSteam (Godot со встроенным Steam, tools/get-godotsteam.sh), если
 # он доступен; рядом кладутся steam_api64.dll и steam_appid.txt. Без шаблона — сборка без Steam.
 set -uo pipefail
@@ -23,10 +23,10 @@ if [ "$what" = windows ] || [ "$what" = all ]; then
   else
     echo "⚠ Сборка без Steam: шаблон GodotSteam недоступен"
   fi
-  timeout 600 "$G" --headless --path . --export-release "Windows Desktop" build/windows/Washington1985.exe 2>&1 | grep -vE "audio|   at: " | tail -5 || true
+  timeout 600 "$G" --headless --path . --export-release "Windows Desktop" build/windows/GodShpionov.exe 2>&1 | grep -vE "audio|   at: " | tail -5 || true
   [ -f "$preset.bak" ] && mv -f "$preset.bak" "$preset"
   trap - EXIT
-  [ -f build/windows/Washington1985.exe ] && ls -la build/windows/ || code=1
+  [ -f build/windows/GodShpionov.exe ] && ls -la build/windows/ || code=1
 fi
 if [ "$what" = web ] || [ "$what" = all ]; then
   mkdir -p build/web
