@@ -3,6 +3,7 @@
 - [plan.md](plan.md): утверждённый пошаговый план разработки (шаги 0–19).
 - [concept/concept-bible.pdf](concept/concept-bible.pdf): оригинал концепта.
 - [concept/concept-bible.txt](concept/concept-bible.txt): текстовая версия для поиска и ссылок.
+- [content-guide.md](content-guide.md): как править игровой контент и что проверяет валидатор.
 
 ## Оглавление концепта (номера строк в `concept-bible.txt`)
 

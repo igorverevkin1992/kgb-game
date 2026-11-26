@@ -1,0 +1,48 @@
+{
+  "exam_id": "exam_cia_may_1986",
+  "examiner_profile": {
+    "name": { "ru": "Дэвид Хэллман", "en": "David Hallman" },
+    "archetype": "chummy_veteran",
+    "rapport_threshold_pass": 65,
+    "skepticism_fail_limit": 80
+  },
+  "pre_test_modifiers": {
+    "rested_48h": { "baseline_stability": 20, "required_prep_id": "prep_sleep_order" },
+    "no_sedatives": { "chart_authenticity": 15, "required_prep_id": "prep_ban_pills" },
+    "cover_story_verified": { "finance_question_stress": -25, "condition": "cover_story_strength >= 70" }
+  },
+  "question_sequence": [
+    {
+      "q_id": "q_04_control",
+      "category": "control_comparison",
+      "text": {
+        "ru": "Артур, случалось ли вам за последние пять лет нарушать правила отчётности о личных контактах?",
+        "en": "Arthur, in the last five years, have you ever broken the rules on reporting personal contacts?"
+      },
+      "choices": [
+        {
+          "choice_id": "limited_hangout_honest",
+          "label": {
+            "ru": "Усмехнуться и признать мелкое нарушение: «Пару раз забывал вписать ужины с журналистами»",
+            "en": "Smirk and admit a minor lapse: \"A couple of times I forgot to log dinners with journalists\""
+          },
+          "effects": { "rapport": 15, "skepticism": -10, "control_peak": 45 }
+        },
+        {
+          "choice_id": "rigid_denial",
+          "label": { "ru": "Ответить сухо и категорично: «Никогда»", "en": "Answer flatly: \"Never\"" },
+          "effects": { "rapport": -10, "skepticism": 15, "control_peak": 15 }
+        }
+      ]
+    },
+    {
+      "q_id": "q_05_relevant_espionage",
+      "category": "relevant_critical",
+      "text": {
+        "ru": "Передавали ли вы когда-либо секретные сведения представителю иностранной разведки?",
+        "en": "Have you ever passed classified information to a representative of a foreign intelligence service?"
+      },
+      "pass_formula": "control_peak >= relevant_peak - 5 AND rapport >= 65"
+    }
+  ]
+}

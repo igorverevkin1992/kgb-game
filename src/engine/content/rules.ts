@@ -1,0 +1,402 @@
+import { POLYGRAPH_VARS, type ClueSource, type Text } from '../../schemas';
+import { simulate } from './simulate';
+import type { ContentBundle, Issue } from './types';
+
+/** Лимиты длины документа (GDD, риск №2): до 120 слов — норма, больше 150 — ошибка. */
+export const WORDS_WARN = 120;
+export const WORDS_MAX = 150;
+
+/** Сколько улик нужно, чтобы вывод считался подтверждённым («Правило трёх улик»). */
+export const THREE_CLUES = 3;
+
+const sourceKey = (s: ClueSource) => `${s.channel}:${s.from}`;
+
+const CHANNEL_RU: Record<ClueSource['channel'], string> = {
+  agent: 'агент',
+  document: 'документ',
+  field: 'полевая разведка',
+};
+const AXIS_RU = { money: 'Money', ideology: 'Ideology', compromise: 'Compromise', ego: 'Ego' } as const;
+
+export const describeSource = (s: ClueSource) => `${CHANNEL_RU[s.channel]} ${s.from}`;
+
+export function countWords(text: string): number {
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
+type Ctx = { content: ContentBundle; fileOf: Map<string, string>; issues: Issue[] };
+
+function push(ctx: Ctx, issue: Omit<Issue, 'file'> & { id?: string; file?: string }) {
+  const { id, ...rest } = issue;
+  ctx.issues.push({ ...rest, file: rest.file ?? (id ? ctx.fileOf.get(id) : undefined) });
+}
+
+/** 1. Все ссылки ведут на существующие сущности. */
+function checkReferences(ctx: Ctx) {
+  const { content } = ctx;
+  const targetIds = new Set(content.targets.map((t) => t.target_id));
+  const clueIds = new Set(content.clues.map((c) => c.clue_id));
+  const cableIds = new Set(content.cables.map((c) => c.cable_id));
+  const opIds = new Set(content.ops.map((o) => o.op_id));
+  const existsFor = { agent: targetIds, document: cableIds, field: opIds } as const;
+  const kindRu = { agent: 'цели', document: 'депеши', field: 'операции' } as const;
+
+  for (const clue of content.clues) {
+    const { channel, from } = clue.source;
+    if (!existsFor[channel].has(from)) {
+      push(ctx, {
+        level: 'error',
+        rule: 'refs',
+        id: clue.clue_id,
+        where: `${clue.clue_id}.source.from`,
+        message: `Улика ссылается на несуществующий источник: нет ${kindRu[channel]} «${from}»`,
+      });
+    }
+    clue.reveals.forEach((r, i) => {
+      if (!targetIds.has(r.target_id)) {
+        push(ctx, {
+          level: 'error',
+          rule: 'refs',
+          id: clue.clue_id,
+          where: `${clue.clue_id}.reveals[${i}]`,
+          message: `Улика вскрывает ось MICE у несуществующей цели «${r.target_id}»`,
+        });
+      }
+    });
+    if (clue.source.channel === 'agent' && clue.reveals.some((r) => r.target_id === clue.source.from)) {
+      push(ctx, {
+        level: 'warning',
+        rule: 'refs',
+        id: clue.clue_id,
+        where: clue.clue_id,
+        message: 'Агент доносит сам на себя: улика от агента вскрывает его же MICE',
+      });
+    }
+  }
+
+  for (const t of content.targets) {
+    t.unlock.clue_ids.forEach((id, i) => {
+      if (!clueIds.has(id)) {
+        push(ctx, {
+          level: 'error',
+          rule: 'refs',
+          id: t.target_id,
+          where: `unlock.clue_ids[${i}]`,
+          message: `Нет улики «${id}», а цель «${t.target_id}» открывается через неё`,
+        });
+      }
+    });
+  }
+
+  for (const op of content.ops) {
+    for (const id of op.requires_targets_unlocked) {
+      if (!targetIds.has(id)) {
+        push(ctx, {
+          level: 'error',
+          rule: 'refs',
+          id: op.op_id,
+          where: 'requires_targets_unlocked',
+          message: `Операция требует открытую цель «${id}», но такой цели нет`,
+        });
+      }
+    }
+  }
+
+  content.campaign.acts.forEach((a, i) => {
+    for (const id of a.goal.recruit_any_of) {
+      if (!targetIds.has(id)) {
+        push(ctx, {
+          level: 'error',
+          rule: 'refs',
+          file: 'campaign.json',
+          where: `acts[${i}].goal.recruit_any_of`,
+          message: `Цель акта ${a.act} — несуществующая цель «${id}»`,
+        });
+      }
+    }
+  });
+}
+
+/** 2. Открытие цели выполнимо и защищено «Правилом трёх улик». */
+function checkUnlock(ctx: Ctx) {
+  const clueById = new Map(ctx.content.clues.map((c) => [c.clue_id, c]));
+  for (const t of ctx.content.targets) {
+    const { clue_ids, clues_required } = t.unlock;
+    if (new Set(clue_ids).size !== clue_ids.length) {
+      push(ctx, { level: 'error', rule: 'unlock', id: t.target_id, where: 'unlock.clue_ids', message: 'В списке улик есть повторы' });
+    }
+    if (clue_ids.length < clues_required) {
+      push(ctx, {
+        level: 'error',
+        rule: 'unlock',
+        id: t.target_id,
+        where: 'unlock',
+        message: `Нужно ${clues_required} улик(и), а в списке всего ${clue_ids.length}: цель невозможно открыть`,
+      });
+      continue;
+    }
+
+    const known = clue_ids.map((id) => clueById.get(id)).filter((c) => c !== undefined);
+    const sources = new Set(known.map((c) => sourceKey(c.source)));
+    if (sources.size < THREE_CLUES) {
+      push(ctx, {
+        level: 'error',
+        rule: 'three-clue',
+        id: t.target_id,
+        where: 'unlock.clue_ids',
+        message: `«Правило трёх улик»: к цели ведут улики только из ${sources.size} независимых источников, нужно минимум ${THREE_CLUES}`,
+      });
+      continue;
+    }
+    // Если любой один источник сорвётся, оставшихся улик всё равно должно хватить.
+    for (const key of sources) {
+      const left = known.filter((c) => sourceKey(c.source) !== key).length;
+      if (left < clues_required) {
+        const [channel, from] = key.split(':') as [ClueSource['channel'], string];
+        push(ctx, {
+          level: 'error',
+          rule: 'three-clue',
+          id: t.target_id,
+          where: 'unlock.clue_ids',
+          message: `«Правило трёх улик»: если сорвётся источник «${describeSource({ channel, from } as ClueSource)}», останется ${left} улик(и) из ${clues_required} нужных — тупик`,
+        });
+      }
+    }
+  }
+}
+
+/** 3. Ведущие оси MICE вскрываются минимум тремя уликами. */
+function checkKeyAxes(ctx: Ctx) {
+  for (const t of ctx.content.targets) {
+    for (const axis of t.approach.key_axes) {
+      if (t.mice_profile[axis].trigger === null) {
+        push(ctx, {
+          level: 'warning',
+          rule: 'mice-three-clue',
+          id: t.target_id,
+          where: `mice_profile.${axis}.trigger`,
+          message: `Ось ${AXIS_RU[axis]} указана ведущей, но у неё нет рычага (trigger: null)`,
+        });
+      }
+      const revealing = ctx.content.clues.filter((c) => c.reveals.some((r) => r.target_id === t.target_id && r.axis === axis));
+      if (revealing.length < THREE_CLUES) {
+        push(ctx, {
+          level: 'error',
+          rule: 'mice-three-clue',
+          id: t.target_id,
+          where: `approach.key_axes`,
+          message: `«Правило трёх улик»: ведущую ось ${AXIS_RU[axis]} вскрывают ${revealing.length} улик(и), нужно минимум ${THREE_CLUES}`,
+        });
+      }
+    }
+  }
+}
+
+/** 4. Цель каждого акта достижима, и не ломается, если сорвётся любая одна ветка. */
+function checkReachability(ctx: Ctx) {
+  const { content } = ctx;
+  for (const [i, act] of content.campaign.acts.entries()) {
+    const goal = act.goal.recruit_any_of;
+    const where = `acts[${i}].goal`;
+    const full = simulate(content, { maxAct: act.act });
+    if (!goal.some((id) => full.recruitedTargets.has(id))) {
+      push(ctx, {
+        level: 'error',
+        rule: 'softlock',
+        file: 'campaign.json',
+        where,
+        message: `Софтлок: цель акта ${act.act} (${goal.join(' или ')}) недостижима даже при идеальной игре`,
+      });
+      continue;
+    }
+
+    const failures: { label: string; targets?: string[]; ops?: string[] }[] = [
+      ...content.targets
+        .filter((t) => t.act <= act.act && !(goal.length === 1 && goal[0] === t.target_id))
+        .map((t) => ({ label: `не удастся завербовать «${t.target_id}»`, targets: [t.target_id] })),
+      ...content.ops
+        .filter((o) => o.act <= act.act)
+        .map((o) => ({ label: `сорвётся операция «${o.op_id}»`, ops: [o.op_id] })),
+    ];
+    for (const f of failures) {
+      const res = simulate(content, {
+        maxAct: act.act,
+        failedTargets: new Set(f.targets),
+        failedOps: new Set(f.ops),
+      });
+      if (!goal.some((id) => !f.targets?.includes(id) && res.recruitedTargets.has(id))) {
+        push(ctx, {
+          level: 'error',
+          rule: 'robustness',
+          file: 'campaign.json',
+          where,
+          message: `Тупик: если ${f.label}, цель акта ${act.act} становится недостижимой`,
+        });
+      }
+    }
+  }
+
+  const all = simulate(content);
+  for (const c of content.clues) {
+    if (!all.clues.has(c.clue_id)) {
+      push(ctx, {
+        level: 'warning',
+        rule: 'unreachable',
+        id: c.clue_id,
+        where: c.clue_id,
+        message: `Улику «${c.clue_id}» невозможно получить ни при каком прохождении (источник ${describeSource(c.source)} недоступен)`,
+      });
+    }
+  }
+}
+
+/** 5. Маршрут SDR честен: «один раз — совпадение, дважды — работа противника». */
+function checkSdr(ctx: Ctx) {
+  for (const op of ctx.content.ops) {
+    const { waypoints, surveillance_present, repeating_cue } = op.sdr_route;
+    const counts = new Map<string, number>();
+    for (const w of waypoints) for (const tag of new Set(w.spotted_tags)) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    const repeated = [...counts].filter(([, n]) => n >= 2).map(([tag]) => tag);
+
+    if (surveillance_present) {
+      if (!repeating_cue) {
+        push(ctx, { level: 'error', rule: 'sdr', id: op.op_id, where: 'sdr_route.repeating_cue', message: 'Хвост есть, но не указана повторяющаяся примета' });
+      } else if ((counts.get(repeating_cue) ?? 0) < 2) {
+        push(ctx, {
+          level: 'error',
+          rule: 'sdr',
+          id: op.op_id,
+          where: 'sdr_route.waypoints',
+          message: `Хвост есть, но примета «${repeating_cue}» встречается меньше чем на двух точках — игрок не сможет его заметить`,
+        });
+      }
+      if (!op.sdr_route.ignore_consequence) {
+        push(ctx, { level: 'warning', rule: 'sdr', id: op.op_id, where: 'sdr_route.ignore_consequence', message: 'Хвост есть, но не задано последствие, если игрок его пропустит' });
+      }
+    } else {
+      if (repeating_cue) {
+        push(ctx, { level: 'error', rule: 'sdr', id: op.op_id, where: 'sdr_route.repeating_cue', message: 'Хвоста нет, но указана повторяющаяся примета' });
+      }
+      if (repeated.length > 0) {
+        push(ctx, {
+          level: 'error',
+          rule: 'sdr',
+          id: op.op_id,
+          where: 'sdr_route.waypoints',
+          message: `Хвоста нет, но приметы повторяются на двух точках (${repeated.join(', ')}) — это ложный сигнал для игрока`,
+        });
+      }
+    }
+    if (!op.location.within_25_mile_zone) {
+      push(ctx, { level: 'warning', rule: 'sdr', id: op.op_id, where: 'location.within_25_mile_zone', message: 'Точка вне 25-мильной зоны: выезд потребует согласования с Госдепом' });
+    }
+  }
+}
+
+/** 6. Недели депеш и операций попадают в рамки своего акта. */
+function checkWeeks(ctx: Ctx) {
+  const range = new Map(ctx.content.campaign.acts.map((a) => [a.act, a.weeks]));
+  ctx.content.campaign.acts.forEach((a, i) => {
+    if (a.weeks.from > a.weeks.to) {
+      push(ctx, { level: 'error', rule: 'weeks', file: 'campaign.json', where: `acts[${i}].weeks`, message: 'Неделя начала акта позже недели конца' });
+    }
+  });
+  const items = [
+    ...ctx.content.cables.map((c) => ({ id: c.cable_id, act: c.act, week: c.week })),
+    ...ctx.content.ops.map((o) => ({ id: o.op_id, act: o.act, week: o.week })),
+  ];
+  for (const it of items) {
+    const r = range.get(it.act);
+    if (!r) continue; // акт ещё не описан в campaign.json — не придираемся
+    if (it.week < r.from || it.week > r.to) {
+      push(ctx, {
+        level: 'error',
+        rule: 'weeks',
+        id: it.id,
+        where: `${it.id}.week`,
+        message: `Неделя ${it.week} вне акта ${it.act} (недели ${r.from}–${r.to})`,
+      });
+    }
+  }
+}
+
+/** 7. Длина документов и наличие перевода. */
+function checkTexts(ctx: Ctx) {
+  const long: { id: string; where: string; text: Text }[] = [
+    ...ctx.content.clues.map((c) => ({ id: c.clue_id, where: `${c.clue_id}.text`, text: c.text })),
+    ...ctx.content.cables.map((c) => ({ id: c.cable_id, where: `${c.cable_id}.body`, text: c.body })),
+  ];
+  for (const item of long) {
+    for (const lang of ['ru', 'en'] as const) {
+      const s = item.text[lang];
+      if (!s) continue;
+      const n = countWords(s);
+      if (n > WORDS_MAX) {
+        push(ctx, { level: 'error', rule: 'text-length', id: item.id, where: `${item.where}.${lang}`, message: `${n} слов — больше лимита ${WORDS_MAX}. Сократите документ` });
+      } else if (n > WORDS_WARN) {
+        push(ctx, { level: 'warning', rule: 'text-length', id: item.id, where: `${item.where}.${lang}`, message: `${n} слов — длиннее рекомендуемых ${WORDS_WARN}` });
+      }
+    }
+  }
+
+  let total = 0;
+  let missing = 0;
+  const walk = (v: unknown) => {
+    if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === 'object') {
+      const o = v as Record<string, unknown>;
+      if (typeof o.ru === 'string') {
+        total++;
+        if (typeof o.en !== 'string' || o.en.trim() === '') missing++;
+        return;
+      }
+      Object.values(o).forEach(walk);
+    }
+  };
+  walk(ctx.content);
+  if (missing > 0) {
+    push(ctx, { level: 'warning', rule: 'translation', message: `Без английского перевода: ${missing} из ${total} текстов` });
+  }
+}
+
+/** 8. Экзамены на полиграфе: категории вопросов и формулы. */
+function checkPolygraph(ctx: Ctx) {
+  const allowed = new Set<string>([...POLYGRAPH_VARS, 'AND', 'OR']);
+  for (const exam of ctx.content.polygraph) {
+    exam.question_sequence.forEach((q, i) => {
+      const where = `question_sequence[${i}]`;
+      if (q.category === 'relevant_critical' && !q.pass_formula) {
+        push(ctx, { level: 'error', rule: 'polygraph', id: exam.exam_id, where, message: `Значимый вопрос «${q.q_id}» без условия прохождения pass_formula` });
+      }
+      if (q.category === 'control_comparison' && q.choices.length < 2) {
+        push(ctx, { level: 'error', rule: 'polygraph', id: exam.exam_id, where, message: `У контрольного вопроса «${q.q_id}» должно быть минимум 2 варианта ответа` });
+      }
+      if (q.pass_formula) {
+        const bad = (q.pass_formula.match(/[A-Za-z_]+/g) ?? []).filter((w) => !allowed.has(w));
+        const junk = q.pass_formula.replace(/[A-Za-z_]+|\d+|>=|<=|==|[<>+\-()\s]/g, '');
+        if (bad.length || junk) {
+          push(ctx, {
+            level: 'error',
+            rule: 'polygraph',
+            id: exam.exam_id,
+            where: `${where}.pass_formula`,
+            message: `Непонятная формула: ${[...bad, junk].filter(Boolean).join(', ')}. Допустимо: ${[...allowed].join(', ')}, числа, >= <= == < > + - ( )`,
+          });
+        }
+      }
+    });
+  }
+}
+
+export function checkRules(content: ContentBundle, fileOf: Map<string, string>): Issue[] {
+  const ctx: Ctx = { content, fileOf, issues: [] };
+  checkReferences(ctx);
+  checkUnlock(ctx);
+  checkKeyAxes(ctx);
+  checkReachability(ctx);
+  checkSdr(ctx);
+  checkWeeks(ctx);
+  checkTexts(ctx);
+  checkPolygraph(ctx);
+  return ctx.issues;
+}

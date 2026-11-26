@@ -12,12 +12,13 @@ macOS и Linux не делаем.
 - `docs/README.md`: оглавление концепта с номерами строк.
 
 ## Стек и команды
-Vite + React 19 + TypeScript (strict) + Zustand. Далее добавятся Zod (схемы), inkjs (диалоги)
-и Electron + electron-builder + steamworks.js (шаг 10).
+Vite + React 19 + TypeScript (strict) + Zustand + Zod 4 (схемы контента, сообщения на русском).
+Далее добавятся inkjs (диалоги) и Electron + electron-builder + steamworks.js (шаг 10).
 
 ```
 npm run dev        # dev-сервер на :5173 (параметры отладки: ?act=1..4&lang=ru|en)
-npm run check      # lint + typecheck + unit + build — запускать перед каждым коммитом
+npm run validate   # проверка контента src/content (можно указать другую папку: npm run validate -- путь)
+npm run check      # lint + typecheck + validate + unit + build — запускать перед каждым коммитом
 npm run e2e        # Playwright (собирает и поднимает preview на :4173), скриншоты в test-results/screens
 ```
 
@@ -25,8 +26,13 @@ npm run e2e        # Playwright (собирает и поднимает preview 
 - `src/engine/`: чистый TS без React и DOM. Вся игровая логика: неделя, риски, улики, флаги.
   Покрывается unit-тестами в `tests/unit/`.
 - `src/content/`: игровые данные (JSON, Ink). Пользователь правит их сам, поэтому
-  структура должна быть понятной, а ошибки валидатора — на русском.
-- `src/schemas/`: Zod-схемы контента (с шага 1).
+  структура должна быть понятной, а ошибки валидатора — на русском. Памятка для пользователя:
+  `docs/content-guide.md`. В игре контент грузит `loadContent()` из `src/content/index.ts`.
+- `src/schemas/`: Zod-схемы контента. Тексты — `{ ru, en? }`, id с префиксами `tar_/clue_/cable_/op_/exam_`.
+- `src/engine/content/`: разбор и проверка контента. `parse.ts` (схемы), `rules.ts` (ссылки,
+  «Правило трёх улик», SDR, недели, длина текстов, полиграф), `simulate.ts` («идеальный игрок»
+  для поиска софтлоков). CLI: `tools/validate.ts`. Новое правило — сразу с тестом в
+  `tests/unit/validate.test.ts`, который портит настоящий контент.
 - `src/ui/`: React. Стор `src/ui/store.ts` хранит состояние UI, а логику берёт из engine.
 - `src/i18n/ru.json` + `en.json`: все видимые строки. Ключи должны совпадать (это проверяет тест).
 

@@ -1,0 +1,38 @@
+{
+  "op_id": "op_a1_recon_potomac_cellar",
+  "act": 1,
+  "week": 3,
+  "type": "recon",
+  "title": { "ru": "Вечер в The Potomac Cellar", "en": "An evening at The Potomac Cellar" },
+  "operative_id": "op_resident_player",
+  "location": {
+    "site_id": "dc_potomac_cellar_m_street",
+    "name": { "ru": "The Potomac Cellar, M-стрит, Джорджтаун", "en": "The Potomac Cellar, M Street, Georgetown" },
+    "within_25_mile_zone": true
+  },
+  "sdr_route": {
+    "waypoints": [
+      {
+        "stop": "dc_wisconsin_bookshop",
+        "name": { "ru": "Книжный магазин на Висконсин-авеню", "en": "Bookshop on Wisconsin Avenue" },
+        "cover_reason": "browse_books",
+        "spotted_tags": ["green_volvo"]
+      },
+      {
+        "stop": "dc_georgetown_post_office",
+        "name": { "ru": "Почтовое отделение Джорджтауна", "en": "Georgetown post office" },
+        "cover_reason": "send_parcel",
+        "spotted_tags": ["woman_red_scarf"]
+      },
+      {
+        "stop": "dc_m_street_tobacconist",
+        "name": { "ru": "Табачная лавка на M-стрит", "en": "Tobacconist on M Street" },
+        "cover_reason": "buy_pipe_tobacco",
+        "spotted_tags": ["delivery_van"]
+      }
+    ],
+    "surveillance_present": false,
+    "repeating_cue": null,
+    "abort_penalty_days": 2
+  }
+}

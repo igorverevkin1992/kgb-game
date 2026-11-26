@@ -1,0 +1,28 @@
+{
+  "target_id": "tar_vargas_ellen",
+  "tier": 1,
+  "act": 1,
+  "name": { "ru": "Элен Варгас", "en": "Ellen Vargas" },
+  "role": {
+    "ru": "Старший операционист отделения First Virginia Bank, Арлингтон",
+    "en": "Senior teller, First Virginia Bank branch, Arlington"
+  },
+  "affiliation": "FIRST_VIRGINIA_BANK",
+  "access_tags": ["cia_staff_mortgages", "ctr_4789_filings"],
+  "unlock": {
+    "clues_required": 2,
+    "clue_ids": ["clue_vargas_bank_position", "clue_vargas_mortgage_desk", "clue_vargas_named_by_calloway"]
+  },
+  "mice_profile": {
+    "money": { "true_value": 82, "trigger": "mother_clinic_debt" },
+    "ideology": { "true_value": 12, "trigger": null },
+    "compromise": { "true_value": 58, "trigger": "cash_drawer_shortage", "backfire_risk": 0.4 },
+    "ego": { "true_value": 30, "trigger": null }
+  },
+  "approach": {
+    "flag_mode": "false_flag",
+    "cover": { "ru": "Частный аудитор и кредитный брокер", "en": "Private auditor and credit broker" },
+    "key_axes": ["money", "compromise"]
+  },
+  "initial_state": { "rapport": 0, "paranoia": 35 }
+}

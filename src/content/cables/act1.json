@@ -1,0 +1,86 @@
+[
+  {
+    "cable_id": "cable_a1_w1_directive",
+    "act": 1,
+    "week": 1,
+    "kind": "directive",
+    "sender": { "ru": "Центр", "en": "The Centre" },
+    "subject": { "ru": "Об оперативных задачах на осень", "en": "Operational tasks for the autumn" },
+    "body": {
+      "ru": "Резиденту. Предлагаем сосредоточить работу линии КР на двух направлениях: банковская среда Северной Вирджинии, обслуживающая сотрудников Лэнгли, и места досуга сотрудников советского отдела ЦРУ. Первичные контакты — только под чужим флагом. О выходе на кандидатов докладывать еженедельно. Бюджет спецфонда на квартал — 40 000 долларов.",
+      "en": "To the Resident. Focus Line KR on two directions: the Northern Virginia banking milieu that serves Langley employees, and the leisure spots of CIA Soviet Division staff. Initial contacts under a false flag only. Report weekly on any approach to candidates. Special fund for the quarter: $40,000."
+    }
+  },
+  {
+    "cable_id": "cable_a1_w1_file_vargas",
+    "act": 1,
+    "week": 1,
+    "kind": "personnel_file",
+    "sender": { "ru": "Картотека резидентуры", "en": "Rezidentura card index" },
+    "subject": { "ru": "First Virginia Bank, отделение на Уилсон-бульвар", "en": "First Virginia Bank, Wilson Boulevard branch" },
+    "body": {
+      "ru": "Отделение ведёт ипотечные и зарплатные счета служащих федеральных ведомств, проживающих в Арлингтоне. Старший операционист — Элен Варгас, 41 год, разведена, стаж в банке 14 лет. Отвечает за кассовые операции и формы отчётности о крупных наличных вкладах.",
+      "en": "The branch handles mortgage and payroll accounts of federal employees living in Arlington. Senior teller: Ellen Vargas, 41, divorced, 14 years with the bank. Responsible for cash operations and reports on large cash deposits."
+    }
+  },
+  {
+    "cable_id": "cable_a1_w2_credit_vargas",
+    "act": 1,
+    "week": 2,
+    "kind": "personnel_file",
+    "sender": { "ru": "Линия «Х», справка", "en": "Line X, memo" },
+    "subject": { "ru": "Кредитная история: Варгас Э.", "en": "Credit history: Vargas, E." },
+    "body": {
+      "ru": "По данным кредитного бюро, у Варгас просрочен долг частной клинике в Бетесде — 11 400 долларов за лечение матери. Две заявки на потребительский кредит отклонены в этом году.",
+      "en": "According to the credit bureau, Vargas owes a private clinic in Bethesda $11,400 for her mother's treatment, overdue. Two consumer loan applications were declined this year."
+    }
+  },
+  {
+    "cable_id": "cable_a1_w3_tech_report",
+    "act": 1,
+    "week": 3,
+    "kind": "agent_report",
+    "sender": { "ru": "«Технарь», оперативник прикрытия", "en": "\"Technician\", cover operative" },
+    "subject": { "ru": "Осмотр мусора у отделения банка", "en": "Trash inspection at the bank branch" },
+    "body": {
+      "ru": "В контейнере за отделением обнаружен черновик служебной записки на имя управляющего: недостача 340 долларов в кассе № 2 по итогам сверки. Подпись — Э. Варгас. Записка не отправлена, переписана от руки трижды.",
+      "en": "A draft internal memo to the manager was found in the bin behind the branch: a $340 shortage in drawer No. 2 after reconciliation. Signed E. Vargas. Never sent, rewritten by hand three times."
+    }
+  },
+  {
+    "cable_id": "cable_a1_w1_post_clipping",
+    "act": 1,
+    "week": 1,
+    "kind": "press_clipping",
+    "sender": { "ru": "The Washington Post", "en": "The Washington Post" },
+    "subject": { "ru": "«Погреб на Потомаке»: где пьёт вашингтонский средний класс", "en": "The Potomac Cellar: where middle Washington drinks" },
+    "body": {
+      "ru": "Ресторанная колонка. Управляющий клуба Мартин Кэллоуэй цитирует Монтескьё и спорит с посетителями о внешней политике. Среди завсегдатаев — клерки Госдепартамента и «люди из Вирджинии, которые не называют своего ведомства». Карта вин хороша, обслуживание медленное.",
+      "en": "Dining column. The club's manager Martin Calloway quotes Montesquieu and argues foreign policy with patrons. Regulars include State Department clerks and \"Virginia people who don't name their agency\". Good wine list, slow service."
+    }
+  },
+  {
+    "cable_id": "cable_a1_w2_vgu_note",
+    "act": 1,
+    "week": 2,
+    "kind": "vgu_note",
+    "sender": { "ru": "1-й отдел ВГУ", "en": "1st Department, Second Chief Directorate" },
+    "subject": { "ru": "Ориентировка по Джорджтауну", "en": "Georgetown orientation note" },
+    "body": {
+      "ru": "По учётам: Кэллоуэй М., бывший аспирант Джорджтаунского университета, диссертацию о советской внешней политике не защитил в 1979 году после конфликта с научным руководителем. В заведении бывают сотрудники SE Division ЦРУ.",
+      "en": "Records: Calloway M., former Georgetown University graduate student; failed to defend a dissertation on Soviet foreign policy in 1979 after a clash with his adviser. CIA SE Division staff visit the venue."
+    }
+  },
+  {
+    "cable_id": "cable_a1_w3_intercept",
+    "act": 1,
+    "week": 3,
+    "kind": "intercept",
+    "sender": { "ru": "Пост радиоперехвата", "en": "Intercept post" },
+    "subject": { "ru": "Расшифровка телефонного разговора", "en": "Transcript of a telephone call" },
+    "body": {
+      "ru": "Владелец помещения на M-стрит — управляющему The Potomac Cellar: «Мартин, три месяца. Или к первому числу деньги, или я разговариваю с юристом». Кэллоуэй просит отсрочку до праздников.",
+      "en": "The landlord on M Street to the manager of The Potomac Cellar: \"Martin, three months. Either the money by the first, or I talk to my lawyer.\" Calloway asks for an extension until the holidays."
+    }
+  }
+]

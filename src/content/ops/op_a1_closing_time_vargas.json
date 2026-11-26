@@ -1,0 +1,39 @@
+{
+  "op_id": "op_a1_closing_time_vargas",
+  "act": 1,
+  "week": 4,
+  "type": "recon",
+  "title": { "ru": "Отделение банка перед закрытием", "en": "The bank branch at closing time" },
+  "operative_id": "op_resident_player",
+  "requires_targets_unlocked": ["tar_vargas_ellen"],
+  "location": {
+    "site_id": "va_first_virginia_wilson_blvd",
+    "name": { "ru": "First Virginia Bank, Уилсон-бульвар, Арлингтон", "en": "First Virginia Bank, Wilson Boulevard, Arlington" },
+    "within_25_mile_zone": true
+  },
+  "sdr_route": {
+    "waypoints": [
+      {
+        "stop": "va_exxon_glebe_road",
+        "name": { "ru": "Заправка Exxon на Глиб-роуд", "en": "Exxon station on Glebe Road" },
+        "cover_reason": "refuel",
+        "spotted_tags": ["school_bus"]
+      },
+      {
+        "stop": "va_hardware_store_ballston",
+        "name": { "ru": "Хозяйственный магазин, Боллстон", "en": "Hardware store, Ballston" },
+        "cover_reason": "buy_lightbulbs",
+        "spotted_tags": ["man_with_terrier"]
+      },
+      {
+        "stop": "va_diner_wilson_blvd",
+        "name": { "ru": "Закусочная напротив банка", "en": "Diner across from the bank" },
+        "cover_reason": "coffee",
+        "spotted_tags": ["yellow_cab"]
+      }
+    ],
+    "surveillance_present": false,
+    "repeating_cue": null,
+    "abort_penalty_days": 1
+  }
+}

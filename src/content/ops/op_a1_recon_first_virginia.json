@@ -1,0 +1,39 @@
+{
+  "op_id": "op_a1_recon_first_virginia",
+  "act": 1,
+  "week": 2,
+  "type": "recon",
+  "title": { "ru": "Осмотр отделения First Virginia Bank", "en": "Reconnaissance of the First Virginia Bank branch" },
+  "operative_id": "op_resident_player",
+  "location": {
+    "site_id": "va_first_virginia_wilson_blvd",
+    "name": { "ru": "First Virginia Bank, Уилсон-бульвар, Арлингтон", "en": "First Virginia Bank, Wilson Boulevard, Arlington" },
+    "within_25_mile_zone": true
+  },
+  "sdr_route": {
+    "waypoints": [
+      {
+        "stop": "dc_peoples_drug_connecticut",
+        "name": { "ru": "Аптека Peoples Drug, Коннектикут-авеню", "en": "Peoples Drug, Connecticut Avenue" },
+        "cover_reason": "buy_medicine",
+        "spotted_tags": ["light_blue_ford_ltd", "grey_trenchcoat"]
+      },
+      {
+        "stop": "va_lee_highway_cleaners",
+        "name": { "ru": "Химчистка на Ли-хайвей", "en": "Dry cleaner on Lee Highway" },
+        "cover_reason": "drop_laundry",
+        "spotted_tags": ["red_buick"]
+      },
+      {
+        "stop": "va_safeway_clarendon",
+        "name": { "ru": "Safeway, Кларендон", "en": "Safeway, Clarendon" },
+        "cover_reason": "buy_groceries",
+        "spotted_tags": ["light_blue_ford_ltd", "brown_cap"]
+      }
+    ],
+    "surveillance_present": true,
+    "repeating_cue": "light_blue_ford_ltd",
+    "abort_penalty_days": 2,
+    "ignore_consequence": { "sog_heat_delta": 25, "flag_set": "fbi_noted_arlington_bank_visit" }
+  }
+}
