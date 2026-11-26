@@ -5,7 +5,7 @@ name: Godot tools
 
 on:
   push:
-    paths: [tools/godot-version.txt, .github/workflows/godot-tools.yml]
+    paths: [tools/godot-version.txt, tools/godotsteam-version.txt, .github/workflows/godot-tools.yml]
   workflow_dispatch:
 
 permissions:
@@ -33,3 +33,30 @@ jobs:
           gh release create "$TAG" --title "Godot $V (инструменты разработки)" \
             --notes "Официальные сборки Godot $V с github.com/godotengine/godot-builds для облачной разработки и CI." \
             --prerelease "Godot_v${V}_linux.x86_64.zip" "Godot_v${V}_export_templates.tpz"
+
+  # GodotSteam (GDExtension) — интеграция со Steam для Windows-сборки. github.com из облачного
+  # контейнера закрыт, поэтому, как и Godot, кладём архив в релиз этого репозитория.
+  godotsteam:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Скачать GodotSteam и выложить в релиз
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          V=$(cat tools/godotsteam-version.txt)      # например v4.24
+          TAG="godotsteam-$V"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Релиз $TAG уже есть"; exit 0
+          fi
+          echo "Файлы релиза GodotSteam $V:"
+          gh release view "$V" -R GodotSteam/GodotSteam --json assets --jq '.assets[].name'
+          NAME=$(gh release view "$V" -R GodotSteam/GodotSteam --json assets --jq '.assets[].name' | grep -i gdextension | grep -i '\.zip$' | head -1)
+          [ -n "$NAME" ] || { echo "В релизе $V нет архива GDExtension"; exit 1; }
+          gh release download "$V" -R GodotSteam/GodotSteam -p "$NAME"
+          mv "$NAME" godotsteam-gdextension.zip
+          unzip -l godotsteam-gdextension.zip | head -40
+          gh release create "$TAG" --title "GodotSteam $V (GDExtension)" \
+            --notes "Архив $NAME из github.com/GodotSteam/GodotSteam (лицензия MIT) для Windows-сборки." \
+            --prerelease godotsteam-gdextension.zip
