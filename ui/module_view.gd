@@ -45,7 +45,7 @@ static func _content(view: String) -> Control:
 		"inbox":
 			return InboxView.build()
 		"cipher":
-			return Shells.cipher()
+			return CipherView.build()
 		"finance":
 			return Shells.finance()
 		"dialog":

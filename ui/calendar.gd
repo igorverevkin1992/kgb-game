@@ -1,5 +1,6 @@
 class_name Calendar
-## Настольный календарь: неделя, дата, фаза, кнопка перехода. Ночью — выбор донесения в Центр.
+## Настольный календарь: неделя, дата, фаза, кнопка перехода. Ночью — донесение в Центр:
+## «как есть» одной кнопкой или шифрограмма на «Фиалке».
 
 
 static func build() -> Control:
@@ -35,11 +36,16 @@ static func build() -> Control:
 	c.custom_minimum_size = Vector2(208, 0)
 	c.add_child(Style.para(T.t("phase.%s.hint" % s.phase), 208, Style.mono(), 12, Color(Style.PAPER, 0.75)))
 	if s.phase == "night":
-		for r in ["truth", "embellished", "silence"]:
-			var b := Style.button(T.t("report." + r), "report-" + r, Style.PAPER, Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.55), 13)
-			b.tooltip_text = T.t("report.%s.hint" % r)
-			b.pressed.connect(Game.dispatch.bind({"type": "submit_report", "report": r}))
-			c.add_child(b)
+		# Быстрое донесение «как есть» или шифрограмма на «Фиалке» (приукрасить, умолчать, запрос).
+		var tb := Style.button(T.t("report.truth"), "report-truth", Style.PAPER, Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.55), 13)
+		tb.tooltip_text = T.t("report.truth.hint")
+		tb.pressed.connect(Game.dispatch.bind({"type": "submit_report", "report": "truth"}))
+		c.add_child(tb)
+		var cb := Style.button(T.t("report.compose"), "report-compose", Style.PAPER, Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.55), 13)
+		cb.tooltip_text = T.t("report.compose.hint")
+		cb.disabled = not Game.is_unlocked("cipher")
+		cb.pressed.connect(Game.open_cipher.bind("outgoing"))
+		c.add_child(cb)
 	else:
 		var nb := Style.button(T.t("calendar.next"), "advance-phase", Style.PAPER, Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.55), 13)
 		nb.pressed.connect(Game.dispatch.bind({"type": "advance_phase"}))

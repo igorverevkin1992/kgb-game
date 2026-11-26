@@ -52,5 +52,12 @@
   "thresholds": {
     "warning": 50,
     "danger": 75
+  },
+  "cipher": {
+    "accept_forged_sog_heat": 15,
+    "accept_forged_flag": "fbi_dangle_accepted",
+    "query_genuine_pressure": 3,
+    "query_genuine_trust": -2,
+    "query_forged_trust": 5
   }
 }

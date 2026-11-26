@@ -8,7 +8,7 @@ static func build() -> Control:
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(ModuleView.header(T.t("inbox.name"), T.t("inbox.hint")))
 
-	var docs: Array = s.delivered_cables.map(func(id): return Campaign.cable_by_id(Game.content, id)).filter(func(c): return not c.is_empty())
+	var docs: Array = s.delivered_cables.map(func(id): return Campaign.cable_by_id(Game.content, id)).filter(func(c): return not c.is_empty() and c.kind != "directive")
 	docs.reverse()  # свежие сверху
 
 	var scroll := ScrollContainer.new()
@@ -56,10 +56,10 @@ static func build() -> Control:
 	var center := CenterContainer.new()
 	center.custom_minimum_size = Vector2(990, 0)
 	var cur_doc := Campaign.cable_by_id(Game.content, Game.inbox_selected)
-	if not cur_doc.is_empty() and s.delivered_cables.has(cur_doc.cable_id):
+	if not cur_doc.is_empty() and s.delivered_cables.has(cur_doc.cable_id) and cur_doc.kind != "directive":
 		center.add_child(DocumentView.build(cur_doc))
 	else:
-		var has_unread := not Campaign.unread_cables(s).is_empty()
+		var has_unread := not Cipher.unread_mail(s, Game.content).is_empty()
 		center.add_child(Style.label(T.t("inbox.pick") if has_unread else T.t("inbox.allRead"), Style.mono(), 16, Color(Style.PAPER, 0.6)))
 	reader.add_child(center)
 	root.add_child(reader)

@@ -12,7 +12,8 @@ func scene_desk_act1() -> void:
 		ok(enabled("desk-object-" + v), v + " открыт")
 	for v in ["finance", "dialog", "counterintel"]:
 		ok(not enabled("desk-object-" + v), v + " заперт")
-	has_text("inbox-unread", "3")
+	has_text("inbox-unread", "2")
+	has_text("cipher-pending", "1")
 	await shot("desk-act1")
 
 
@@ -49,17 +50,19 @@ func scene_locked_module_stays_closed() -> void:
 func scene_inbox_documents() -> void:
 	await start()
 	await click("desk-object-inbox")
-	eq(node("inbox-list").get_child_count(), 3, "документов")
+	eq(node("inbox-list").get_child_count(), 2, "документов (директивы — на «Фиалке»)")
+	ok(not exists("inbox-item-cable_a1_w1_directive"), "директивы нет в лотке")
 	await press("inbox-item-cable_a1_w1_post_clipping")
 	eq(node("document").get_meta("kind"), "press_clipping")
 	has_text("document", "Монтескьё")
 	await shot("doc-clipping")
-	await press("inbox-item-cable_a1_w1_directive")
-	eq(node("document").get_meta("kind"), "directive")
+	await press("inbox-item-cable_a1_w1_file_vargas")
+	eq(node("document").get_meta("kind"), "personnel_file")
 	has_text("document", "СЕКРЕТНО")
-	await shot("doc-directive")
+	await shot("doc-personnel-file")
 	await key(KEY_ESCAPE)
-	has_text("inbox-unread", "1")
+	ok(not exists("inbox-unread"), "всё прочитано")
+	has_text("cipher-pending", "1")
 
 
 func scene_mice_dossiers_and_sog_marks() -> void:

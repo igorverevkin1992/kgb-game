@@ -12,7 +12,10 @@ class_name Campaign
 ##   {type: "pin_clue", clue_id, target_id, axis} — приколоть улику к досье (axis "" — общее поле)
 ##   {type: "submit_analysis", target_id, axis, access, channel} — заключение по досье (проверка тройкой)
 ##   {type: "use_hint", target_id} — подсказка: намёк → документ → ответ
-##   {type: "submit_report", report: "truth"|"embellished"|"silence"}
+##   {type: "verify_cable", cable_id, decision: "accept"|"query"} — сверка директивы (шифроузел)
+##   {type: "submit_report", report: "truth"|"embellished"|"silence"} — быстрое донесение, или
+##   {type: "submit_report", choices: {fact_key: "as_is"|"embellish"|"omit"}, request: "req_…"|""}
+##     — шифрограмма из фактов недели (Cipher.week_facts); вид донесения определяет Cipher.classify
 
 const PHASES := ["morning", "day", "evening", "night"]
 const RISKS := ["sog_heat", "mole_hunt", "treasury", "moscow_pressure"]
@@ -55,6 +58,8 @@ static func new_campaign(content: Dictionary) -> Dictionary:
 		"goal_reached": false,
 		"pinned": [],
 		"analysis": {},
+		"verified": {},
+		"requests": [],
 		"rng": b.start.seed,
 		"ending": null,
 		"log": [],
@@ -205,10 +210,33 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			s.analysis[action.target_id] = an
 			_emit(ctx, {"type": "hint_used", "target_id": action.target_id, "level": an.hint_level})
 
+		"verify_cable":
+			var cable := cable_by_id(content, action.cable_id)
+			if cable.is_empty() or cable.kind != "directive" or not s.delivered_cables.has(cable.cable_id):
+				return _reject(state, "Такой директивы не поступало")
+			if not s.read_cables.has(cable.cable_id):
+				return _reject(state, "Сначала расшифруйте директиву")
+			if s.verified.has(cable.cable_id):
+				return _reject(state, "Решение по этой директиве уже принято")
+			if not ["accept", "query"].has(action.get("decision", "")):
+				return _reject(state, "Директиву можно принять к исполнению или запросить подтверждение")
+			_verify(ctx, cable, action.decision)
+
 		"submit_report":
 			if s.phase != "night":
 				return _reject(state, "Донесение в Центр отправляют ночью, а сейчас %s" % phase_ru)
-			_end_week(ctx, action.report)
+			var report: String = action.get("report", "")
+			if action.has("choices"):
+				var choices: Dictionary = action.choices
+				if choices.values().any(func(c): return not Cipher.CHOICES.has(c)):
+					return _reject(state, "По каждому факту: как есть, приукрасить или умолчать")
+				report = Cipher.classify(Cipher.week_facts(s), choices)
+			if not Cipher.REPORTS.has(report):
+				return _reject(state, "Неизвестный вид донесения")
+			var request: String = action.get("request", "")
+			if request != "" and not Cipher.available_requests(s, content).any(func(r): return r.request_id == request):
+				return _reject(state, "Этот запрос сейчас отправить нельзя")
+			_end_week(ctx, report, request)
 
 		_:
 			return _reject(state, "Неизвестное действие")
@@ -404,30 +432,54 @@ static func _resolve_op(ctx: Dictionary, op: Dictionary, decision: String) -> vo
 			_give_clue(ctx, clue.clue_id)
 
 
+## Директива сверена: принять к исполнению или запросить подтверждение у Центра.
+static func _verify(ctx: Dictionary, cable: Dictionary, decision: String) -> void:
+	var b: Dictionary = ctx.content.balance.cipher
+	var outcome := Cipher.verify_outcome(cable, decision)
+	ctx.s.verified[cable.cable_id] = decision
+	_emit(ctx, {"type": "directive_verified", "cable_id": cable.cable_id, "decision": decision, "outcome": outcome})
+	match outcome:
+		"accepted_forged":
+			_add_risk(ctx, "sog_heat", b.accept_forged_sog_heat, "forged_directive")
+			_set_flag(ctx, b.accept_forged_flag)
+		"confirmed":
+			_add_trust(ctx, b.query_genuine_trust, "needless_query")
+			_add_risk(ctx, "moscow_pressure", b.query_genuine_pressure, "needless_query")
+		"exposed":
+			_add_trust(ctx, b.query_forged_trust, "forgery_exposed")
+
+
+## Запрос в Центр: решение — по Доверию Центра в момент отправки (до последствий донесения).
+static func _request(ctx: Dictionary, request_id: String) -> void:
+	var s: Dictionary = ctx.s
+	var r := Cipher.request_by_id(ctx.content, request_id)
+	var granted := Cipher.would_grant(s, r)
+	s.requests.append({"request_id": request_id, "act": s.act, "week": s.week, "granted": granted})
+	_emit(ctx, {"type": "request_answered", "request_id": request_id, "granted": granted})
+	var fx: Dictionary = r.granted if granted else r.refused
+	_add_trust(ctx, fx.centre_trust, "request")
+	_add_risk(ctx, "moscow_pressure", fx.moscow_pressure, "request")
+	if granted and fx.get("fund_usd", 0) != 0:
+		var from: int = s.fund_usd
+		s.fund_usd += int(fx.fund_usd)
+		_emit(ctx, {"type": "fund_changed", "from": from, "to": s.fund_usd, "reason": "request"})
+
+
 ## Ночь: донесение, сверка лжи, пересчёт рисков, концовки и переход к следующей неделе.
-static func _end_week(ctx: Dictionary, report: String) -> void:
+static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 	var s: Dictionary = ctx.s
 	var content: Dictionary = ctx.content
 	var b: Dictionary = content.balance
 	var mp: Dictionary = b.moscow_pressure
 	var ct: Dictionary = b.centre_trust
-	var failures: bool = s.week_failures > 0
-	_emit(ctx, {"type": "report_submitted", "report": report})
-	match report:
-		"truth":
-			if failures:
-				_add_trust(ctx, ct.report_truth_with_failures, "report_truth_with_failures")
-				_add_risk(ctx, "moscow_pressure", mp.report_truth_with_failures, "report_truth_with_failures")
-			else:
-				_add_trust(ctx, ct.report_truth, "report_truth")
-		"embellished":
-			_add_trust(ctx, ct.report_embellished, "report_embellished")
-			_add_risk(ctx, "moscow_pressure", mp.report_embellished, "report_embellished")
-			s.lies.append({"week": s.week, "kind": "embellished"})
-		_:
-			_add_trust(ctx, ct.report_silence, "report_silence")
-			if failures:
-				s.lies.append({"week": s.week, "kind": "silence"})
+	var fx := Cipher.report_effects(s, content, report)
+	_emit(ctx, {"type": "report_submitted", "report": report, "request": request})
+	if request != "":
+		_request(ctx, request)
+	_add_trust(ctx, fx.trust, "report_" + report)
+	_add_risk(ctx, "moscow_pressure", fx.pressure, "report_" + report)
+	if fx.lie:
+		s.lies.append({"week": s.week, "kind": report})
 
 	# Сверка донесений: каждая ложь либо вскрывается, либо уходит в архив навсегда.
 	if s.week % int(b.lies.check_every_weeks) == 0 and not s.lies.is_empty():
@@ -444,7 +496,7 @@ static func _end_week(ctx: Dictionary, report: String) -> void:
 	if s.goal_reached:
 		_add_risk(ctx, "moscow_pressure", mp.act_goal_reached, "act_goal_reached")
 		_emit(ctx, {"type": "act_completed", "act": s.act})
-	elif not act.is_empty() and s.week > act.weeks.to:
+	elif not act.is_empty() and s.week > Cipher.act_deadline(s, content):
 		_add_risk(ctx, "moscow_pressure", mp.per_week_overdue, "act_overdue")
 	elif not act.is_empty() and s.week - act.weeks.from + 1 > int(mp.grace_weeks):
 		_add_risk(ctx, "moscow_pressure", mp.per_week_without_goal, "no_progress")

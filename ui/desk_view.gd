@@ -71,7 +71,7 @@ static func _object(v: String) -> Control:
 	for s in ["normal", "hover", "pressed", "disabled", "focus"]:
 		b.add_theme_stylebox_override(s, StyleBoxEmpty.new())
 	b.pressed.connect(Game.open.bind(v))
-	var tex := Style.art(o[5] if not (v == "inbox" and Campaign.unread_cables(Game.state).size() > 0) else "inbox_full", Rect2(Vector2.ZERO, b.size))
+	var tex := Style.art(o[5] if not (v == "inbox" and Cipher.unread_mail(Game.state, Game.content).size() > 0) else "inbox_full", Rect2(Vector2.ZERO, b.size))
 	if not unlocked:
 		tex.modulate = Color(0.45, 0.45, 0.42)
 	b.add_child(tex)
@@ -93,8 +93,17 @@ static func _object(v: String) -> Control:
 			nb.add_child(Style.label(str(fresh), Style.form(true), 20, Style.PAPER_LIGHT, false))
 			nb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			b.add_child(nb)
+	if v == "cipher" and unlocked:
+		var pending := Cipher.pending_directives(Game.state, Game.content).size()
+		if pending > 0:
+			var cb := Style.panel(Style.STAMP_RED, 6)
+			cb.name = "cipher-pending"
+			cb.position = Vector2(b.size.x - 52, 20)
+			cb.add_child(Style.label(str(pending), Style.form(true), 20, Style.PAPER_LIGHT, false))
+			cb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			b.add_child(cb)
 	if v == "inbox":
-		var unread := Campaign.unread_cables(Game.state).size()
+		var unread := Cipher.unread_mail(Game.state, Game.content).size()
 		if unread > 0:
 			var badge := Style.panel(Style.STAMP_RED, 6)
 			badge.name = "inbox-unread"

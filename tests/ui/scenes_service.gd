@@ -68,6 +68,6 @@ func scene_text_scale() -> void:
 	await shot("service-settings")
 	await key(KEY_ESCAPE)
 	await click("desk-object-inbox")
-	await press("inbox-item-cable_a1_w1_directive")
+	await press("inbox-item-cable_a1_w1_file_vargas")
 	await shot("doc-scaled-130")
 	Game.set_text_scale(1.0)

@@ -31,7 +31,7 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
 
 ## Архитектура
 - `content/`: игровые данные JSON (пользователь правит сам). `campaign.json`, `balance.json`,
-  `map/sites.json`, `map/cues.json`, `targets/`, `clues/`, `cables/`, `ops/`, `polygraph/`.
+  `map/sites.json`, `map/cues.json`, `targets/`, `clues/`, `cables/`, `ops/`, `polygraph/`, `requests/`.
 - `engine/` — чистый GDScript без узлов и экрана, всё — `static func` над словарями:
   - `schema.gd` + `content_schemas.gd` — проверка схем (замена Zod): русские сообщения,
     значения по умолчанию, предупреждение о неизвестных полях (опечатки);
@@ -45,8 +45,13 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
     улики из документов игрок снимает сам (`take_clue`, поле `chunk`), прикалывает к досье
     (`pin_clue` с осью или "" — общее поле), утверждает заключение (`submit_analysis`: мотив,
     доступ, канал — проверка тройкой) и берёт подсказки (`use_hint`). Вербовка `success` требует
-    утверждённого заключения. Знание о мотиве на доске — по приколотым уликам (`axis_knowledge`);
-  - `saves.gd` — формат v4 (pinned, analysis), проверка при загрузке, автосейв, чекпоинты месяц/акт (до 12),
+    утверждённого заключения. Знание о мотиве на доске — по приколотым уликам (`axis_knowledge`).
+    Шифроузел (шаг 6): `verify_cable` (accept/query, `state.verified`), `submit_report` принимает
+    `choices` по фактам недели и `request` — запрос в Центр (`state.requests`);
+  - `cipher.gd` — ключевой блокнот (ключ и контрольная группа недели), подложные директивы
+    (`forged`), факты недели из журнала, `classify` → truth/embellished/silence, `report_effects`
+    (те же числа, что применит движок — для предпросмотра), запросы и срок акта с продлением;
+  - `saves.gd` — формат v5 (pinned, analysis, verified, requests; v4 переносится), проверка при загрузке, автосейв, чекпоинты месяц/акт (до 12),
     3 слота, «Железный занавес» (флаг `mode_ironman`); `FileStorage` (user://saves), `MemoryStorage`;
   - `map_geo.gd` — мили, 25-мильная зона, разбор маршрута; `rng.gd` — mulberry32; `util.gd` —
     JSON (числа из JSON приходят float — `normalize_numbers` делает целые int); `modules.gd`.
@@ -61,7 +66,8 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
     Esc), `inbox_view.gd` + `document_view.gd` (бланк / вырезка / перехват), `shells.gd`
     (оболочки модулей), `board_view.gd` (доска мотивов: стопка улик, ячейки Д/И/К/С как
     DropZone с drag&drop и кликом, заключение тройкой, подсказки), `map_canvas.gd` + `map_module.gd` (карта, «Сбор» →
-    «Вердикт»), `overlays.gd` (сводка аналитика, служебная папка, итог).
+    «Вердикт»), `overlays.gd` (сводка аналитика, служебная папка, итог), `cipher_view.gd` (шифроузел:
+    блокнот, роторы, лента, сверка, шифрограмма с плашкой последствий).
   - `style.gd` — палитра, шрифты PT (кириллица + латинский запасной файл), фабрики элементов;
     `Style.fs()` применяет масштаб текста 100–130 %. `i18n.gd` (`T.t`, `T.loc`), `fmt.gd` (суммы,
     даты), `signals.gd` (диегетические сигналы рисков).
@@ -69,7 +75,7 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
 - `tests/` — unit-тесты (`TestCase`, помощники `H`: `play()` сам снимает улики-фрагменты,
   `approve()` прикалывает улики и утверждает заключение); `tests/ui/` — сценарии (`UiTest`:
   `start(actions)` собирает состояние движком, `press`, `click`, `key`, `has_text`, `shot`).
-  После действия экран перестроен — узлы, найденные до него, уже удалены: ищи заново по имени.
+  `Game.reset_for_test` включает «Мгновенный вывод текста» (лента шифроузла без анимации). После действия экран перестроен — узлы, найденные до него, уже удалены: ищи заново по имени.
 - Сборки: `export_presets.cfg` — Windows (`.exe` со встроенным pck) и Web (без потоков, для Pages).
 
 ## Язык: сейчас только русская версия

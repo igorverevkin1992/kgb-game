@@ -127,6 +127,14 @@ static func _event_text(e: Dictionary) -> String:
 			return T.t("event.lie_uncovered", {"week": e.lie_week})
 		"act_completed":
 			return T.t("event.act_completed", {"act": e.act})
+		"directive_verified":
+			return T.t("event.directive_" + e.outcome, {"name": T.loc(Campaign.cable_by_id(c, e.cable_id).subject)})
+		"report_submitted":
+			return T.t("event.report_" + e.report)
+		"request_answered":
+			return T.t("event.request_" + ("granted" if e.granted else "refused"), {"name": T.loc(Cipher.request_by_id(c, e.request_id).title)})
+		"fund_changed":
+			return T.t("event.fund_changed", {"from": Fmt.usd(e.from), "to": Fmt.usd(e.to)})
 	return ""
 
 
@@ -270,6 +278,13 @@ static func _settings_tab(v: VBoxContainer) -> void:
 		row.add_child(b)
 	box.add_child(row)
 	box.add_child(Style.para(T.t("settings.textScaleHint"), PANEL_W - 104, Style.mono(), 13, Color(Style.INK, 0.75)))
+	box.add_child(_h3(T.t("settings.instantText")))
+	var it := Style.button(T.t("settings.on") if Game.settings.instant_text else T.t("settings.off"), "instant-text-toggle", Style.INK, Color(0, 0, 0, 0), Style.INK)
+	it.pressed.connect(func(): Game.set_instant_text(not Game.settings.instant_text))
+	var irow := Style.hbox(8)
+	irow.add_child(it)
+	box.add_child(irow)
+	box.add_child(Style.para(T.t("settings.instantTextHint"), PANEL_W - 104, Style.mono(), 13, Color(Style.INK, 0.75)))
 	# Переключатель языка вернётся вместе с английской версией (см. docs/plan.md).
 	v.add_child(box)
 

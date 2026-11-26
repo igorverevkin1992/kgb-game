@@ -25,6 +25,7 @@ static func check(content: Dictionary, file_of: Dictionary, opts := {}) -> Array
 	_polygraph(ctx)
 	_balance(ctx)
 	_board(ctx)
+	_cipher(ctx)
 	return ctx.issues
 
 
@@ -342,3 +343,20 @@ static func _board(ctx: Dictionary) -> void:
 				relevant += 1
 		if relevant < THREE_CLUES:
 			_push(ctx, "error", "board", "По цели всего %d улик(и): для заключения на доске нужно минимум %d" % [relevant, THREE_CLUES], "", t.target_id)
+
+
+## 11. Шифроузел: подложными бывают только директивы, запросы привязаны к существующим актам.
+static func _cipher(ctx: Dictionary) -> void:
+	var c: Dictionary = ctx.content
+	for x in c.cables:
+		if x.forged and x.kind != "directive":
+			_push(ctx, "error", "cipher", "Подложной (forged) может быть только директива Центра", "%s.forged" % x.cable_id, x.cable_id)
+	var acts := {}
+	for a in c.campaign.acts:
+		acts[a.act] = true
+	for r in c.requests:
+		if not acts.has(r.act):
+			_push(ctx, "error", "cipher", "Запрос привязан к акту %d, которого нет в campaign.json" % r.act, "%s.act" % r.request_id, r.request_id)
+		var g: Dictionary = r.granted
+		if g.fund_usd == 0 and g.centre_trust == 0 and g.moscow_pressure == 0 and g.extend_act_weeks == 0:
+			_push(ctx, "warning", "cipher", "Одобренный запрос ничего не меняет: задайте хотя бы одно поле в granted", "%s.granted" % r.request_id, r.request_id)

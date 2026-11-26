@@ -77,6 +77,27 @@ static func _build() -> void:
 		"sender": text,
 		"subject": text,
 		"body": text,
+		# Подложная директива (шифроузел): контрольная группа не совпадёт с ключевым блокнотом.
+		"forged": Schema.opt({"type": "bool"}, false),
+	})
+
+	# Запросы в Центр, которые резидент может приложить к ночной шифрограмме.
+	_cache["request"] = Schema.obj({
+		"request_id": Schema.id("req"),
+		"act": act,
+		"title": text,
+		"phrase": text,
+		"min_trust": scale,
+		"granted": Schema.obj({
+			"fund_usd": Schema.opt(Schema.i(0, 1000000), 0),
+			"centre_trust": Schema.opt(delta, 0),
+			"moscow_pressure": Schema.opt(delta, 0),
+			"extend_act_weeks": Schema.opt(Schema.i(0, 6), 0),
+		}),
+		"refused": Schema.obj({
+			"centre_trust": Schema.opt(delta, 0),
+			"moscow_pressure": Schema.opt(delta, 0),
+		}),
 	})
 
 	_cache["op"] = Schema.obj({
@@ -167,6 +188,10 @@ static func _build() -> void:
 		"lies": Schema.obj({"check_every_weeks": Schema.i(1), "uncover_chance_embellished": chance, "uncover_chance_silence": chance}),
 		"treasury": Schema.obj({"audit_mole_hunt_multiplier": Schema.n(1, 5)}),
 		"thresholds": Schema.obj({"warning": scale, "danger": scale}),
+		"cipher": Schema.obj({
+			"accept_forged_sog_heat": delta, "accept_forged_flag": flag,
+			"query_genuine_pressure": delta, "query_genuine_trust": delta, "query_forged_trust": delta,
+		}),
 	})
 
 	_cache["map"] = Schema.obj({

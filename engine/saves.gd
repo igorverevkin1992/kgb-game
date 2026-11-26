@@ -6,7 +6,8 @@ class_name Saves
 
 const FORMAT := "liniya-kr-save"
 ## v3: первая версия на Godot. v4 (шаг 5): доска мотивов — pinned, analysis.
-const VERSION := 4
+## v5 (шаг 6): шифроузел — verified, requests. Сохранения v4 переносятся автоматически.
+const VERSION := 5
 const AUTOSAVE := "autosave"
 const MANUAL_SLOTS := ["manual-1", "manual-2", "manual-3"]
 const MAX_CHECKPOINTS := 12
@@ -55,6 +56,10 @@ static func deserialize(text: String, content: Dictionary) -> Dictionary:
 	var data = r.data
 	if typeof(data) != TYPE_DICTIONARY or data.get("format") != FORMAT:
 		return {"ok": false, "error": "Это не сохранение «Линии КР»"}
+	if data.get("version") == 4 and typeof(data.get("state")) == TYPE_DICTIONARY:
+		data.state["verified"] = {}
+		data.state["requests"] = []
+		data["version"] = VERSION
 	if data.get("version") != VERSION:
 		return {"ok": false, "error": "Сохранение от другой версии игры (формат %s)" % str(data.get("version"))}
 	var issues: Array = []
@@ -71,8 +76,10 @@ static func deserialize(text: String, content: Dictionary) -> Dictionary:
 		known[c.cable_id] = true
 	for o in content.ops:
 		known[o.op_id] = true
+	for q in content.requests:
+		known[q.request_id] = true
 	var missing := {}
-	for id in state.targets.keys() + state.clues + state.delivered_cables + state.planned_ops + state.op_results.keys():
+	for id in state.targets.keys() + state.clues + state.delivered_cables + state.planned_ops + state.op_results.keys() + state.verified.keys() + state.requests.map(func(q): return q.request_id):
 		if not known.has(id):
 			missing[id] = true
 	if not missing.is_empty():
@@ -110,6 +117,8 @@ static func _state_spec() -> Dictionary:
 		"goal_reached": {"type": "bool"}, "rng": Schema.i(0),
 		"pinned": Schema.arr(Schema.obj({"clue_id": Schema.s(), "target_id": Schema.s(), "axis": Schema.s()})),
 		"analysis": {"type": "dict", "of": Schema.obj({"approved": {"type": "bool"}, "attempts": Schema.i(0), "wrong": Schema.i(-1, 3), "hint_level": Schema.i(0, 3)})},
+		"verified": {"type": "dict", "of": Schema.e(["accept", "query"])},
+		"requests": Schema.arr(Schema.obj({"request_id": Schema.s(), "act": Schema.i(1, 4), "week": Schema.i(1), "granted": {"type": "bool"}})),
 		"ending": Schema.nullable(Schema.e(["persona_non_grata", "recalled", "mole_arrested", "campaign_complete"])),
 		"log": Schema.arr({"type": "dict", "of": {"type": "any"}}),
 	})

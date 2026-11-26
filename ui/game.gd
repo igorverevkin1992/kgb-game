@@ -14,7 +14,7 @@ var state: Dictionary = {}
 var storage = null
 ## Отладка: стол как в акте N (на сам движок не влияет).
 var debug_act := 0
-var settings := {"text_scale": 1.0}
+var settings := {"text_scale": 1.0, "instant_text": false}
 
 ## Открытый модуль/лоток или "" — виден весь стол.
 var view := ""
@@ -33,6 +33,14 @@ var board_form := {}
 var map_draft := {"op_id": "", "stops": []}
 ## Идущий выезд (вечер): {op_id, step, verdict, marks, result} или пустой словарь.
 var sdr_run := {}
+## Шифроузел: вкладка (incoming / outgoing), выбранная директива, директива с выставленным
+## ключом, идущая расшифровка {cable_id, start} и черновик шифрограммы {week, choices, request}.
+const DECODE_SECONDS := 1.6
+var cipher_tab := "incoming"
+var cipher_selected := ""
+var cipher_key_set := ""
+var cipher_anim := {}
+var cipher_draft := {"week": 0, "choices": {}, "request": ""}
 
 
 func _ready() -> void:
@@ -66,7 +74,7 @@ func reset_for_test(new_state: Dictionary = {}, mem_storage = null) -> void:
 	state = new_state if not new_state.is_empty() else Campaign.new_campaign(content).state
 	Saves.persist(storage, null, state, content)
 	debug_act = 0
-	settings = {"text_scale": 1.0}
+	settings = {"text_scale": 1.0, "instant_text": true}
 	Style.text_scale = 1.0
 	_clear_ui()
 	saved_at = 0
@@ -163,6 +171,13 @@ func set_text_scale(scale: float) -> void:
 	changed.emit()
 
 
+## «Мгновенный вывод текста»: расшифровка без анимации ленты.
+func set_instant_text(on: bool) -> void:
+	settings.instant_text = on
+	storage.write(SETTINGS_SLOT, JSON.stringify(settings))
+	changed.emit()
+
+
 ## Открыть документ в лотке; непрочитанный отмечается прочитанным.
 func select_document(cable_id: String) -> void:
 	inbox_selected = cable_id
@@ -211,6 +226,70 @@ func set_sdr_run(run: Dictionary) -> void:
 	changed.emit()
 
 
+# ——— Шифроузел ———
+
+func open_cipher(tab: String) -> void:
+	cipher_tab = tab
+	open("cipher")
+
+
+func set_cipher_tab(tab: String) -> void:
+	cipher_tab = tab
+	changed.emit()
+
+
+func select_directive(cable_id: String) -> void:
+	cipher_tab = "incoming"
+	cipher_selected = cable_id
+	changed.emit()
+
+
+## Выставить роторы по ключевому блокноту (первый шаг ритуала).
+func set_cipher_key(cable_id: String) -> void:
+	cipher_key_set = cable_id
+	changed.emit()
+
+
+## Принять шифрограмму: директива расшифрована (прочитана), лента печатает открытый текст.
+func decode_directive(cable_id: String) -> void:
+	cipher_anim = {} if settings.instant_text else {"cable_id": cable_id, "start": Time.get_ticks_msec()}
+	dispatch({"type": "read_cable", "cable_id": cable_id})
+
+
+## Пропустить печать ленты (клик по ленте) или закончить её.
+func finish_decode() -> void:
+	if not cipher_anim.is_empty():
+		cipher_anim = {}
+		changed.emit()
+
+
+func verify_directive(cable_id: String, decision: String) -> void:
+	dispatch({"type": "verify_cable", "cable_id": cable_id, "decision": decision})
+
+
+## Черновик шифрограммы живёт до конца недели.
+func report_draft() -> Dictionary:
+	if cipher_draft.week != state.week:
+		cipher_draft = {"week": state.week, "choices": {}, "request": ""}
+	return cipher_draft
+
+
+func set_report_choice(key: String, choice: String) -> void:
+	report_draft().choices[key] = choice
+	changed.emit()
+
+
+func set_report_request(request_id: String) -> void:
+	var d := report_draft()
+	d.request = "" if d.request == request_id else request_id
+	changed.emit()
+
+
+func send_report() -> void:
+	var d := report_draft()
+	dispatch({"type": "submit_report", "choices": d.choices.duplicate(), "request": d.request})
+
+
 func _clear_ui() -> void:
 	view = ""
 	analyst_open = false
@@ -222,6 +301,11 @@ func _clear_ui() -> void:
 	board_form = {}
 	map_draft = {"op_id": "", "stops": []}
 	sdr_run = {}
+	cipher_tab = "incoming"
+	cipher_selected = ""
+	cipher_key_set = ""
+	cipher_anim = {}
+	cipher_draft = {"week": 0, "choices": {}, "request": ""}
 
 
 func _load_settings() -> void:
@@ -230,4 +314,5 @@ func _load_settings() -> void:
 		var sc: float = r.data.get("text_scale", 1.0)
 		if TEXT_SCALES.any(func(x): return is_equal_approx(x, sc)):
 			settings.text_scale = sc
+		settings.instant_text = r.data.get("instant_text", false) == true
 	Style.text_scale = settings.text_scale
