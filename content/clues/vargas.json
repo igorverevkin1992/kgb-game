@@ -142,5 +142,25 @@
         "axis": "compromise"
       }
     ]
+  },
+  {
+    "clue_id": "clue_vargas_slip_cash",
+    "source": {
+      "channel": "meeting",
+      "from": "dlg_a1_vargas"
+    },
+    "title": {
+      "ru": "Оговорка о кассе"
+    },
+    "text": {
+      "ru": "На встрече Варгас проговорилась: касса снова не сошлась, на этот раз на двести долларов. Недостача повторяется."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_vargas_ellen",
+        "axis": "compromise"
+      }
+    ],
+    "chunk": "в кассе опять не сошлось на двести долларов"
   }
 ]

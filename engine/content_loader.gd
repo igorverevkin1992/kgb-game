@@ -1,7 +1,7 @@
 class_name ContentLoader
 ## Чтение и проверка контента из папки `content/`. Результат `load_dir()`:
 ##   {content: Dictionary|null, issues: Array, errors: Array, warnings: Array}
-## content — словарь: campaign, balance, map, cues, targets, clues, cables, ops, polygraph, requests.
+## content — словарь: campaign, balance, map, cues, targets, clues, cables, ops, polygraph, requests, dialogs.
 
 const DEFAULT_DIR := "res://content"
 const SINGLE := {
@@ -18,6 +18,7 @@ const FOLDERS := {
 	"ops": {"spec": "op", "id": "op_id", "list": false, "kind": "Операция"},
 	"polygraph": {"spec": "polygraph", "id": "exam_id", "list": false, "kind": "Экзамен"},
 	"requests": {"spec": "request", "id": "request_id", "list": true, "kind": "Запрос в Центр"},
+	"dialogs": {"spec": "dialog", "id": "dialog_id", "list": false, "kind": "Беседа"},
 }
 
 static var _cached := {}
@@ -82,7 +83,7 @@ static func game_content() -> Dictionary:
 static func parse(entries: Array) -> Dictionary:
 	var issues: Array = []
 	var file_of := {}
-	var content := {"targets": [], "clues": [], "cables": [], "ops": [], "polygraph": [], "requests": []}
+	var content := {"targets": [], "clues": [], "cables": [], "ops": [], "polygraph": [], "requests": [], "dialogs": []}
 	var singles := {}
 
 	var register := func(id: String, kind: String, path: String) -> void:
@@ -98,7 +99,7 @@ static func parse(entries: Array) -> Dictionary:
 			continue
 		var folder: String = path.get_slice("/", 0) if path.contains("/") else ""
 		if not FOLDERS.has(folder):
-			issues.append({"level": "error", "rule": "layout", "file": path, "message": "Файл лежит вне известных папок. Допустимо: campaign.json, balance.json, map/sites.json, map/cues.json, targets/, clues/, cables/, ops/, polygraph/, requests/"})
+			issues.append({"level": "error", "rule": "layout", "file": path, "message": "Файл лежит вне известных папок. Допустимо: campaign.json, balance.json, map/sites.json, map/cues.json, targets/, clues/, cables/, ops/, polygraph/, requests/, dialogs/"})
 			continue
 		var f: Dictionary = FOLDERS[folder]
 		var spec := ContentSchemas.get_spec(f.spec)
@@ -151,7 +152,7 @@ const RULE_RU := {
 	"three-clue": "три улики", "mice-three-clue": "три улики на мотив", "softlock": "тупик",
 	"robustness": "устойчивость", "unreachable": "недостижимо", "sdr": "проверочный маршрут",
 	"weeks": "недели", "text-length": "длина текста", "translation": "перевод", "polygraph": "полиграф",
-	"balance": "баланс", "board": "доска мотивов", "cipher": "шифроузел",
+	"balance": "баланс", "board": "доска мотивов", "cipher": "шифроузел", "dialog": "беседа",
 }
 
 

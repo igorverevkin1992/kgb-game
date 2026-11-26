@@ -41,6 +41,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if Game.service_open or event.ctrl_pressed or event.alt_pressed or event.meta_pressed:
 		return
+	# Катушка на «Тембр-2М»: ← → — перемотка по строкам, пробел — к следующей оговорке.
+	if Game.view == "dialog" and Game.state.meeting == null and Game.tape_selected >= 0:
+		if key == KEY_LEFT or key == KEY_RIGHT:
+			Game.tape_seek(-1 if key == KEY_LEFT else 1)
+			get_viewport().set_input_as_handled()
+			return
+		if key == KEY_SPACE:
+			Game.tape_next_slip()
+			get_viewport().set_input_as_handled()
+			return
 	if key >= KEY_1 and key <= KEY_7:
 		var v := Modules.by_hotkey(key - KEY_0)
 		if v != "":

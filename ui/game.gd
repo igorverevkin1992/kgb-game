@@ -41,6 +41,10 @@ var cipher_selected := ""
 var cipher_key_set := ""
 var cipher_anim := {}
 var cipher_draft := {"week": 0, "choices": {}, "request": ""}
+## Беседа: выбранный козырь, открытая катушка (номер в state.tapes, -1 — нет) и головка.
+var meeting_trump := ""
+var tape_selected := -1
+var tape_cursor := 0
 
 
 func _ready() -> void:
@@ -94,6 +98,11 @@ func dispatch(action: Dictionary) -> void:
 		return
 	Saves.persist(storage, prev, r.state, content)
 	state = r.state
+	# Встреча закончилась — на магнитофоне сразу её катушка, головка на последней строке.
+	if prev.meeting != null and state.meeting == null:
+		meeting_trump = ""
+		tape_selected = state.tapes.size() - 1
+		tape_cursor = state.tapes[-1].lines.size() - 1
 	last_events = r.events
 	last_error = ""
 	saved_at = Time.get_ticks_msec()
@@ -226,6 +235,57 @@ func set_sdr_run(run: Dictionary) -> void:
 	changed.emit()
 
 
+# ——— Беседа ———
+
+func start_meeting(target_id: String) -> void:
+	meeting_trump = ""
+	tape_selected = -1
+	view = "dialog"
+	dispatch({"type": "start_meeting", "target_id": target_id})
+
+
+func select_trump(clue_id: String) -> void:
+	meeting_trump = "" if meeting_trump == clue_id else clue_id
+	changed.emit()
+
+
+## Ответ тоном (вместе с выбранным козырем, если он есть).
+func meeting_reply(tone: String) -> void:
+	var clue := meeting_trump
+	meeting_trump = ""
+	dispatch({"type": "meeting_turn", "tone": tone, "clue_id": clue})
+
+
+func select_tape(i: int) -> void:
+	tape_selected = i
+	tape_cursor = 0
+	changed.emit()
+
+
+func tape_seek(delta: int) -> void:
+	if tape_selected < 0 or tape_selected >= state.tapes.size():
+		return
+	tape_cursor = clampi(tape_cursor + delta, 0, state.tapes[tape_selected].lines.size() - 1)
+	changed.emit()
+
+
+## Пробел на катушке: к следующей строке с неснятой оговоркой (по кругу).
+func tape_next_slip() -> void:
+	if tape_selected < 0 or tape_selected >= state.tapes.size():
+		return
+	var tape: Dictionary = state.tapes[tape_selected]
+	var slips := DialogView.slip_lines(state, Meeting.dialog_by_id(content, tape.dialog_id), tape.lines)
+	if slips.is_empty():
+		return
+	var nxt: int = slips[0]
+	for i in slips:
+		if i > tape_cursor:
+			nxt = i
+			break
+	tape_cursor = nxt
+	changed.emit()
+
+
 # ——— Шифроузел ———
 
 func open_cipher(tab: String) -> void:
@@ -306,6 +366,9 @@ func _clear_ui() -> void:
 	cipher_key_set = ""
 	cipher_anim = {}
 	cipher_draft = {"week": 0, "choices": {}, "request": ""}
+	meeting_trump = ""
+	tape_selected = -1
+	tape_cursor = 0
 
 
 func _load_settings() -> void:

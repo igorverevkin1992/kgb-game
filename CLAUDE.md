@@ -31,7 +31,7 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
 
 ## Архитектура
 - `content/`: игровые данные JSON (пользователь правит сам). `campaign.json`, `balance.json`,
-  `map/sites.json`, `map/cues.json`, `targets/`, `clues/`, `cables/`, `ops/`, `polygraph/`, `requests/`.
+  `map/sites.json`, `map/cues.json`, `targets/`, `clues/`, `cables/`, `ops/`, `polygraph/`, `requests/`, `dialogs/`.
 - `engine/` — чистый GDScript без узлов и экрана, всё — `static func` над словарями:
   - `schema.gd` + `content_schemas.gd` — проверка схем (замена Zod): русские сообщения,
     значения по умолчанию, предупреждение о неизвестных полях (опечатки);
@@ -47,11 +47,15 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
     доступ, канал — проверка тройкой) и берёт подсказки (`use_hint`). Вербовка `success` требует
     утверждённого заключения. Знание о мотиве на доске — по приколотым уликам (`axis_knowledge`).
     Шифроузел (шаг 6): `verify_cable` (accept/query, `state.verified`), `submit_report` принимает
-    `choices` по фактам недели и `request` — запрос в Центр (`state.requests`);
+    `choices` по фактам недели и `request` — запрос в Центр (`state.requests`). Беседа (шаг 7):
+    `start_meeting`, `meeting_turn {tone, clue_id}`, `meeting_offer`, `meeting_abort`;
+    `state.meeting` — идущая встреча, `state.tapes` — катушки; `recruitment` — прямой исход для тестов;
+  - `meeting.gd` — беседа: условия встречи, ход «тон + козырь» (ready/early), строки стенограммы
+    как ссылки на контент, оговорки (`heard`), `winnable` — поиск для валидатора;
   - `cipher.gd` — ключевой блокнот (ключ и контрольная группа недели), подложные директивы
     (`forged`), факты недели из журнала, `classify` → truth/embellished/silence, `report_effects`
     (те же числа, что применит движок — для предпросмотра), запросы и срок акта с продлением;
-  - `saves.gd` — формат v5 (pinned, analysis, verified, requests; v4 переносится), проверка при загрузке, автосейв, чекпоинты месяц/акт (до 12),
+  - `saves.gd` — формат v6 (… verified, requests, meeting, tapes; v4 и v5 переносятся), проверка при загрузке, автосейв, чекпоинты месяц/акт (до 12),
     3 слота, «Железный занавес» (флаг `mode_ironman`); `FileStorage` (user://saves), `MemoryStorage`;
   - `map_geo.gd` — мили, 25-мильная зона, разбор маршрута; `rng.gd` — mulberry32; `util.gd` —
     JSON (числа из JSON приходят float — `normalize_numbers` делает целые int); `modules.gd`.
@@ -67,7 +71,8 @@ tools/export.sh windows|web|all   # build/windows/LiniyaKR.exe, build/web/
     (оболочки модулей), `board_view.gd` (доска мотивов: стопка улик, ячейки Д/И/К/С как
     DropZone с drag&drop и кликом, заключение тройкой, подсказки), `map_canvas.gd` + `map_module.gd` (карта, «Сбор» →
     «Вердикт»), `overlays.gd` (сводка аналитика, служебная папка, итог), `cipher_view.gd` (шифроузел:
-    блокнот, роторы, лента, сверка, шифрограмма с плашкой последствий).
+    блокнот, роторы, лента, сверка, шифрограмма с плашкой последствий), `dialog_view.gd`
+    («Тембр-2М»: встреча с индикаторами и козырями, катушки с таймкодами и оговорками).
   - `style.gd` — палитра, шрифты PT (кириллица + латинский запасной файл), фабрики элементов;
     `Style.fs()` применяет масштаб текста 100–130 %. `i18n.gd` (`T.t`, `T.loc`), `fmt.gd` (суммы,
     даты), `signals.gd` (диегетические сигналы рисков).

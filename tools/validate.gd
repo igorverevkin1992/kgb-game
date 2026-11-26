@@ -13,8 +13,8 @@ func _init() -> void:
 	print("Проверка контента: %s\n" % ProjectSettings.globalize_path(dir))
 	if report.content != null:
 		var c: Dictionary = report.content
-		print("Акты: %d · цели: %d · улики: %d · депеши: %d · операции: %d · экзамены: %d · запросы в Центр: %d · точки карты: %d\n" % [
-			c.campaign.acts.size(), c.targets.size(), c.clues.size(), c.cables.size(), c.ops.size(), c.polygraph.size(), c.requests.size(), c.map.sites.size()])
+		print("Акты: %d · цели: %d · улики: %d · депеши: %d · операции: %d · экзамены: %d · запросы в Центр: %d · беседы: %d · точки карты: %d\n" % [
+			c.campaign.acts.size(), c.targets.size(), c.clues.size(), c.cables.size(), c.ops.size(), c.polygraph.size(), c.requests.size(), c.dialogs.size(), c.map.sites.size()])
 	var errors: Array = r.broken.map(func(b): return "%s: файл не читается — %s [файл]" % [b.path, b.message])
 	errors.append_array(report.errors.map(ContentLoader.format_issue))
 	if not errors.is_empty():

@@ -49,7 +49,7 @@ static func _content(view: String) -> Control:
 		"finance":
 			return Shells.finance()
 		"dialog":
-			return Shells.dialog()
+			return DialogView.build()
 		_:
 			return Shells.counterintel()
 

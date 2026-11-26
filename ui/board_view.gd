@@ -198,10 +198,10 @@ static func _dossier(t: Dictionary, ts: Dictionary) -> Control:
 		var ab := Style.paper_button(T.t("board.analysis"), "analysis-" + t.target_id)
 		ab.pressed.connect(Game.open_analysis.bind(t.target_id))
 		actions.add_child(ab)
-	# Временная встреча до вербовочного диалога (шаг 7): только вечером и по утверждённому досье.
-	if an.approved and not ts.recruited and not ts.lost and s.phase == "evening":
+	# Встреча на «Тембр-2М»: вечером и по утверждённому досье.
+	if an.approved and Meeting.meet_error(s, Game.content, t.target_id) == "":
 		var mb := Style.paper_button(T.t("board.meet"), "meet-" + t.target_id)
-		mb.pressed.connect(Game.dispatch.bind({"type": "recruitment", "target_id": t.target_id, "result": "success"}))
+		mb.pressed.connect(Game.start_meeting.bind(t.target_id))
 		actions.add_child(mb)
 	if actions.get_child_count() > 0:
 		v.add_child(actions)

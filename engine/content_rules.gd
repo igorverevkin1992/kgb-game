@@ -9,7 +9,7 @@ const WORDS_MAX := 150
 ## Сколько улик нужно, чтобы вывод считался подтверждённым.
 const THREE_CLUES := 3
 const POLYGRAPH_VARS := ["control_peak", "relevant_peak", "rapport", "skepticism"]
-const CHANNEL_RU := {"agent": "агент", "document": "документ", "field": "полевая разведка"}
+const CHANNEL_RU := {"agent": "агент", "document": "документ", "field": "полевая разведка", "meeting": "беседа"}
 const AXIS_RU := {"money": "Деньги", "ideology": "Идеология", "compromise": "Компромат", "ego": "Самолюбие"}
 
 
@@ -26,6 +26,7 @@ static func check(content: Dictionary, file_of: Dictionary, opts := {}) -> Array
 	_balance(ctx)
 	_board(ctx)
 	_cipher(ctx)
+	_dialogs(ctx)
 	return ctx.issues
 
 
@@ -57,8 +58,8 @@ static func _references(ctx: Dictionary) -> void:
 	var c: Dictionary = ctx.content
 	var targets := _ids(c.targets, "target_id")
 	var clues := _ids(c.clues, "clue_id")
-	var exists := {"agent": targets, "document": _ids(c.cables, "cable_id"), "field": _ids(c.ops, "op_id")}
-	var kind_ru := {"agent": "цели", "document": "депеши", "field": "операции"}
+	var exists := {"agent": targets, "document": _ids(c.cables, "cable_id"), "field": _ids(c.ops, "op_id"), "meeting": _ids(c.dialogs, "dialog_id")}
+	var kind_ru := {"agent": "цели", "document": "депеши", "field": "операции", "meeting": "беседы"}
 	for clue in c.clues:
 		var src: Dictionary = clue.source
 		if not exists[src.channel].has(src.from):
@@ -329,6 +330,12 @@ static func _board(ctx: Dictionary) -> void:
 				_push(ctx, "error", "board", "Улика из документа без фрагмента chunk: игроку нечего выделить в тексте", where, clue.clue_id)
 			elif cables.has(clue.source.from) and not String(cables[clue.source.from].body.ru).contains(clue.chunk):
 				_push(ctx, "error", "board", "Фрагмента «%s» нет в тексте документа «%s» (нужно дословное совпадение)" % [clue.chunk, clue.source.from], where, clue.clue_id)
+		elif clue.source.channel == "meeting":
+			var d := Meeting.dialog_by_id(c, clue.source.from)
+			if not clue.has("chunk"):
+				_push(ctx, "error", "board", "Оговорка на встрече без фрагмента chunk: игроку нечего выделить в стенограмме", where, clue.clue_id)
+			elif not d.is_empty() and not _dialog_replies(d).any(func(t): return t.contains(clue.chunk)):
+				_push(ctx, "error", "board", "Фрагмента «%s» нет в репликах собеседника в беседе «%s» (нужно дословное совпадение)" % [clue.chunk, d.dialog_id], where, clue.clue_id)
 		elif clue.has("chunk"):
 			_push(ctx, "warning", "board", "Фрагмент chunk нужен только уликам из документов", where, clue.clue_id)
 	for t in c.targets:
@@ -360,3 +367,48 @@ static func _cipher(ctx: Dictionary) -> void:
 		var g: Dictionary = r.granted
 		if g.fund_usd == 0 and g.centre_trust == 0 and g.moscow_pressure == 0 and g.extend_act_weeks == 0:
 			_push(ctx, "warning", "cipher", "Одобренный запрос ничего не меняет: задайте хотя бы одно поле в granted", "%s.granted" % r.request_id, r.request_id)
+
+
+## Реплики собеседника в беседе (русский текст): вопросы, ответы на тоны и козыри, согласие.
+static func _dialog_replies(d: Dictionary) -> Array:
+	var out: Array = [String(d.offer.reply.ru)]
+	for b in d.beats:
+		out.append(String(b.prompt.ru))
+		for tone in Meeting.TONES:
+			out.append(String(b.tones[tone].reply.ru))
+	for t in d.trumps:
+		out.append(String(t.ready.reply.ru))
+		out.append(String(t.early.reply.ru))
+	return out
+
+
+## 12. Беседы: цель существует, козыри — улики по этой цели, беседу можно выиграть.
+static func _dialogs(ctx: Dictionary) -> void:
+	var c: Dictionary = ctx.content
+	var seen := {}
+	for d in c.dialogs:
+		var id: String = d.dialog_id
+		var t := Campaign.target_by_id(c, d.target_id)
+		if t.is_empty():
+			_push(ctx, "error", "dialog", "Беседа с несуществующей целью «%s»" % d.target_id, "%s.target_id" % id, id)
+			continue
+		if seen.has(d.target_id):
+			_push(ctx, "error", "dialog", "У цели «%s» уже есть беседа «%s»: нужна одна" % [d.target_id, seen[d.target_id]], "%s.target_id" % id, id)
+		seen[d.target_id] = id
+		var relevant: Array = []
+		for i in d.trumps.size():
+			var clue := Campaign.clue_by_id(c, d.trumps[i].clue_id)
+			if clue.is_empty():
+				_push(ctx, "error", "dialog", "Козырь ссылается на несуществующую улику «%s»" % d.trumps[i].clue_id, "%s.trumps[%d]" % [id, i], id)
+			elif not Campaign.clue_relevant(c, clue, d.target_id):
+				_push(ctx, "error", "dialog", "Козырь «%s» не относится к цели: его не приколоть к её досье" % clue.clue_id, "%s.trumps[%d]" % [id, i], id)
+			else:
+				relevant.append(clue.clue_id)
+		var r0: int = t.initial_state.rapport
+		var a0: int = t.initial_state.paranoia
+		if a0 >= int(d.max_anxiety):
+			_push(ctx, "error", "dialog", "Стартовая тревога цели (%d) уже не ниже предела беседы (%d)" % [a0, d.max_anxiety], "%s.max_anxiety" % id, id)
+		elif not Meeting.winnable(d, r0, a0, relevant):
+			_push(ctx, "error", "dialog", "Беседу невозможно выиграть даже идеальной игрой: Раппорт не доходит до %d%% раньше, чем Тревога до %d%%" % [d.offer_rapport, d.max_anxiety], id, id)
+		elif Meeting.winnable(d, r0, a0, []):
+			_push(ctx, "warning", "dialog", "Беседу можно выиграть без козырей из досье — доска мотивов на встрече не нужна", id, id)

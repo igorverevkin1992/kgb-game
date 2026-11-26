@@ -12,6 +12,9 @@ class_name Campaign
 ##   {type: "pin_clue", clue_id, target_id, axis} — приколоть улику к досье (axis "" — общее поле)
 ##   {type: "submit_analysis", target_id, axis, access, channel} — заключение по досье (проверка тройкой)
 ##   {type: "use_hint", target_id} — подсказка: намёк → документ → ответ
+##   {type: "start_meeting", target_id} · {type: "meeting_turn", tone, clue_id?} — вербовочная беседа
+##   {type: "meeting_offer"} · {type: "meeting_abort"} — сделать предложение / прервать контакт
+##   (`recruitment` — прямой исход без беседы, для тестов и отладки)
 ##   {type: "verify_cable", cable_id, decision: "accept"|"query"} — сверка директивы (шифроузел)
 ##   {type: "submit_report", report: "truth"|"embellished"|"silence"} — быстрое донесение, или
 ##   {type: "submit_report", choices: {fact_key: "as_is"|"embellish"|"omit"}, request: "req_…"|""}
@@ -60,6 +63,8 @@ static func new_campaign(content: Dictionary) -> Dictionary:
 		"analysis": {},
 		"verified": {},
 		"requests": [],
+		"meeting": null,
+		"tapes": [],
 		"rng": b.start.seed,
 		"ending": null,
 		"log": [],
@@ -88,6 +93,8 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 		"advance_phase":
 			if not NEXT_PHASE.has(s.phase):
 				return _reject(state, "Ночью неделя завершается донесением в Центр")
+			if s.meeting != null:
+				return _reject(state, "Идёт встреча: сделайте предложение или прервите контакт")
 			if s.phase == "evening" and not s.planned_ops.is_empty():
 				return _reject(state, "Не разыграны операции: %s" % ", ".join(s.planned_ops.map(func(id): return _op_title(content, id))))
 			_set_phase(ctx, NEXT_PHASE[s.phase])
@@ -148,25 +155,20 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 					var missing: Array = target.approach.key_axes.filter(func(a): return not ts.discovered_axes.has(a))
 					if not missing.is_empty():
 						return _reject(state, "Не вскрыты ведущие мотивы: %s" % ", ".join(missing.map(func(a): return AXIS_NAME_RU[a])))
-					ts.recruited = true
-					_emit(ctx, {"type": "target_recruited", "target_id": target.target_id})
-					var def := current_act_def(s, content)
-					if not def.is_empty() and def.goal.recruit_any_of.has(target.target_id):
-						s.goal_reached = true
+					_recruit(ctx, target.target_id)
 				"failed":
-					ts.lost = true
-					s.week_failures += 1
-					_emit(ctx, {"type": "target_lost", "target_id": target.target_id})
-					_add_risk(ctx, "sog_heat", content.balance.sog_heat.failed_recruitment, "failed_recruitment")
+					_lose(ctx, target.target_id)
 				_:
 					_emit(ctx, {"type": "recruitment_postponed", "target_id": target.target_id})
 
 		"take_clue":
 			var clue := clue_by_id(content, action.clue_id)
-			if clue.is_empty() or clue.source.channel != "document":
+			if clue.is_empty() or not ["document", "meeting"].has(clue.source.channel):
 				return _reject(state, "Эту улику нельзя взять из документов")
-			if not s.delivered_cables.has(clue.source.from):
+			if clue.source.channel == "document" and not s.delivered_cables.has(clue.source.from):
 				return _reject(state, "Этот документ ещё не поступал")
+			if clue.source.channel == "meeting" and not Meeting.heard(s, content, clue):
+				return _reject(state, "Эта фраза ещё не прозвучала на встречах")
 			if s.clues.has(clue.clue_id):
 				return _reject(state, "Эта улика уже снята")
 			_give_clue(ctx, clue.clue_id)
@@ -209,6 +211,47 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			an.hint_level += 1
 			s.analysis[action.target_id] = an
 			_emit(ctx, {"type": "hint_used", "target_id": action.target_id, "level": an.hint_level})
+
+		"start_meeting":
+			var err := Meeting.meet_error(s, content, action.get("target_id", ""))
+			if err != "":
+				return _reject(state, err)
+			s.meeting = Meeting.start(s, content, action.target_id)
+			_emit(ctx, {"type": "meeting_started", "target_id": action.target_id})
+
+		"meeting_turn":
+			if s.meeting == null:
+				return _reject(state, "Встреча не идёт")
+			var d := Meeting.dialog_by_id(content, s.meeting.dialog_id)
+			if not Meeting.topics_left(d, s.meeting):
+				return _reject(state, "Темы для разговора исчерпаны: сделайте предложение или прервите контакт")
+			if not Meeting.TONES.has(action.get("tone", "")):
+				return _reject(state, "Выберите тон ответа")
+			var clue_id: String = action.get("clue_id", "")
+			if clue_id != "" and not Meeting.available_trumps(s, content, s.meeting).any(func(t): return t.clue_id == clue_id):
+				return _reject(state, "Этот козырь сейчас не выложить: улика должна быть приколота к досье и ещё не использована")
+			s.meeting = Meeting.apply_turn(d, s.meeting, action.tone, clue_id)
+			if s.meeting.anxiety >= Meeting.max_anxiety(d):
+				_finish_meeting(ctx, "failed")
+
+		"meeting_offer":
+			if s.meeting == null:
+				return _reject(state, "Встреча не идёт")
+			var d := Meeting.dialog_by_id(content, s.meeting.dialog_id)
+			if not Meeting.can_offer(d, s.meeting):
+				return _reject(state, "Рано: Раппорт ниже %d%%" % d.offer_rapport)
+			var target := target_by_id(content, s.meeting.target_id)
+			var missing: Array = target.approach.key_axes.filter(func(a): return not s.targets[target.target_id].discovered_axes.has(a))
+			if not missing.is_empty():
+				return _reject(state, "Не вскрыты ведущие мотивы: %s" % ", ".join(missing.map(func(a): return AXIS_NAME_RU[a])))
+			s.meeting.lines.append({"kind": "my_offer"})
+			s.meeting.lines.append({"kind": "reply_offer"})
+			_finish_meeting(ctx, "recruited")
+
+		"meeting_abort":
+			if s.meeting == null:
+				return _reject(state, "Встреча не идёт")
+			_finish_meeting(ctx, "aborted")
 
 		"verify_cable":
 			var cable := cable_by_id(content, action.cable_id)
@@ -430,6 +473,41 @@ static func _resolve_op(ctx: Dictionary, op: Dictionary, decision: String) -> vo
 	for clue in content.clues:
 		if clue.source.channel == "field" and clue.source.from == op.op_id:
 			_give_clue(ctx, clue.clue_id)
+
+
+## Конец встречи: запись уходит на катушку, исход применяется к цели.
+static func _finish_meeting(ctx: Dictionary, outcome: String) -> void:
+	var s: Dictionary = ctx.s
+	var m: Dictionary = s.meeting
+	var ts: Dictionary = s.targets[m.target_id]
+	m.lines.append({"kind": "end", "outcome": outcome})
+	s.tapes.append({"target_id": m.target_id, "dialog_id": m.dialog_id, "week": s.week, "outcome": outcome, "lines": m.lines})
+	s.meeting = null
+	ts.rapport = m.rapport
+	ts.paranoia = maxi(0, m.anxiety - int(ctx.content.balance.meeting.anxiety_cooldown))
+	_emit(ctx, {"type": "meeting_ended", "target_id": m.target_id, "outcome": outcome})
+	match outcome:
+		"recruited":
+			_recruit(ctx, m.target_id)
+		"failed":
+			_lose(ctx, m.target_id)
+
+
+static func _recruit(ctx: Dictionary, target_id: String) -> void:
+	var s: Dictionary = ctx.s
+	s.targets[target_id].recruited = true
+	_emit(ctx, {"type": "target_recruited", "target_id": target_id})
+	var def := current_act_def(s, ctx.content)
+	if not def.is_empty() and def.goal.recruit_any_of.has(target_id):
+		s.goal_reached = true
+
+
+static func _lose(ctx: Dictionary, target_id: String) -> void:
+	var s: Dictionary = ctx.s
+	s.targets[target_id].lost = true
+	s.week_failures += 1
+	_emit(ctx, {"type": "target_lost", "target_id": target_id})
+	_add_risk(ctx, "sog_heat", ctx.content.balance.sog_heat.failed_recruitment, "failed_recruitment")
 
 
 ## Директива сверена: принять к исполнению или запросить подтверждение у Центра.

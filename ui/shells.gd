@@ -2,7 +2,7 @@ class_name Shells
 ## Оболочки модулей. Каждая уже показывает живые данные кампании, а полноценная механика
 ## появится в своём шаге плана (номер шага — в подписи «в разработке»).
 
-const PLAN_STEP := {"dialog": 7, "finance": 8, "counterintel": 13}
+const PLAN_STEP := {"finance": 8, "counterintel": 13}
 
 
 static func _shell(id: String) -> Control:
@@ -24,15 +24,6 @@ static func finance() -> Control:
 	v.add_child(Style.label(T.t("finance.threshold"), Style.mono(), 16, Color(Style.INK, 0.75)))
 	page.add_child(v)
 	root.add_child(page)
-	return root
-
-
-static func dialog() -> Control:
-	var root := _shell("dialog")
-	root.add_child(Style.art("recorder", Rect2(28, 76, 760, 640)))
-	var note := Style.label(T.t("dialog.empty"), Style.mono(), 15, Color(Style.PAPER, 0.8))
-	note.position = Vector2(830, 90)
-	root.add_child(note)
 	return root
 
 

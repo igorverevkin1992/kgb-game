@@ -102,6 +102,15 @@ static func _object(v: String) -> Control:
 			cb.add_child(Style.label(str(pending), Style.form(true), 20, Style.PAPER_LIGHT, false))
 			cb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			b.add_child(cb)
+	if v == "dialog" and unlocked:
+		var ready: int = Game.content.targets.filter(func(t): return Meeting.meet_error(Game.state, Game.content, t.target_id) == "").size()
+		if ready > 0 or Game.state.meeting != null:
+			var db := Style.panel(Style.STAMP_RED, 6)
+			db.name = "dialog-ready"
+			db.position = Vector2(b.size.x - 60, 20)
+			db.add_child(Style.label(T.t("dialog.recording") if Game.state.meeting != null else str(ready), Style.form(true), 18, Style.PAPER_LIGHT, false))
+			db.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			b.add_child(db)
 	if v == "inbox":
 		var unread := Cipher.unread_mail(Game.state, Game.content).size()
 		if unread > 0:

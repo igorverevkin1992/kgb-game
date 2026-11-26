@@ -59,5 +59,8 @@
     "query_genuine_pressure": 3,
     "query_genuine_trust": -2,
     "query_forged_trust": 5
+  },
+  "meeting": {
+    "anxiety_cooldown": 20
   }
 }

@@ -133,6 +133,8 @@ static func _event_text(e: Dictionary) -> String:
 			return T.t("event.report_" + e.report)
 		"request_answered":
 			return T.t("event.request_" + ("granted" if e.granted else "refused"), {"name": T.loc(Cipher.request_by_id(c, e.request_id).title)})
+		"meeting_ended":
+			return T.t("event.meeting_" + e.outcome, {"name": T.loc(Campaign.target_by_id(c, e.target_id).name)})
 		"fund_changed":
 			return T.t("event.fund_changed", {"from": Fmt.usd(e.from), "to": Fmt.usd(e.to)})
 	return ""

@@ -61,11 +61,11 @@ static func _build() -> void:
 
 	_cache["clue"] = Schema.obj({
 		"clue_id": Schema.id("clue"),
-		"source": Schema.obj({"channel": Schema.e(["agent", "document", "field"]), "from": Schema.s("^(tar|cable|op)_[a-z0-9_]+$", "источник: id цели (tar_), депеши (cable_) или операции (op_)")}),
+		"source": Schema.obj({"channel": Schema.e(["agent", "document", "field", "meeting"]), "from": Schema.s("^(tar|cable|op|dlg)_[a-z0-9_]+$", "источник: id цели (tar_), депеши (cable_), операции (op_) или беседы (dlg_)")}),
 		"title": text,
 		"text": text,
 		"reveals": Schema.opt(Schema.arr(Schema.obj({"target_id": Schema.id("tar"), "axis": axis})), []),
-		# Для улик из документов: фраза из текста документа, которую игрок «снимает» кликом.
+		# Для улик из документов и оговорок на встречах: фраза из текста, которую игрок «снимает» кликом.
 		"chunk": Schema.opt(Schema.s()),
 	})
 
@@ -79,6 +79,30 @@ static func _build() -> void:
 		"body": text,
 		# Подложная директива (шифроузел): контрольная группа не совпадёт с ключевым блокнотом.
 		"forged": Schema.opt({"type": "bool"}, false),
+	})
+
+	# Вербовочная беседа (магнитофон «Тембр-2М»): реплики по тонам и козыри из досье.
+	var fx := Schema.obj({"rapport": delta, "anxiety": delta, "reply": text})
+	var tone_fx := Schema.obj({"line": text, "rapport": delta, "anxiety": delta, "reply": text})
+	_cache["dialog"] = Schema.obj({
+		"dialog_id": Schema.id("dlg"),
+		"target_id": Schema.id("tar"),
+		"title": text,
+		"setting": text,
+		"offer_rapport": Schema.i(1, 100),
+		"max_anxiety": Schema.opt(Schema.i(1, 100), 100),
+		"offer": Schema.obj({"line": text, "reply": text}),
+		"beats": Schema.arr(Schema.obj({
+			"prompt": text,
+			"tones": Schema.obj({"empathy": tone_fx, "pragmatic": tone_fx, "pressure": tone_fx, "ego": tone_fx}),
+		}), 1),
+		"trumps": Schema.opt(Schema.arr(Schema.obj({
+			"clue_id": Schema.id("clue"),
+			"line": text,
+			"min_rapport": scale,
+			"ready": fx,
+			"early": fx,
+		})), []),
 	})
 
 	# Запросы в Центр, которые резидент может приложить к ночной шифрограмме.
@@ -188,6 +212,7 @@ static func _build() -> void:
 		"lies": Schema.obj({"check_every_weeks": Schema.i(1), "uncover_chance_embellished": chance, "uncover_chance_silence": chance}),
 		"treasury": Schema.obj({"audit_mole_hunt_multiplier": Schema.n(1, 5)}),
 		"thresholds": Schema.obj({"warning": scale, "danger": scale}),
+		"meeting": Schema.obj({"anxiety_cooldown": Schema.i(0, 100)}),
 		"cipher": Schema.obj({
 			"accept_forged_sog_heat": delta, "accept_forged_flag": flag,
 			"query_genuine_pressure": delta, "query_genuine_trust": delta, "query_forged_trust": delta,

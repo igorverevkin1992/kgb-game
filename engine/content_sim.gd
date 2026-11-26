@@ -18,6 +18,10 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 	var targets: Array = content.targets.filter(func(t): return t.act <= max_act)
 	var ops: Array = content.ops.filter(func(o): return o.act <= max_act and not failed_ops.has(o.op_id))
 
+	# Беседа: оговорки слышны на встрече с установленной целью; без беседы цель не завербовать.
+	var dialog_target := {}
+	for d in content.get("dialogs", []):
+		dialog_target[d.dialog_id] = d.target_id
 	var st := {"clues": {}, "unlocked": {}, "recruited": {}, "ops": {}}
 	var changed := true
 	while changed:
@@ -32,7 +36,8 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 			var src: Dictionary = clue.source
 			var ok: bool = (src.channel == "document" and cables.has(src.from)) \
 				or (src.channel == "field" and st.ops.has(src.from)) \
-				or (src.channel == "agent" and st.recruited.has(src.from))
+				or (src.channel == "agent" and st.recruited.has(src.from)) \
+				or (src.channel == "meeting" and st.unlocked.has(dialog_target.get(src.from, "")))
 			if ok:
 				st.clues[clue.clue_id] = true
 				changed = true
@@ -44,7 +49,8 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 				st.unlocked[t.target_id] = true
 				changed = true
 		for t in targets:
-			if st.recruited.has(t.target_id) or not st.unlocked.has(t.target_id) or failed_targets.has(t.target_id):
+			if st.recruited.has(t.target_id) or not st.unlocked.has(t.target_id) or failed_targets.has(t.target_id) \
+					or not dialog_target.values().has(t.target_id):
 				continue
 			var known := true
 			for axis in t.approach.key_axes:
