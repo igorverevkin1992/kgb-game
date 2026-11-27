@@ -116,7 +116,7 @@ static func _object(v: String) -> Control:
 			db.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			b.add_child(db)
 	if v == "inbox":
-		var unread := Cipher.unread_mail(Game.state, Game.content).size() + Decisions.pending(Game.state, Game.content).size()
+		var unread := Cipher.unread_mail(Game.state, Game.content).size() + Decisions.pending(Game.state, Game.content).size() + (1 if Dangle.open(Game.state) else 0)
 		if unread > 0:
 			var badge := Style.panel(Style.STAMP_RED, 6)
 			badge.name = "inbox-unread"

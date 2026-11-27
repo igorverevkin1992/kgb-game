@@ -122,3 +122,36 @@ static func weeks(n: int, actions_per_week: Array) -> Array:
 	for i in n:
 		out.append_array(actions_per_week)
 	return out
+
+
+## Начало третьей фазы (неделя 17, утро): агенты из списка уже завербованы и лояльны,
+## решения второй фазы приняты. Для тестов и сценариев интерфейса.
+static func act3_state(agents: Array = []) -> Dictionary:
+	var c := content()
+	var s := fresh()
+	for id in agents:
+		s.targets[id].unlocked = true
+		s.targets[id].recruited = true
+		s.agents[id] = Finance.new_agent(s, c, id)
+		s.agents[id].loyalty = 70
+		s.agents[id].promise_kept = true
+	for d in c.decisions:
+		if int(d.act) < 3:
+			s.decisions[d.decision_id] = d.options[0].option_id
+	s.act = 2
+	s.week = 16
+	s.phase = "night"
+	s.goal_reached = true
+	return Campaign.dispatch(s, c, report("truth")).state
+
+
+## Прогон действий без TestCase (для сценариев интерфейса): ошибки печатаются.
+static func run(state: Dictionary, actions: Array) -> Dictionary:
+	var s := _collect(state, [])
+	for a in actions:
+		var r := Campaign.dispatch(s, content(), a)
+		if r.error != "":
+			push_error("действие %s отклонено: %s" % [JSON.stringify(a), r.error])
+			return s
+		s = _collect(r.state, [])
+	return s

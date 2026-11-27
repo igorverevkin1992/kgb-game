@@ -17,6 +17,25 @@ static func build() -> Control:
 	var list := Style.vbox(8)
 	list.name = "inbox-list"
 	list.custom_minimum_size.x = 420
+	# Пробный пакет «крота» — самым первым, пока ждёт решения.
+	if s.get("package") != null:
+		var open := Dangle.open(s)
+		var pb := Button.new()
+		pb.name = "package-item"
+		pb.focus_mode = Control.FOCUS_NONE
+		var psb := Style.box(Color(Style.STAMP_RED, 0.25 if Game.inbox_selected == PackageView.ITEM else 0.14), Style.STAMP_RED if open else Color(0, 0, 0, 0), 0, 0, 10)
+		psb.border_width_left = 4
+		for st in ["normal", "hover", "pressed"]:
+			pb.add_theme_stylebox_override(st, psb)
+		pb.pressed.connect(Game.select_document.bind(PackageView.ITEM))
+		var pv := Style.vbox(2)
+		pv.position = Vector2(14, 8)
+		pv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pv.add_child(Style.label(T.t("package.waiting") if open else T.t("decision.done"), Style.form(), 13, Color(Style.PAPER, 0.75)))
+		pv.add_child(Style.para(T.loc(Dangle.config(Game.content).title), 390, Style.form(open), 17, Style.PAPER))
+		pb.add_child(pv)
+		pb.custom_minimum_size = Vector2(420, 64)
+		list.add_child(pb)
 	# Решения резидента — первыми: ждущие решения отмечены красным.
 	for dec in Decisions.arrived(s, Game.content):
 		var waiting: bool = not s.decisions.has(dec.decision_id)
@@ -80,7 +99,9 @@ static func build() -> Control:
 	center.custom_minimum_size = Vector2(990, 0)
 	var cur_doc := Campaign.cable_by_id(Game.content, Game.inbox_selected)
 	var cur_dec := Decisions.by_id(Game.content, Game.inbox_selected)
-	if not cur_dec.is_empty() and Decisions.arrived(s, Game.content).has(cur_dec):
+	if Game.inbox_selected == PackageView.ITEM and s.get("package") != null:
+		center.add_child(PackageView.build())
+	elif not cur_dec.is_empty() and Decisions.arrived(s, Game.content).has(cur_dec):
 		center.add_child(DecisionView.build(cur_dec))
 	elif not cur_doc.is_empty() and s.delivered_cables.has(cur_doc.cable_id) and cur_doc.kind != "directive":
 		center.add_child(DocumentView.build(cur_doc))

@@ -160,7 +160,13 @@ static func _event_text(e: Dictionary) -> String:
 		"loyalty_changed":
 			return T.t("event.loyalty_changed", {"name": _tname(e.target_id), "from": e.from, "to": e.to})
 		"fund_changed":
+			if e.get("reason", "") == "allocation":
+				return T.t("event.fund_allocation", {"usd": Fmt.usd(e.to - e.from)})
 			return T.t("event.fund_changed", {"from": Fmt.usd(e.from), "to": Fmt.usd(e.to)})
+		"package_received", "package_accepted", "package_rejected":
+			return T.t("event." + e.type)
+		"package_checked":
+			return T.t("event.package_checked." + e.result, {"channel": T.t("package.channel." + e.channel)})
 	return ""
 
 

@@ -315,7 +315,7 @@ func set_instant_text(on: bool) -> void:
 ## Открыть документ в лотке; непрочитанный отмечается прочитанным.
 func select_document(cable_id: String) -> void:
 	inbox_selected = cable_id
-	if cable_id.begins_with("dec_"):
+	if cable_id.begins_with("dec_") or cable_id == PackageView.ITEM:
 		changed.emit()
 		return
 	if not state.read_cables.has(cable_id):

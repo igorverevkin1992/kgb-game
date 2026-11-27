@@ -192,10 +192,14 @@ static func _calculator(s: Dictionary, id: String) -> Control:
 	v.add_child(amount)
 	var inst := Style.hbox(8)
 	for i in Finance.INSTRUMENTS:
+		if i == "legend" and not Finance.legend_available(s, c):
+			continue  # перевод «наследства» — только через агента с банковским контуром
 		var on: bool = f.instrument == i
 		var b := Style.button(T.t("finance.instrument." + i), "instrument-" + i, Style.INK if on else Style.PAPER, Style.PAPER if on else Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.5), 14)
 		b.pressed.connect(Game.set_finance_form.bind(id, "instrument", i))
 		inst.add_child(b)
+	v.add_child(inst)
+	inst = Style.hbox(8)
 	if f.instrument == "cash":
 		inst.add_child(Style.label(T.t("finance.parts"), Style.form(), 14, Color(Style.PAPER, 0.8)))
 		for n in range(1, int(c.balance.finance.max_parts) + 1):

@@ -144,6 +144,12 @@ tools/telemetry-report.sh [папка] # сводка журналов плей�
   `engine/decisions.gd` (решения резидента, действие `decide`), тайник `op.contact_target_id`,
   приёмы наружки `sdr.technique` + депеши `teaches`, перк `sog_schedule`; UI — `decision_view.gd`,
   карточка смены фаз `Overlays.phase_card` (`Game.phase_card`), гул «Монополии» `SoundBank.set_tunnel`.
+- Третья фаза (шаг 12): `engine/dangle.gd` — пробный пакет и проверка на подставу (`state.package`,
+  действия `check_package`, `accept_package`, `reject_package`, запрос с `package_check`, блок
+  `package` акта в `campaign.json`); «слепое окно» `sdr.blind_window` + perk `sog_schedule`;
+  условия выходов `requires_recruited/flags/decisions`, `essential`; беседа с `requires_op`;
+  задача акта `goal.clues_all`, перевод Центра `fund_usd`, `days_per_week`; инструмент `legend`
+  (perk `legend`, Мендоса). UI — `package_view.gd` (лоток почты, элемент `pkg`).
 
 ## Договорённости
 - Пользователь немного программировал. Объясняй ключевые решения коротко и по-русски.

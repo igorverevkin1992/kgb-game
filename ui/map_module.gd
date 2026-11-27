@@ -100,6 +100,8 @@ static func _plan_panel(panel: VBoxContainer) -> void:
 		var sched := _schedule_note(op)
 		var b := Style.button("%s\n%s%s" % [T.loc(op.title), _site_name(op.location.site_id), ("\n" + sched) if sched != "" else ""], "op-" + op.op_id, Style.PAPER,
 			Color(Style.OCHRE, 0.18) if cur else Color(0, 0, 0, 0.25), Style.OCHRE if cur else Color(Style.PAPER, 0.55), 13)
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		b.custom_minimum_size.x = PANEL_W
 		b.disabled = limit
 		b.pressed.connect(Game.set_map_draft.bind(op.op_id, []))
 		panel.add_child(b)
@@ -223,7 +225,9 @@ static func _schedule_note(op: Dictionary) -> String:
 		if t.get("perks", []).has("sog_schedule") and s.targets[t.target_id].recruited and not s.targets[t.target_id].lost:
 			src = T.loc(t.name)
 	if src == "":
-		return ""
+		return T.t("sdr.blind.locked") if op.sdr.get("blind_window", false) else ""
+	if Campaign.blind_window(s, op, Game.content):
+		return T.t("sdr.schedule.blind", {"name": src})
 	return T.t("sdr.schedule.tail" if Campaign.tail_present(s, op, Game.content) else "sdr.schedule.clean", {"name": src})
 
 

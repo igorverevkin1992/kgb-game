@@ -17,24 +17,8 @@ func _do(s: Dictionary, a: Dictionary) -> Dictionary:
 	return Campaign.dispatch(s, H.content(), a)
 
 
-## Конец второй фазы: агенты из списка уже завербованы и лояльны → неделя 17, утро.
 func _act3(agents: Array = []) -> Dictionary:
-	var c := H.content()
-	var s := H.fresh()
-	for id in agents:
-		s.targets[id].unlocked = true
-		s.targets[id].recruited = true
-		s.agents[id] = Finance.new_agent(s, c, id)
-		s.agents[id].loyalty = 70
-		s.agents[id].promise_kept = true
-	for d in c.decisions:
-		if int(d.act) < 3:
-			s.decisions[d.decision_id] = d.options[0].option_id  # решения второй фазы приняты
-	s.act = 2
-	s.week = 16
-	s.phase = "night"
-	s.goal_reached = true
-	return H.play(self, s, [H.report("truth")]).state
+	return H.play(self, H.act3_state(agents), []).state
 
 
 ## Неделя 18: Колдуэлл установлен, заключение утверждено, ужин подготовлен днём.
