@@ -84,8 +84,8 @@ func scene_mice_dossiers_and_sog_marks() -> void:
 func scene_week_flow_and_analyst() -> void:
 	await start()
 	has_text("calendar-week", "Неделя 1")
-	has_text("calendar-phase", "УТРО")
-	for p in ["ДЕНЬ", "ВЕЧЕР", "НОЧЬ"]:
+	has_text("calendar-phase", "ПОНЕДЕЛЬНИК")
+	for p in ["СРЕДА", "ПЯТНИЦА", "ВОСКРЕСЕНЬЕ"]:
 		await press("advance-phase")
 		has_text("calendar-phase", p)
 	ok(not exists("advance-phase"), "ночью вместо кнопки — донесение")

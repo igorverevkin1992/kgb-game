@@ -90,7 +90,7 @@ func scene_clean_run_brings_clues() -> void:
 	await press("sdr-done")
 	await key(KEY_ESCAPE)
 	await press("advance-phase")
-	has_text("calendar-phase", "НОЧЬ")
+	has_text("calendar-phase", "ВОСКРЕСЕНЬЕ")
 
 
 func scene_abort_mid_route() -> void:

@@ -81,7 +81,7 @@ static func action_error(s: Dictionary, content: Dictionary, id: String, action:
 	if not open(s, content):
 		return "«Окно арестов» закрыто"
 	if s.phase == "night":
-		return "Ночью меры уже исполняются — решайте утром, днём или вечером"
+		return "В воскресенье меры уже исполняются — решайте в понедельник, среду или пятницу"
 	var c := card(content, id)
 	if c.is_empty():
 		return "Такого дела нет в «Списке»"

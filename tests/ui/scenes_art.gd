@@ -7,7 +7,7 @@ func scene_crt_and_sound_settings() -> void:
 	ok(exists("crt"), "ЭЛТ-эффект включён по умолчанию")
 	has_text("act", "Первая фаза операции")
 	has_text("desk-object-counterintel", "Откроется в третьей фазе операции")
-	has_text("advance-phase", "Далее — день")
+	has_text("advance-phase", "Далее — среда")
 	await shot("desk-crt")
 	await key(KEY_ESCAPE)
 	await press("service-tab-settings")

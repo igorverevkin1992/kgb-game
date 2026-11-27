@@ -43,7 +43,7 @@ func scene_month_checkpoint() -> void:
 	has_text("checkpoints", "Неделя 6")
 	await press("load-checkpoint-a1-w6")
 	has_text("calendar-week", "Неделя 6")
-	has_text("calendar-phase", "УТРО")
+	has_text("calendar-phase", "ПОНЕДЕЛЬНИК")
 
 
 func scene_ironman() -> void:

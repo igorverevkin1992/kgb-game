@@ -24,7 +24,7 @@ static func build() -> Control:
 	var week := Style.label(T.t("calendar.week", {"week": s.week}), Style.form(true), 22, Style.INK, false)
 	week.name = "calendar-week"
 	v.add_child(week)
-	v.add_child(Style.label(Fmt.date(Campaign.week_date(Game.content, s.act, s.week)), Style.form(), 14, Color(Style.INK, 0.75), false))
+	v.add_child(Style.label(Fmt.date(Campaign.phase_date(Game.content, s.act, s.week, s.phase)), Style.form(), 14, Color(Style.INK, 0.75), false))
 	var phase := Style.label(T.t("phase." + s.phase).to_upper(), Style.form(true), 20, Style.STAMP_RED, false)
 	phase.name = "calendar-phase"
 	v.add_child(phase)

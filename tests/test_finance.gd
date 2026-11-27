@@ -89,7 +89,7 @@ func test_rejections() -> void:
 	has_text(_do(s, H.pay(V, 999999)).error, "В валютных средствах только")
 	has_text(_do(s, H.pay(V, 0)).error, "больше нуля")
 	var night: Dictionary = _do(s, H.NEXT).state
-	has_text(_do(night, H.pay(V)).error, "днём или вечером")
+	has_text(_do(night, H.pay(V)).error, "в среду или пятницу")
 
 
 func test_unpaid_promise_and_reports() -> void:

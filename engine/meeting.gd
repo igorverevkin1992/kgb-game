@@ -64,7 +64,7 @@ static func conversation_error(s: Dictionary, content: Dictionary, dialog_id: St
 	if s.meeting != null:
 		return "Встреча уже идёт"
 	if s.phase != "day" and s.phase != "evening":
-		return "Разговоры — днём или вечером"
+		return "Разговоры — в среду или пятницу"
 	if s.tapes.any(func(t): return t.dialog_id == dialog_id and t.week == s.week):
 		return "Этот разговор уже был на этой неделе — вернитесь к нему позже"
 	return ""

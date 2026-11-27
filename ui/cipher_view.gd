@@ -287,7 +287,7 @@ static func _outgoing(s: Dictionary) -> Control:
 	v.custom_minimum_size.x = RIGHT_W - 72
 	var w := RIGHT_W - 72
 	v.add_child(Style.label(T.t("cipher.gramHead").to_upper(), Style.form(true), 22, Style.INK))
-	v.add_child(Style.label(T.t("cipher.gramTo", {"week": s.week, "date": Fmt.date(Campaign.week_date(content, s.act, s.week))}), Style.mono(), 14, Color(Style.INK, 0.7)))
+	v.add_child(Style.label(T.t("cipher.gramTo", {"week": s.week, "date": Fmt.date(Campaign.phase_date(content, s.act, s.week, "night"))}), Style.mono(), 14, Color(Style.INK, 0.7)))
 	v.add_child(Style.hline(Color(Style.INK, 0.3)))
 	v.add_child(Style.para(T.t("cipher.gramHint"), w, Style.mono(), 13, Color(Style.INK, 0.75)))
 

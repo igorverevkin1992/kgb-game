@@ -33,7 +33,10 @@ class_name Campaign
 const PHASES := ["morning", "day", "evening", "night"]
 const RISKS := ["sog_heat", "mole_hunt", "treasury", "moscow_pressure"]
 const NEXT_PHASE := {"morning": "day", "day": "evening", "evening": "night"}
-const PHASE_RU := {"morning": "утро", "day": "день", "evening": "вечер", "night": "ночь"}
+## Части недели — дни: понедельник (почта), среда (подготовка), пятница (выходы), воскресенье (доклад).
+const PHASE_RU := {"morning": "понедельник", "day": "среда", "evening": "пятница", "night": "воскресенье"}
+## Сдвиг дня части недели от понедельника (дата на календаре).
+const PHASE_DAY := {"morning": 0, "day": 2, "evening": 4, "night": 6}
 ## Названия мотивов для сообщений игроку (доска мотивов: Д/И/К/С).
 const AXIS_NAME_RU := {"money": "деньги", "ideology": "идеология", "compromise": "компромат", "ego": "самолюбие"}
 const IRONMAN_FLAG := "mode_ironman"
@@ -114,7 +117,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 	match action.type:
 		"advance_phase":
 			if not NEXT_PHASE.has(s.phase):
-				return _reject(state, "Ночью неделя закрывается докладом в Центр")
+				return _reject(state, "В воскресенье неделя закрывается докладом в Центр")
 			if s.meeting != null:
 				return _reject(state, "Идёт встреча: сделайте вербовочное предложение или прервите контакт")
 			if s.phase == "evening" and not s.planned_ops.is_empty():
@@ -129,7 +132,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 
 		"plan_op":
 			if s.phase != "day":
-				return _reject(state, "Выходы в город готовят днём, а сейчас %s" % phase_ru)
+				return _reject(state, "Выходы в город готовят в среду, а сейчас %s" % phase_ru)
 			if not available_ops(s, content).any(func(o): return o.op_id == action.op_id):
 				return _reject(state, "Мероприятие «%s» сейчас недоступно" % _op_title(content, action.op_id))
 			if s.planned_ops.size() >= int(content.balance.ops.per_week):
@@ -156,7 +159,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 
 		"cancel_op":
 			if s.phase != "day":
-				return _reject(state, "Отменить выход можно только днём")
+				return _reject(state, "Отменить выход можно только в среду")
 			if not s.planned_ops.has(action.op_id):
 				return _reject(state, "Этот выход не готовился")
 			s.planned_ops = Util.without(s.planned_ops, action.op_id)
@@ -165,7 +168,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 
 		"resolve_op":
 			if s.phase != "evening":
-				return _reject(state, "В город выходят вечером, а сейчас %s" % phase_ru)
+				return _reject(state, "В город выходят в пятницу, а сейчас %s" % phase_ru)
 			if not s.planned_ops.has(action.op_id):
 				return _reject(state, "Этот выход не готовился")
 			var who: String = s.routes.get(action.op_id, {}).get("operative", Delegation.RESIDENT)
@@ -186,7 +189,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 
 		"recruitment":
 			if s.phase != "evening":
-				return _reject(state, "Вербовочные беседы проводятся вечером, а сейчас %s" % phase_ru)
+				return _reject(state, "Вербовочные беседы проводятся в пятницу, а сейчас %s" % phase_ru)
 			var target := target_by_id(content, action.target_id)
 			if target.is_empty() or not s.targets.has(action.target_id):
 				return _reject(state, "Такого кандидата нет")
@@ -315,7 +318,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 
 		"pay_agent":
 			if s.phase != "day" and s.phase != "evening":
-				return _reject(state, "Выплаты производят днём или вечером, а сейчас %s" % phase_ru)
+				return _reject(state, "Выплаты производят в среду или пятницу, а сейчас %s" % phase_ru)
 			var plan := Finance.plan(s, content, action.get("target_id", ""), int(action.get("amount", 0)), action.get("instrument", ""), int(action.get("parts", 1)))
 			if plan.error != "":
 				return _reject(state, plan.error)
@@ -436,7 +439,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			if not rehearsal and int(s.week) < int(e.week):
 				return _reject(state, "Проверка назначена на неделю %d — пока можно провести репетицию" % e.week)
 			if s.phase == "night":
-				return _reject(state, "Ночью проверку не проводят")
+				return _reject(state, "В воскресенье проверку не проводят")
 			p.exam = Polygraph.start_exam(s, content, rehearsal)
 			if rehearsal:
 				p.rehearsals = int(p.rehearsals) + 1
@@ -478,7 +481,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 
 		"submit_report":
 			if s.phase != "night":
-				return _reject(state, "Доклад в Центр отправляют ночью, а сейчас %s" % phase_ru)
+				return _reject(state, "Доклад в Центр отправляют в воскресенье, а сейчас %s" % phase_ru)
 			var waiting := Decisions.pending(s, content)
 			if not waiting.is_empty():
 				return _reject(state, "Сначала примите решение: «%s»" % waiting[0].title.ru)
@@ -1327,6 +1330,16 @@ static func unread_cables(s: Dictionary) -> Array:
 
 
 ## Календарная дата начала недели по start_date акта: {year, month, day}.
+## Дата дня недели: понедельник недели + сдвиг части недели (PHASE_DAY).
+static func phase_date(content: Dictionary, act: int, week: int, phase: String) -> Dictionary:
+	var d := week_date(content, act, week)
+	if d.is_empty():
+		return d
+	var unix := Time.get_unix_time_from_datetime_dict({"year": d.year, "month": d.month, "day": d.day, "hour": 12})
+	var x := Time.get_datetime_dict_from_unix_time(unix + int(PHASE_DAY.get(phase, 0)) * 86400)
+	return {"year": x.year, "month": x.month, "day": x.day}
+
+
 static func week_date(content: Dictionary, act: int, week: int) -> Dictionary:
 	for a in content.campaign.acts:
 		if a.act == act:
