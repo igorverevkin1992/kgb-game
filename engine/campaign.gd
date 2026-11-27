@@ -261,7 +261,14 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			if did != "":
 				var hd := Meeting.dialog_by_id(content, did)
 				tid = hd.get("target_id", tid)
-			var err := Meeting.meet_error(s, content, tid) if did == "" else Meeting.handling_error(s, content, did)
+			var hdd := Meeting.dialog_by_id(content, did)
+			var err := ""
+			if did == "":
+				err = Meeting.meet_error(s, content, tid)
+			elif Meeting.is_conversation(hdd):
+				err = Meeting.conversation_error(s, content, did)
+			else:
+				err = Meeting.handling_error(s, content, did)
 			if err != "":
 				return _reject(state, err)
 			s.meeting = Meeting.start(s, content, tid, did)
@@ -289,7 +296,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			if not Meeting.can_offer(d, s.meeting):
 				return _reject(state, "Рано: контакт ниже %d%%" % d.offer_rapport)
 			var target := target_by_id(content, s.meeting.target_id)
-			var handling := Meeting.is_handling(d)
+			var handling := Meeting.is_agreement(d)
 			var missing: Array = [] if handling else target.approach.key_axes.filter(func(a): return not s.targets[target.target_id].discovered_axes.has(a))
 			if not missing.is_empty():
 				return _reject(state, "Не вскрыты ведущие мотивы: %s" % ", ".join(missing.map(func(a): return AXIS_NAME_RU[a])))
@@ -590,7 +597,8 @@ static func _start_morning(ctx: Dictionary) -> void:
 	s.week_field_activity = false
 	_emit(ctx, {"type": "week_started", "week": s.week, "act": s.act})
 	for cable in content.cables:
-		if cable.act <= s.act and cable.week <= s.week and not s.delivered_cables.has(cable.cable_id):
+		if cable.act <= s.act and cable.week <= s.week and not s.delivered_cables.has(cable.cable_id) \
+				and cable.get("requires_flags", []).all(func(f): return s.flags.has(f)):
 			s.delivered_cables.append(cable.cable_id)
 			_emit(ctx, {"type": "cable_delivered", "cable_id": cable.cable_id})
 			# Улики из документов игрок снимает сам (подсвеченные фрагменты, take_clue).
@@ -708,9 +716,8 @@ static func _resolve_op(ctx: Dictionary, op: Dictionary, decision: String) -> vo
 static func _finish_meeting(ctx: Dictionary, outcome: String) -> void:
 	var s: Dictionary = ctx.s
 	var m: Dictionary = s.meeting
-	var ts: Dictionary = s.targets[m.target_id]
 	var d := Meeting.dialog_by_id(ctx.content, m.dialog_id)
-	var handling := Meeting.is_handling(d)
+	var handling := Meeting.is_agreement(d)
 	if handling and outcome == "failed":
 		outcome = "broken_off"  # агент не потерян: встреча сорвалась, лояльность падает
 	m.lines.append({"kind": "end", "outcome": outcome})
@@ -720,6 +727,7 @@ static func _finish_meeting(ctx: Dictionary, outcome: String) -> void:
 		_emit(ctx, {"type": "meeting_ended", "target_id": m.target_id, "outcome": outcome, "dialog_id": d.dialog_id})
 		_finish_handling(ctx, d, outcome)
 		return
+	var ts: Dictionary = s.targets[m.target_id]
 	ts.rapport = m.rapport
 	ts.paranoia = maxi(0, m.anxiety - int(ctx.content.balance.meeting.anxiety_cooldown))
 	_emit(ctx, {"type": "meeting_ended", "target_id": m.target_id, "outcome": outcome})
@@ -735,7 +743,8 @@ static func _finish_meeting(ctx: Dictionary, outcome: String) -> void:
 static func _finish_handling(ctx: Dictionary, d: Dictionary, outcome: String) -> void:
 	var s: Dictionary = ctx.s
 	var id: String = d.target_id
-	_add_risk(ctx, "sog_heat", int(ctx.content.balance.meeting.get("handling_sog_heat", 2)), "agent_meeting")
+	if Meeting.is_handling(d):
+		_add_risk(ctx, "sog_heat", int(ctx.content.balance.meeting.get("handling_sog_heat", 2)), "agent_meeting")
 	if outcome == "aborted":
 		return
 	if not s.has("handled"):
@@ -744,24 +753,28 @@ static func _finish_handling(ctx: Dictionary, d: Dictionary, outcome: String) ->
 	var fx = d.get("success") if outcome == "agreed" else d.get("failure")
 	if fx == null:
 		return
+	if String(fx.get("loyalty_target", "")) != "":
+		id = fx.loyalty_target
 	var ag = s.agents.get(id)
 	if ag != null and int(fx.get("loyalty", 0)) != 0:
 		var from: int = ag.loyalty
 		ag.loyalty = Util.clamp100(from + int(fx.loyalty))
 		_emit(ctx, {"type": "loyalty_changed", "target_id": id, "from": from, "to": ag.loyalty, "reason": "agent_meeting"})
+	for r in ["sog_heat", "mole_hunt", "moscow_pressure"]:
+		_add_risk(ctx, r, int(fx.get(r, 0)), "agent_meeting")
+	_add_trust(ctx, int(fx.get("centre_trust", 0)), "agent_meeting")
+	_change_fund(ctx, int(fx.get("fund_usd", 0)), "decision", d.dialog_id)
+	if String(fx.get("flag_set", "")) != "":
+		_set_flag(ctx, fx.flag_set)
 	if outcome != "agreed":
 		return
 	if ag != null and int(fx.get("lifestyle", 0)) != 0:
 		ag.lifestyle = Util.clamp100(int(ag.lifestyle) + int(fx.lifestyle))
-	for r in ["sog_heat", "mole_hunt"]:
-		_add_risk(ctx, r, int(fx.get(r, 0)), "agent_meeting")
-	_add_trust(ctx, int(fx.get("centre_trust", 0)), "agent_meeting")
 	for c in fx.get("clue_ids", []):
 		_give_clue(ctx, c)
-	if String(fx.get("flag_set", "")) != "":
-		_set_flag(ctx, fx.flag_set)
 	if int(fx.get("polygraph_slots", 0)) > 0 and s.get("polygraph") != null:
 		s.polygraph.slots = int(s.polygraph.slots) + int(fx.polygraph_slots)
+	_check_goal(ctx)
 
 
 ## coerced — завербован принуждением: агент неустойчив (ниже лояльность, она падает каждую неделю).
@@ -886,6 +899,7 @@ static func _decide(ctx: Dictionary, d: Dictionary, o: Dictionary) -> void:
 		var from: int = ag.loyalty
 		ag.loyalty = Util.clamp100(from + int(fx.loyalty))
 		_emit(ctx, {"type": "loyalty_changed", "target_id": lt, "from": from, "to": ag.loyalty, "reason": "decision"})
+	_check_goal(ctx)  # задача фазы может ждать флага решения (например, «сеть сдана»)
 
 
 ## Директива сверена: принять к исполнению или запросить подтверждение у Центра.
@@ -1077,6 +1091,7 @@ static func _polygraph_notice(ctx: Dictionary) -> void:
 	if ts == null or not ts.recruited or ts.lost:
 		s.polygraph.result = "none"
 		_set_flag(ctx, Polygraph.DONE_FLAG)
+		_set_flag(ctx, Polygraph.ABSENT_FLAG)
 		return
 	_emit(ctx, {"type": "polygraph_scheduled", "week": int(e.week), "source": s.polygraph.source})
 
@@ -1144,6 +1159,14 @@ static func current_act_def(s: Dictionary, content: Dictionary) -> Dictionary:
 		if a.act == s.act:
 			return a
 	return {}
+
+
+## Название, вводная или итог фазы с учётом вариантов (по флагам кампании).
+static func act_text(s: Dictionary, def: Dictionary, key: String):
+	for v in def.get("variants", []):
+		if v.flags_all.all(func(f): return s.flags.has(f)) and v.get(key) != null:
+			return v[key]
+	return def.get(key)
 
 
 static func next_act_def(s: Dictionary, content: Dictionary) -> Dictionary:

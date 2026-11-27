@@ -429,6 +429,9 @@ static func _dialogs(ctx: Dictionary) -> void:
 	var seen := {}
 	for d in c.dialogs:
 		var id: String = d.dialog_id
+		if Meeting.is_conversation(d):
+			_conversation(ctx, d)
+			continue
 		var t := Campaign.target_by_id(c, d.target_id)
 		if t.is_empty():
 			_push(ctx, "error", "dialog", "Беседа с несуществующей целью «%s»" % d.target_id, "%s.target_id" % id, id)
@@ -468,7 +471,9 @@ static func _handling(ctx: Dictionary, d: Dictionary, t: Dictionary) -> void:
 	var id: String = d.dialog_id
 	if t.approach.flag_mode == "contactless":
 		_push(ctx, "error", "dialog", "С «%s» связь только бесконтактная — встреча на связи невозможна" % t.target_id, "%s.target_id" % id, id)
-	var same: Array = Meeting.handling_dialogs(c, d.target_id).filter(func(x): return int(x.order) == int(d.order))
+	var my_flags: Array = d.get("requires", {}).get("flags", [])
+	var same: Array = Meeting.handling_dialogs(c, d.target_id).filter(func(x): return int(x.order) == int(d.order) \
+		and (x.get("requires", {}).get("flags", []) == my_flags or my_flags.is_empty()))
 	if same.size() > 1:
 		_push(ctx, "error", "dialog", "У агента «%s» две встречи с номером %d" % [d.target_id, d.order], "%s.order" % id, id)
 	if d.get("success") == null:
@@ -483,6 +488,21 @@ static func _handling(ctx: Dictionary, d: Dictionary, t: Dictionary) -> void:
 		_push(ctx, "error", "dialog", "Стартовая настороженность не ниже предела беседы", "%s.start_anxiety" % id, id)
 	elif not Meeting.winnable(d, HANDLING_CHECK_LOYALTY, int(d.start_anxiety), trumps):
 		_push(ctx, "error", "dialog", "Встречу на связи не выиграть при лояльности агента %d%%" % HANDLING_CHECK_LOYALTY, id, id)
+
+
+## Разговор не с кандидатом: собеседник назван, итог есть, выигрывается со своих стартовых чисел.
+static func _conversation(ctx: Dictionary, d: Dictionary) -> void:
+	var id: String = d.dialog_id
+	if d.get("person") == null:
+		_push(ctx, "error", "dialog", "У разговора нет собеседника (person)", id, id)
+	if d.get("target_id", "") != "":
+		_push(ctx, "warning", "dialog", "У разговора указана цель — для встречи с агентом используйте kind: handling", id, id)
+	if d.get("success") == null:
+		_push(ctx, "error", "dialog", "У разговора нет итога success", id, id)
+	if int(d.start_anxiety) >= int(d.max_anxiety):
+		_push(ctx, "error", "dialog", "Стартовая настороженность не ниже предела беседы", "%s.start_anxiety" % id, id)
+	elif not Meeting.winnable(d, int(d.start_rapport), int(d.start_anxiety), []):
+		_push(ctx, "error", "dialog", "Разговор невозможно выиграть даже идеальной игрой", id, id)
 
 
 ## 13. Финансы: обещанное агенту можно выплатить из стартового спецфонда и переводов Центра.
@@ -653,6 +673,19 @@ static func _act3(ctx: Dictionary) -> void:
 		var cons = o.sdr.get("ignore_consequence")
 		if cons != null and cons.get("flag_set", "") != "":
 			flags_known[cons.flag_set] = true
+	for dd in c.dialogs:
+		for key in ["success", "failure"]:
+			var fx = dd.get(key)
+			if fx != null and String(fx.get("flag_set", "")) != "":
+				flags_known[fx.flag_set] = true
+	for cab in c.cables:
+		for f in cab.get("requires_flags", []):
+			if not flags_known.has(f) and not ArrestWindow.ENGINE_FLAGS.has(f):
+				_push(ctx, "error", "refs", "Документ ждёт флаг «%s», который ничто не ставит" % f, "%s.requires_flags" % cab.cable_id, cab.cable_id)
+	for dd in c.dialogs:
+		for f in dd.get("requires", {}).get("flags", []):
+			if not flags_known.has(f) and not ArrestWindow.ENGINE_FLAGS.has(f) and not ["package_accepted", "package_rejected", "dangle_accepted"].has(f):
+				_push(ctx, "error", "refs", "Беседа ждёт флаг «%s», который ничто не ставит" % f, "%s.requires" % dd.dialog_id, dd.dialog_id)
 	var pkg := Dangle.config(c)
 	if not pkg.is_empty():
 		for key in ["drop_op", "handover_op"]:

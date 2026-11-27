@@ -26,7 +26,7 @@ static func build() -> Control:
 	v.add_child(phase)
 	var def := Campaign.current_act_def(s, Game.content)
 	if not def.is_empty():
-		var ph := Style.label("%s\n«%s»" % [Fmt.op_phase(s.act), T.loc(def.title)], Style.form(), 13, Color(Style.INK, 0.75), false)
+		var ph := Style.label("%s\n«%s»" % [Fmt.op_phase(s.act), T.loc(Campaign.act_text(s, def, "title"))], Style.form(), 13, Color(Style.INK, 0.75), false)
 		ph.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		ph.custom_minimum_size.x = 136
 		v.add_child(ph)

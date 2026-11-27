@@ -116,7 +116,8 @@
     "triumph_realized": 14,
     "triumph_mole_hunt_below": 65,
     "control_below": 75,
-    "double_bottom_trust_below": 20
+    "double_bottom_trust_below": 20,
+    "inspector_trust_below": 35
   },
   "text_budget": {
     "max_words": 60000,

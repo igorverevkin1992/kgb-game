@@ -6,7 +6,7 @@ func test_careful_reaches_clean_triumph() -> void:
 	var r := Autoplay.run(H.content(), "careful")
 	eq(r.errors, [])
 	eq(r.ending, "clean_triumph", "осторожная игра — «Чистый триумф»")
-	eq(r.weeks.keys(), [1, 2, 3, 4], "пройдены все четыре фазы")
+	eq(r.weeks.keys(), [1, 2, 3, 4, 5], "пройдены все пять фаз")
 
 
 func test_rush_in_finale_burns_the_mole() -> void:

@@ -20,6 +20,8 @@ const DONE_FLAG := "polygraph_done"
 const PASS_FLAG := "polygraph_passed"
 const INCONCLUSIVE_FLAG := "polygraph_inconclusive"
 const FAIL_FLAG := "polygraph_failed"
+## «Кронос» потерян до проверки — пятая фаза идёт по своему варианту.
+const ABSENT_FLAG := "kronos_absent"
 const RESULTS := ["pass", "inconclusive", "fail", "none"]
 
 

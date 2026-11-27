@@ -9,7 +9,7 @@ class_name ContentSim
 
 
 static func run(content: Dictionary, opts := {}) -> Dictionary:
-	var max_act: int = opts.get("max_act", 4)
+	var max_act: int = opts.get("max_act", 5)
 	var failed_targets: Array = opts.get("failed_targets", [])
 	var failed_ops: Array = opts.get("failed_ops", [])
 	var choices: Dictionary = opts.get("choices", {})
@@ -17,7 +17,7 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 	var cables := {}
 	for c in content.cables:
 		if c.act <= max_act:
-			cables[c.cable_id] = true
+			cables[c.cable_id] = c
 	var targets: Array = content.targets.filter(func(t): return t.act <= max_act)
 	var ops: Array = content.ops.filter(func(o): return o.act <= max_act and not failed_ops.has(o.op_id))
 	var decisions: Array = content.get("decisions", []).filter(func(d): return d.act <= max_act)
@@ -42,6 +42,9 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 	var pe := Polygraph.exam_def(content)
 	if not pe.is_empty() and int(pe.act) <= max_act:
 		st.flags[Polygraph.DONE_FLAG] = true
+		# Любой исход проверки достижим — пятая фаза ветвится по нему.
+		for f in [Polygraph.PASS_FLAG, Polygraph.INCONCLUSIVE_FLAG, Polygraph.FAIL_FLAG, Polygraph.ABSENT_FLAG]:
+			st.flags[f] = true
 	var changed := true
 	while changed:
 		changed = false
@@ -57,6 +60,20 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 					st.flags[Dangle.ACCEPTED_FLAG] = true
 					st.flags[Dangle.REJECTED_FLAG] = true
 				changed = true
+		# Разговоры и встречи на связи ставят флаги (идеальный игрок может прийти к любому исходу).
+		for d in content.get("dialogs", []):
+			if not Meeting.is_agreement(d) or st.decisions.has(d.dialog_id) or int(d.get("requires", {}).get("act", 1)) > max_act:
+				continue
+			if not d.get("requires", {}).get("flags", []).all(func(f): return st.flags.has(f)):
+				continue
+			if Meeting.is_handling(d) and not st.recruited.has(d.target_id):
+				continue
+			st.decisions[d.dialog_id] = true
+			for key in ["success", "failure"]:
+				var fx = d.get(key)
+				if fx != null and String(fx.get("flag_set", "")) != "":
+					st.flags[fx.flag_set] = true
+			changed = true
 		for d in decisions:
 			if st.decisions.has(d.decision_id):
 				continue
@@ -73,7 +90,7 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 			if st.clues.has(clue.clue_id):
 				continue
 			var src: Dictionary = clue.source
-			var ok: bool = (src.channel == "document" and cables.has(src.from)) \
+			var ok: bool = (src.channel == "document" and cables.has(src.from) and cables[src.from].get("requires_flags", []).all(func(f): return st.flags.has(f))) \
 				or (src.channel == "field" and st.ops.has(src.from)) \
 				or (src.channel == "agent" and st.recruited.has(src.from) and int(clue.get("act", 1)) <= max_act) \
 				or (src.channel == "meeting" and st.unlocked.has(dialog_target.get(src.from, ""))) \

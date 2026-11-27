@@ -30,6 +30,57 @@ static func is_handling(d: Dictionary) -> bool:
 	return d.get("kind", "recruitment") == "handling"
 
 
+## Разговор не с кандидатом: инициативник, подчинённый, инспектор, родные (person вместо цели).
+static func is_conversation(d: Dictionary) -> bool:
+	return d.get("kind", "recruitment") == "conversation"
+
+
+## Встреча с итогом «договорились» (не вербовка): на связи или разговор.
+static func is_agreement(d: Dictionary) -> bool:
+	return is_handling(d) or is_conversation(d)
+
+
+## Имя собеседника: цель вербовки или person разговора.
+static func person_name(content: Dictionary, d: Dictionary) -> Dictionary:
+	if d.get("target_id", "") != "":
+		return Campaign.target_by_id(content, d.target_id).get("name", {"ru": d.target_id})
+	return d.get("person", {"ru": ""})
+
+
+## Разговоры, которые можно провести сейчас.
+static func conversations(s: Dictionary, content: Dictionary) -> Array:
+	return content.dialogs.filter(func(d): return is_conversation(d) and conversation_error(s, content, d.dialog_id) == "")
+
+
+## Почему нельзя провести разговор ("" — можно). Условия — без подсказок наперёд.
+static func conversation_error(s: Dictionary, content: Dictionary, dialog_id: String) -> String:
+	var d := dialog_by_id(content, dialog_id)
+	if d.is_empty() or not is_conversation(d):
+		return "Такого разговора нет"
+	if s.get("handled", {}).has(dialog_id):
+		return "Разговор уже состоялся"
+	if not _requires_met(s, d):
+		return "Повода для разговора пока нет"
+	if s.meeting != null:
+		return "Встреча уже идёт"
+	if s.phase != "day" and s.phase != "evening":
+		return "Разговоры — днём или вечером"
+	if s.tapes.any(func(t): return t.dialog_id == dialog_id and t.week == s.week):
+		return "Этот разговор уже был на этой неделе — вернитесь к нему позже"
+	return ""
+
+
+static func _requires_met(s: Dictionary, d: Dictionary) -> bool:
+	var req: Dictionary = d.get("requires", {})
+	if int(s.act) < int(req.get("act", 1)) or int(s.week) < int(req.get("week", 0)):
+		return false
+	if not req.get("flags", []).all(func(f): return s.flags.has(f)):
+		return false
+	if req.get("polygraph", false) and (s.get("polygraph") == null or s.polygraph.result != ""):
+		return false
+	return true
+
+
 ## Встречи на связи с агентом по порядку.
 static func handling_dialogs(content: Dictionary, target_id: String) -> Array:
 	var out: Array = content.dialogs.filter(func(d): return d.target_id == target_id and is_handling(d))
@@ -37,11 +88,22 @@ static func handling_dialogs(content: Dictionary, target_id: String) -> Array:
 	return out
 
 
-## Ближайшая непроведённая встреча на связи или {}.
+## Ближайшая непроведённая встреча на связи или {}. Встречи с одним номером — варианты для
+## разных исходов (например, после полиграфа): берётся та, чьи флаги уже поставлены.
 static func next_handling(s: Dictionary, content: Dictionary, target_id: String) -> Dictionary:
+	var groups := {}
 	for d in handling_dialogs(content, target_id):
-		if not s.get("handled", {}).has(d.dialog_id):
-			return d
+		if not groups.has(int(d.order)):
+			groups[int(d.order)] = []
+		groups[int(d.order)].append(d)
+	var orders: Array = groups.keys()
+	orders.sort()
+	for o in orders:
+		var group: Array = groups[o]
+		if group.any(func(d): return s.get("handled", {}).has(d.dialog_id)):
+			continue
+		var ready: Array = group.filter(func(d): return d.get("requires", {}).get("flags", []).all(func(f): return s.flags.has(f)))
+		return ready[0] if not ready.is_empty() else group[0]
 	return {}
 
 
@@ -114,8 +176,8 @@ static func meet_error(s: Dictionary, content: Dictionary, target_id: String) ->
 
 
 static func start(s: Dictionary, content: Dictionary, target_id: String, dialog_id := "") -> Dictionary:
-	var ts: Dictionary = s.targets[target_id]
 	var d := dialog_for(content, target_id) if dialog_id == "" else dialog_by_id(content, dialog_id)
+	var ts: Dictionary = s.targets.get(target_id, {"rapport": int(d.get("start_rapport", 40)), "paranoia": int(d.get("start_anxiety", 20))})
 	var r := int(ts.rapport)
 	var a := int(ts.paranoia)
 	# Встреча на связи: контакт — лояльность агента, настороженность — своя у встречи.

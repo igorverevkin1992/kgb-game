@@ -144,7 +144,7 @@ static func act3_state(agents: Array = []) -> Dictionary:
 	s.week = 16
 	s.phase = "night"
 	s.goal_reached = true
-	return Campaign.dispatch(s, c, report("truth")).state
+	return Campaign.dispatch(auto_decide(s), c, report("truth")).state
 
 
 ## Прогон действий без TestCase (для сценариев интерфейса): ошибки печатаются.
@@ -171,20 +171,22 @@ static func act4_state(agents: Array = ["tar_caldwell_arthur"], flags: Array = [
 	s.goal_reached = true
 	for f in flags:
 		s.flags.append(f)
-	return Campaign.dispatch(s, c, report("truth")).state
+	return Campaign.dispatch(auto_decide(s), c, report("truth")).state
 
 
 
-## Решения «для атмосферы», которые старые сценарии не проверяют: перед ночным докладом
-## принимаются первым вариантом, чтобы не блокировать неделю. Решения второй фазы
-## (их проверяют тесты) сюда не входят.
-const AUTO_DECISIONS := ["dec_a1_journalist", "dec_a3_wedding", "dec_a4_draconian", "dec_a4_rome"]
+## Решения сюжетных линий, которые старые сценарии не проверяют: перед ночным докладом
+## принимаются автоматически, чтобы не блокировать неделю.
+## Решения, которые тесты принимают сами (их не трогаем).
+const TESTED_DECISIONS := ["dec_a2_monopoly", "dec_a2_colleague", "dec_a3_defector"]
+## Вариант, тише всего влияющий на числа старых сценариев (по умолчанию — первый).
+const QUIET_OPTION := {"dec_wi_gate": "turn_away", "dec_a1_journalist": "decline"}
 
 
 static func auto_decide(s: Dictionary) -> Dictionary:
 	for d in Decisions.pending(s, content()):
-		if AUTO_DECISIONS.has(d.decision_id):
-			var r := Campaign.dispatch(s, content(), {"type": "decide", "decision_id": d.decision_id, "option_id": d.options[0].option_id})
+		if not TESTED_DECISIONS.has(d.decision_id):
+			var r := Campaign.dispatch(s, content(), {"type": "decide", "decision_id": d.decision_id, "option_id": QUIET_OPTION.get(d.decision_id, d.options[0].option_id)})
 			if r.error == "":
 				s = r.state
 	return s

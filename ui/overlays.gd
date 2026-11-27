@@ -146,7 +146,7 @@ static func _event_text(e: Dictionary) -> String:
 		"agent_broke":
 			return T.t("event.agent_broke", {"name": _tname(e.target_id)})
 		"meeting_ended":
-			return T.t("event.meeting_" + e.outcome, {"name": T.loc(Campaign.target_by_id(c, e.target_id).name)})
+			return T.t("event.meeting_" + e.outcome, {"name": T.loc(Meeting.person_name(c, Meeting.dialog_by_id(c, e.get("dialog_id", Meeting.dialog_for(c, e.target_id).get("dialog_id", "")))))})
 		"tranche_sent":
 			return T.t("event.tranche_sent", {"name": _tname(e.target_id), "usd": Fmt.usd(e.amount), "how": T.t("finance.instrument." + e.instrument)})
 		"tranche_delivered":
@@ -392,14 +392,14 @@ static func phase_card(done_act: int) -> Control:
 		if int(a.act) == done_act:
 			prev = a
 	_title(v, T.t("phase.done", {"phase": Fmt.op_phase(done_act)}), T.t("phase.stamp"))
-	if not prev.is_empty() and prev.get("outro") != null:
-		v.add_child(Style.para(T.loc(prev.outro), PANEL_W - 104, Style.mono(), 16, Style.INK))
+	if not prev.is_empty() and Campaign.act_text(Game.state, prev, "outro") != null:
+		v.add_child(Style.para(T.loc(Campaign.act_text(Game.state, prev, "outro")), PANEL_W - 104, Style.mono(), 16, Style.INK))
 	if not next.is_empty():
 		v.add_child(Style.hline(Color(Style.INK, 0.3)))
-		v.add_child(Style.label("%s «%s»" % [Fmt.op_phase(next.act), T.loc(next.title)], Style.serif(true), 22, Style.INK))
+		v.add_child(Style.label("%s «%s»" % [Fmt.op_phase(next.act), T.loc(Campaign.act_text(Game.state, next, "title"))], Style.serif(true), 22, Style.INK))
 		v.add_child(Style.label(Fmt.date(Campaign.week_date(c, next.act, Game.state.week)), Style.form(), 14, Color(Style.INK, 0.65)))
-		if next.get("intro") != null:
-			v.add_child(Style.para(T.loc(next.intro), PANEL_W - 104, Style.mono(), 16, Style.INK))
+		if Campaign.act_text(Game.state, next, "intro") != null:
+			v.add_child(Style.para(T.loc(Campaign.act_text(Game.state, next, "intro")), PANEL_W - 104, Style.mono(), 16, Style.INK))
 	var row := Style.hbox(12)
 	var go := Style.paper_button(T.t("phase.continue"), "phase-card-continue")
 	go.pressed.connect(Game.close_phase_card)
@@ -426,6 +426,11 @@ static func ending() -> Control:
 			"poly": T.t("ending.poly." + (poly.result if poly != null and poly.result != "" else "none"))}), PANEL_W - 104, Style.mono(), 14, Style.INK)
 		stats.name = "ending-stats"
 		v.add_child(stats)
+		var ns: Array = Endings.notes(st)
+		if not ns.is_empty():
+			var nl := Style.para(" ".join(ns.map(func(f): return T.t("ending.note." + f))), PANEL_W - 104, Style.serif(false, true), 14, Style.INK)
+			nl.name = "ending-notes"
+			v.add_child(nl)
 		var chk := Style.vbox(2)
 		chk.name = "ending-checklist"
 		chk.add_child(Style.label(T.t("ending.check.title"), Style.form(true), 14, Style.INK))

@@ -61,5 +61,11 @@ static func branches(content: Dictionary) -> Array:
 			for op in content.get("ops", []):
 				if op.get("requires_flags", []).has(flag):
 					n += in_value(op)
+			for cab in content.get("cables", []):
+				if cab.get("requires_flags", []).has(flag):
+					n += in_value(cab)
+			for dd in content.get("dialogs", []):
+				if dd.get("requires", {}).get("flags", []).has(flag):
+					n += in_value(dd)
 			out.append({"decision_id": d.decision_id, "option_id": o.option_id, "flag": flag, "words": n + in_value(o.outcome)})
 	return out

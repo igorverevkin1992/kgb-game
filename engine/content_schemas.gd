@@ -12,8 +12,8 @@ static func get_spec(name: String) -> Dictionary:
 
 static func _build() -> void:
 	var text := {"type": "text"}
-	var act := Schema.i(1, 4)
-	var week := Schema.i(1, 60)
+	var act := Schema.i(1, 5)
+	var week := Schema.i(1, 80)
 	var scale := Schema.i(0, 100)
 	var flag := Schema.s("^[a-z0-9_]+$", "флаг: латиница в нижнем регистре, цифры и «_»")
 	var tag := Schema.s("^[a-z0-9_]+$", "примета: латиница в нижнем регистре, цифры и «_»")
@@ -77,7 +77,7 @@ static func _build() -> void:
 		"text": text,
 		"reveals": Schema.opt(Schema.arr(Schema.obj({"target_id": Schema.id("tar"), "axis": axis})), []),
 		# Для донесений агентов: с какой фазы операции агент может это сообщить.
-		"act": Schema.opt(Schema.i(1, 4), 1),
+		"act": Schema.opt(Schema.i(1, 5), 1),
 		# Для улик из документов и оговорок на встречах: фраза из текста, которую игрок «снимает» кликом.
 		"chunk": Schema.opt(Schema.s()),
 	})
@@ -94,6 +94,8 @@ static func _build() -> void:
 		"forged": Schema.opt({"type": "bool"}, false),
 		# Ориентировка о новом приёме наружки ФБР: приём появляется на маршрутах только после неё.
 		"teaches": Schema.opt(Schema.e(["", "relay", "clothes", "aircraft"]), ""),
+		# Документ сюжетной линии: приходит, только когда поставлены эти флаги (и не раньше недели).
+		"requires_flags": Schema.opt(Schema.arr(flag), []),
 	})
 
 	# Вербовочная беседа (магнитофон «Тембр-2М»): реплики по тонам и козыри из досье.
@@ -101,19 +103,24 @@ static func _build() -> void:
 	var tone_fx := Schema.obj({"line": text, "rapport": delta, "anxiety": delta, "reply": text})
 	_cache["dialog"] = Schema.obj({
 		"dialog_id": Schema.id("dlg"),
-		"target_id": Schema.id("tar"),
+		# Кандидат или агент; у разговора (kind: conversation) — пусто, вместо него person.
+		"target_id": Schema.opt(Schema.s(), ""),
+		"person": Schema.opt(text),
 		# Встреча назначается выходом на карте: беседа доступна после этого мероприятия.
 		"requires_op": Schema.opt(Schema.s(), ""),
 		# recruitment — вербовочная беседа (одна на кандидата); handling — встреча на связи с уже
 		# завербованным агентом (вторая, третья… — по порядку order).
-		"kind": Schema.opt(Schema.e(["recruitment", "handling"]), "recruitment"),
+		"kind": Schema.opt(Schema.e(["recruitment", "handling", "conversation"]), "recruitment"),
 		"order": Schema.opt(Schema.i(1, 9), 1),
 		# Условия встречи на связи: не раньше фазы, флаги, вызов «крота» на полиграф.
 		"requires": Schema.opt(Schema.obj({
-			"act": Schema.opt(Schema.i(1, 4), 1),
+			"act": Schema.opt(Schema.i(1, 5), 1),
 			"flags": Schema.opt(Schema.arr(flag), []),
 			"polygraph": Schema.opt({"type": "bool"}, false),
-		}), {"act": 1, "flags": [], "polygraph": false}),
+			"week": Schema.opt(Schema.i(0, 80), 0),
+		}), {"act": 1, "flags": [], "polygraph": false, "week": 0}),
+		# Разговор: контакт в начале (у встречи на связи — лояльность агента).
+		"start_rapport": Schema.opt(scale, 40),
 		# Настороженность агента в начале встречи на связи (контакт — его лояльность).
 		"start_anxiety": Schema.opt(scale, 20),
 		# Итог встречи на связи: договорились / сорвалось.
@@ -124,8 +131,12 @@ static func _build() -> void:
 			"clue_ids": Schema.opt(Schema.arr(Schema.id("clue")), []),
 			"flag_set": Schema.opt(Schema.s(), ""),
 			"polygraph_slots": Schema.opt(Schema.i(0, 3), 0),
+			"moscow_pressure": Schema.opt(delta, 0), "fund_usd": Schema.opt(Schema.i(-1000000, 1000000), 0),
+			"loyalty_target": Schema.opt(Schema.s(), ""),
 		})),
-		"failure": Schema.opt(Schema.obj({"text": text, "loyalty": Schema.opt(delta, 0)})),
+		"failure": Schema.opt(Schema.obj({"text": text, "loyalty": Schema.opt(delta, 0),
+			"flag_set": Schema.opt(Schema.s(), ""), "sog_heat": Schema.opt(delta, 0), "mole_hunt": Schema.opt(delta, 0),
+			"centre_trust": Schema.opt(delta, 0), "moscow_pressure": Schema.opt(delta, 0)})),
 		"title": text,
 		"setting": text,
 		"offer_rapport": Schema.i(1, 100),
@@ -204,7 +215,7 @@ static func _build() -> void:
 	_cache["decision"] = Schema.obj({
 		"decision_id": Schema.s("^dec_[a-z0-9_]+$", "id решения: dec_ и латиница"),
 		"act": act,
-		"trigger": Schema.obj({"week": Schema.opt(Schema.i(0, 60), 0), "clue_id": Schema.opt(Schema.s(), ""), "flag": Schema.opt(Schema.s(), "")}),
+		"trigger": Schema.obj({"week": Schema.opt(Schema.i(0, 80), 0), "clue_id": Schema.opt(Schema.s(), ""), "flag": Schema.opt(Schema.s(), "")}),
 		"sender": text,
 		"title": text,
 		"text": text,
@@ -395,6 +406,12 @@ static func _build() -> void:
 				# Ошибки подхода (флаги), при которых пакет из тайника окажется подставой ФБР.
 				"mistake_flags": Schema.opt(Schema.arr(flag), []),
 			})),
+			# Варианты фазы по итогам прошлых: первый, у которого есть все флаги, заменяет
+			# название, вводную и итог (например, «Рим» или «Эвакуация» после полиграфа).
+			"variants": Schema.opt(Schema.arr(Schema.obj({
+				"flags_all": Schema.arr(flag, 1),
+				"title": Schema.opt(text), "intro": Schema.opt(text), "outro": Schema.opt(text),
+			})), []),
 			# Вводная и итог фазы — показываются при смене фаз операции.
 			"intro": Schema.opt(text),
 			"outro": Schema.opt(text),
@@ -445,7 +462,7 @@ static func _build() -> void:
 		# Пороги четырёх концовок кампании.
 		"endings": Schema.obj({
 			"triumph_realized": Schema.i(0, 18), "triumph_mole_hunt_below": scale, "control_below": scale,
-			"double_bottom_trust_below": scale,
+			"double_bottom_trust_below": scale, "inspector_trust_below": Schema.opt(scale, 35),
 		}),
 		# «Окно арестов» и образ жизни «крота» (четвёртая фаза).
 		"list": Schema.obj({

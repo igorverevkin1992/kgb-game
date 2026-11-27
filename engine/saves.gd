@@ -118,7 +118,7 @@ static func _state_spec() -> Dictionary:
 	var pct := Schema.i(0, 100)
 	var strs := Schema.arr(Schema.s())
 	_spec = Schema.obj({
-		"act": Schema.i(1, 4), "week": Schema.i(1), "phase": Schema.e(Campaign.PHASES),
+		"act": Schema.i(1, 5), "week": Schema.i(1), "phase": Schema.e(Campaign.PHASES),
 		"risks": Schema.obj({"sog_heat": pct, "mole_hunt": pct, "treasury": pct, "moscow_pressure": pct}),
 		"centre_trust": pct, "fund_usd": Schema.i(), "flags": strs,
 		"delivered_cables": strs, "read_cables": strs, "clues": strs,
@@ -154,7 +154,7 @@ static func _state_spec() -> Dictionary:
 		"pinned": Schema.arr(Schema.obj({"clue_id": Schema.s(), "target_id": Schema.s(), "axis": Schema.s()})),
 		"analysis": {"type": "dict", "of": Schema.obj({"approved": {"type": "bool"}, "attempts": Schema.i(0), "wrong": Schema.i(-1, 3), "hint_level": Schema.i(0, 3)})},
 		"verified": {"type": "dict", "of": Schema.e(["accept", "query"])},
-		"requests": Schema.arr(Schema.obj({"request_id": Schema.s(), "act": Schema.i(1, 4), "week": Schema.i(1), "granted": {"type": "bool"}})),
+		"requests": Schema.arr(Schema.obj({"request_id": Schema.s(), "act": Schema.i(1, 5), "week": Schema.i(1), "granted": {"type": "bool"}})),
 		"meeting": Schema.nullable(Schema.obj({
 			"target_id": Schema.s(), "dialog_id": Schema.s(), "beat": Schema.i(0), "rapport": pct, "anxiety": pct,
 			"used": strs, "lines": Schema.arr({"type": "dict", "of": {"type": "any"}}), "coercion": Schema.opt(Schema.i(0), 0),

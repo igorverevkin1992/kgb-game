@@ -20,7 +20,8 @@ static func build() -> Control:
 	var note := T.t("dialog.note")
 	if s.meeting != null:
 		var t := Campaign.target_by_id(Game.content, s.meeting.target_id)
-		note = T.t("dialog.cover", {"cover": T.loc(t.approach.cover), "flag": T.t("board.channel." + t.approach.flag_mode)})
+		if not t.is_empty():
+			note = T.t("dialog.cover", {"cover": T.loc(t.approach.cover), "flag": T.t("board.channel." + t.approach.flag_mode)})
 	root.add_child(ModuleView.header(T.t("module.dialog.name"), note))
 	root.add_child(_left(s))
 	if s.meeting != null:
@@ -58,7 +59,7 @@ static func _left(s: Dictionary) -> Control:
 	for i in range(s.tapes.size() - 1, -1, -1):
 		var tape: Dictionary = s.tapes[i]
 		var on: bool = Game.tape_selected == i and s.meeting == null
-		var name := T.loc(Campaign.target_by_id(Game.content, tape.target_id).name)
+		var name := T.loc(Meeting.person_name(Game.content, Meeting.dialog_by_id(Game.content, tape.dialog_id)))
 		var b := Style.button("%s · %s\n%s" % [T.t("calendar.week", {"week": tape.week}), name, T.t("dialog.outcome." + tape.outcome)],
 			"tape-%d" % i, Style.INK if on else Style.PAPER, Style.PAPER if on else Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.5), 13)
 		b.custom_minimum_size.x = LEFT_W - 12
@@ -82,17 +83,17 @@ static func _meeting(s: Dictionary) -> Control:
 	v.position = Vector2(RIGHT_X, TOP)
 	v.custom_minimum_size = Vector2(RIGHT_W, 0)
 	var head := Style.hbox(16)
-	head.add_child(Style.label("%s · %s" % [T.loc(t.name), T.loc(d.title)], Style.form(true), 20, Style.PAPER))
+	head.add_child(Style.label("%s · %s" % [T.loc(Meeting.person_name(c, d)), T.loc(d.title)], Style.form(true), 20, Style.PAPER))
 	v.add_child(head)
 	var bars := Style.hbox(24)
 	bars.add_child(_bar("meeting-rapport", T.t("dialog.rapport"), m.rapport, int(d.offer_rapport), T.t("dialog.offerAt", {"n": d.offer_rapport}), Color("#7fae6e")))
 	bars.add_child(_bar("meeting-anxiety", T.t("dialog.anxiety"), m.anxiety, Meeting.max_anxiety(d), T.t("dialog.breakAt", {"n": Meeting.max_anxiety(d)}), Color("#d0614c")))
 	v.add_child(bars)
-	if Meeting.is_handling(d):
+	if Meeting.is_agreement(d):
 		var stakes := Style.para(_stakes(d), RIGHT_W, Style.mono(), 12, Color(Style.PAPER, 0.75))
 		stakes.name = "meeting-stakes"
 		v.add_child(stakes)
-	v.add_child(_transcript(d, m.lines, 250 if Meeting.is_handling(d) else 270, -1))
+	v.add_child(_transcript(d, m.lines, 250 if Meeting.is_agreement(d) else 270, -1))
 
 	var topics := Meeting.topics_left(d, m)
 	var trumps := Meeting.available_trumps(s, c, m)
@@ -113,7 +114,7 @@ static func _meeting(s: Dictionary) -> Control:
 			row.add_child(b)
 		row.custom_minimum_size.x = RIGHT_W
 		v.add_child(row)
-	if topics and not Meeting.is_handling(d):
+	if topics and not Meeting.is_agreement(d):
 		var mb: Dictionary = c.balance
 		var co := Style.para(T.t("dialog.coercion", {"n": int(m.get("coercion", 0)), "max": mb.meeting.coercion_threshold,
 			"p": mb.finance.coerced_loyalty_penalty, "w": mb.finance.loyalty_coerced_week}), RIGHT_W, Style.mono(), 12,
@@ -133,7 +134,7 @@ static func _meeting(s: Dictionary) -> Control:
 		v.add_child(Style.para(T.t("dialog.noTopics"), RIGHT_W, Style.mono(), 14, Color(Style.PAPER, 0.8)))
 
 	var acts := Style.hbox(10)
-	var handling := Meeting.is_handling(d)
+	var handling := Meeting.is_agreement(d)
 	var offer := Style.button(T.t("dialog.agree" if handling else "dialog.offer", {"n": d.offer_rapport}), "meeting-offer", Style.PAPER, Color("#3d5a32"), Color(Style.PAPER, 0.6), 15)
 	offer.disabled = not Meeting.can_offer(d, m)
 	offer.pressed.connect(Game.dispatch.bind({"type": "meeting_offer"}))
@@ -226,8 +227,7 @@ static func _line(d: Dictionary, line: Dictionary, sec: int, current: bool) -> C
 			col.add_child(Style.label(tag.to_upper(), Style.form(true), 12, Color(Style.INK, 0.6)))
 			col.add_child(Style.para(T.loc(Meeting.line_text(d, line)), w, Style.mono(), 15, Style.INK))
 		_:
-			var t := Campaign.target_by_id(Game.content, d.target_id)
-			col.add_child(Style.label(T.loc(t.name).to_upper(), Style.form(true), 12, Style.STAMP_RED))
+			col.add_child(Style.label(T.loc(Meeting.person_name(Game.content, d)).to_upper(), Style.form(true), 12, Style.STAMP_RED))
 			col.add_child(_rich(d, line, w))
 			if line.has("dr"):
 				var fx := Style.label(T.t("dialog.fx", {"r": _signed(line.dr), "a": _signed(line.da)}) + ("" if not line.has("ready") else ("  ·  " + T.t("dialog.trumpOk" if line.ready else "dialog.trumpEarly"))),
@@ -266,12 +266,12 @@ static func _rich(d: Dictionary, line: Dictionary, w: float) -> RichTextLabel:
 
 static func _review(s: Dictionary, tape: Dictionary) -> Control:
 	var d := Meeting.dialog_by_id(Game.content, tape.dialog_id)
-	var t := Campaign.target_by_id(Game.content, tape.target_id)
+	var tn := Meeting.person_name(Game.content, Meeting.dialog_by_id(Game.content, tape.dialog_id))
 	var v := Style.vbox(10)
 	v.name = "tape-review"
 	v.position = Vector2(RIGHT_X, TOP)
 	v.custom_minimum_size = Vector2(RIGHT_W, 0)
-	v.add_child(Style.label(T.t("dialog.reviewTitle", {"week": tape.week, "name": T.loc(t.name), "outcome": T.t("dialog.outcome." + tape.outcome)}), Style.form(true), 20, Style.PAPER))
+	v.add_child(Style.label(T.t("dialog.reviewTitle", {"week": tape.week, "name": T.loc(tn), "outcome": T.t("dialog.outcome." + tape.outcome)}), Style.form(true), 20, Style.PAPER))
 	var slips := slip_lines(s, d, tape.lines)
 	v.add_child(Style.para(T.t("dialog.reviewHint", {"n": slips.size()}), RIGHT_W, Style.mono(), 13, Color(Style.PAPER, 0.75)))
 	var cursor := clampi(Game.tape_cursor, 0, tape.lines.size() - 1)
@@ -315,6 +315,24 @@ static func _candidates(s: Dictionary) -> Control:
 	v.position = Vector2(RIGHT_X, TOP)
 	v.custom_minimum_size = Vector2(RIGHT_W, 0)
 	v.add_child(Style.para(T.t("dialog.intro"), RIGHT_W, Style.mono(), 14, Color(Style.PAPER, 0.85)))
+	# Разговоры, которых ждут сейчас (инициативник, подчинённый, инспектор, родные).
+	for d in Meeting.conversations(s, c):
+		var cp := Style.panel(Color(Style.STAMP_RED, 0.18), 14, Color(Style.PAPER, 0.3), 1)
+		cp.name = "conversation-" + d.dialog_id
+		var crow := Style.hbox(16)
+		var cinfo := Style.vbox(4)
+		cinfo.custom_minimum_size.x = 560
+		cinfo.add_child(Style.label(T.loc(Meeting.person_name(c, d)), Style.form(true), 18, Style.PAPER))
+		cinfo.add_child(Style.para(T.loc(d.title), 560, Style.mono(), 13, Color(Style.PAPER, 0.75)))
+		crow.add_child(cinfo)
+		var cv := Style.vbox(4)
+		var cb := Style.button(T.t("dialog.converse"), "converse-" + d.dialog_id, Style.PAPER, Color("#3d5a32"), Color(Style.PAPER, 0.6), 15)
+		cb.pressed.connect(Game.start_meeting.bind("", d.dialog_id))
+		cv.add_child(cb)
+		cv.add_child(Style.para(_stakes(d), 400, Style.mono(), 12, Color(Style.PAPER, 0.7)))
+		crow.add_child(cv)
+		cp.add_child(crow)
+		v.add_child(cp)
 	var any := false
 	for t in c.targets:
 		var ts: Dictionary = s.targets[t.target_id]
@@ -392,6 +410,14 @@ static func _stakes(d: Dictionary) -> String:
 		parts.append(T.t("dialog.stake.sog", {"n": _signed(int(ok.sog_heat))}))
 	if int(ok.get("mole_hunt", 0)) != 0:
 		parts.append(T.t("dialog.stake.mole", {"n": _signed(int(ok.mole_hunt))}))
+	if int(ok.get("centre_trust", 0)) != 0:
+		parts.append(T.t("dialog.stake.trust", {"n": _signed(int(ok.centre_trust))}))
+	if int(ok.get("moscow_pressure", 0)) != 0:
+		parts.append(T.t("dialog.stake.pressure", {"n": _signed(int(ok.moscow_pressure))}))
+	if Meeting.is_conversation(d):
+		if parts.is_empty():
+			return T.t("dialog.stakesTalkPlain", {"n": d.offer_rapport})
+		return T.t("dialog.stakesTalk", {"n": d.offer_rapport, "ok": ", ".join(parts)})
 	var fail = d.get("failure")
 	return T.t("dialog.stakes", {"ok": ", ".join(parts), "fail": _signed(int(fail.loyalty)) if fail != null else "0",
 		"sog": Game.content.balance.meeting.get("handling_sog_heat", 2), "n": d.offer_rapport})
