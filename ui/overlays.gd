@@ -415,7 +415,7 @@ static func ending() -> Control:
 	var v: VBoxContainer = o[1]
 	var e: String = Game.state.ending
 	o[2].set_meta("ending", e)
-	_title(v, T.t("ending.%s.title" % e), T.t("ending.stamp"))
+	_title(v, T.t("ending.%s.title" % e), T.t("ending.demo_stamp" if e == Campaign.DEMO_END else "ending.stamp"))
 	v.add_child(Style.para(T.t("ending.%s.text" % e, {"week": Game.state.week}), PANEL_W - 104, Style.mono(), 16, Style.INK))
 	# Итог кампании: цифры и условия «Чистого триумфа» — без скрытых чисел.
 	if Endings.is_final(e):
@@ -438,6 +438,17 @@ static func ending() -> Control:
 			chk.add_child(Style.label((T.t("ending.check.yes") if x.ok else T.t("ending.check.no")) + T.t("ending.check." + x.id, {"need": x.need, "value": x.value}), Style.mono(), 13, Style.INK if x.ok else Style.STAMP_RED))
 		v.add_child(chk)
 	var row := Style.hbox(12)
+	# Конец демоверсии: в демоверсии — страница полной игры, в полной игре — продолжить.
+	if e == Campaign.DEMO_END:
+		if Game.demo_build:
+			if int(ProjectSettings.get_setting("steam/full_app_id", 0)) > 0:
+				var wb := Style.paper_button(T.t("ending.wishlist"), "ending-wishlist")
+				wb.pressed.connect(Game.open_store)
+				row.add_child(wb)
+		else:
+			var cb := Style.paper_button(T.t("ending.continue_full"), "ending-continue-full")
+			cb.pressed.connect(Game.continue_full)
+			row.add_child(cb)
 	if not Campaign.is_ironman(Game.state):
 		var ld := Style.paper_button(T.t("ending.load"), "ending-load")
 		ld.pressed.connect(Game.open_service)

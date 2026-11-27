@@ -37,6 +37,10 @@ const PHASE_RU := {"morning": "утро", "day": "день", "evening": "веч�
 ## Названия мотивов для сообщений игроку (доска мотивов: Д/И/К/С).
 const AXIS_NAME_RU := {"money": "деньги", "ideology": "идеология", "compromise": "компромат", "ego": "самолюбие"}
 const IRONMAN_FLAG := "mode_ironman"
+## Демоверсия: кампания заканчивается после фазы campaign.demo.last_act итогом DEMO_END;
+## в полной игре такое сохранение продолжается со следующей фазы (continue_full).
+const DEMO_FLAG := "mode_demo"
+const DEMO_END := "demo_complete"
 
 
 # ——— Новая кампания ———
@@ -994,12 +998,10 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 		if nxt.is_empty():
 			_end(ctx, Endings.final(s, content))  # четыре концовки кампании
 			return
-		s.act = nxt.act
-		s.week = maxi(s.week + 1, nxt.weeks.from)  # сюжетный скачок во времени между актами
-		s.goal_reached = false
-		_change_fund(ctx, int(nxt.get("fund_usd", 0)), "allocation", "act_%d" % nxt.act)
-		if nxt.get("arrest_window") != null and s.get("list") == null:
-			s.list = ArrestWindow.new_state(content)
+		if is_demo(s) and int(s.act) >= demo_last_act(content):
+			_end(ctx, DEMO_END)  # конец демоверсии: дальше — в полной игре
+			return
+		_enter_act(ctx, nxt)
 	else:
 		s.week += 1
 		# Задача фазы сорвана окончательно: Центр отзывает резидента.
@@ -1007,6 +1009,42 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 			_end(ctx, "recalled")
 			return
 	_start_morning(ctx)
+
+
+## Переход к следующей фазе операции (утро начинает вызывающий).
+static func _enter_act(ctx: Dictionary, nxt: Dictionary) -> void:
+	var s: Dictionary = ctx.s
+	s.act = nxt.act
+	s.week = maxi(s.week + 1, nxt.weeks.from)  # сюжетный скачок во времени между актами
+	s.goal_reached = false
+	_change_fund(ctx, int(nxt.get("fund_usd", 0)), "allocation", "act_%d" % nxt.act)
+	if nxt.get("arrest_window") != null and s.get("list") == null:
+		s.list = ArrestWindow.new_state(ctx.content)
+
+
+static func is_demo(s: Dictionary) -> bool:
+	return s.flags.has(DEMO_FLAG)
+
+
+static func demo_last_act(content: Dictionary) -> int:
+	return int(content.campaign.get("demo", {}).get("last_act", 0))
+
+
+## Сохранение демоверсии в полной игре: снять отметку демоверсии и начать следующую фазу.
+static func continue_full(state: Dictionary, content: Dictionary) -> Dictionary:
+	if state.ending != DEMO_END:
+		return _reject(state, "Продолжить можно только сохранение демоверсии")
+	var s: Dictionary = state.duplicate(true)
+	var ctx := _ctx(s, content)
+	s.ending = null
+	s.flags.erase(DEMO_FLAG)
+	var nxt := next_act_def(s, content)
+	if nxt.is_empty():
+		return _reject(state, "Следующей фазы операции нет")
+	_emit(ctx, {"type": "demo_continued", "act": nxt.act})
+	_enter_act(ctx, nxt)
+	_start_morning(ctx)
+	return {"state": s, "events": ctx.events, "error": ""}
 
 
 ## Ночь «Окна арестов»: исполнение мер, каскад тревоги в Лэнгли, квоты Центра, закрытие окна.

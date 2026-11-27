@@ -23,7 +23,7 @@ jobs:
         run: tools/test.sh
       - name: Сценарии интерфейса (Xvfb)
         run: tools/ui-test.sh
-      - name: Сборки Windows и Web
+      - name: Сборки Windows (полная и демоверсия) и Web
         run: tools/export.sh all
       - name: Скриншоты
         if: always()
@@ -38,4 +38,10 @@ jobs:
         with:
           name: GodShpionov-windows
           path: build/windows/
+          retention-days: 30
+      - name: Windows-демоверсия
+        uses: actions/upload-artifact@v4
+        with:
+          name: GodShpionov-windows-demo
+          path: build/windows-demo/
           retention-days: 30

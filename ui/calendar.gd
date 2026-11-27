@@ -30,6 +30,12 @@ static func build() -> Control:
 		ph.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		ph.custom_minimum_size.x = 136
 		v.add_child(ph)
+	if Campaign.is_demo(s):
+		var dm := Style.label(T.t("calendar.demo"), Style.form(true), 12, Style.STAMP_RED, false)
+		dm.name = "calendar-demo"
+		dm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		dm.custom_minimum_size.x = 136
+		v.add_child(dm)
 	sheet.add_child(v)
 	root.add_child(sheet)
 

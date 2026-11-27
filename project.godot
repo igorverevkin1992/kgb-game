@@ -17,6 +17,11 @@ boot_splash/show_image=false
 
 Game="*res://ui/game.gd"
 
+[steam]
+
+; App ID полной игры в Steam (после регистрации страницы): кнопка «В список желаемого» в демоверсии.
+full_app_id=0
+
 [display]
 
 window/size/viewport_width=1600

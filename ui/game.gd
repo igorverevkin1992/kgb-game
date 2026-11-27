@@ -19,6 +19,8 @@ const VOLUME_STEPS := [0, 25, 50, 80, 100]
 var settings := DEFAULT_SETTINGS.duplicate()
 ## Звук стола (нет в консольных инструментах).
 var sound: SoundBank = null
+## Сборка демоверсии (экспорт «Windows Demo» с признаком demo); тесты задают сами.
+var demo_build := OS.has_feature("demo")
 ## Steam (GodotSteam в Windows-сборке; без него — заглушка) и журнал плейтеста.
 var steam: SteamBridge = null
 var telemetry: Telemetry = null
@@ -127,6 +129,7 @@ func reset_for_test(new_state: Dictionary = {}, mem_storage = null) -> void:
 	state = new_state if not new_state.is_empty() else Campaign.new_campaign(content).state
 	Saves.persist(storage, null, state, content)
 	debug_act = 0
+	demo_build = false
 	settings = DEFAULT_SETTINGS.duplicate()
 	settings.instant_text = true
 	settings.telemetry = false  # тесты не пишут журнал плейтеста
@@ -194,12 +197,37 @@ func new_game(ironman := false) -> void:
 	var r := Campaign.new_campaign(content)
 	if ironman:
 		r.state.flags.append(Campaign.IRONMAN_FLAG)
+	if demo_build and Campaign.demo_last_act(content) > 0:
+		r.state.flags.append(Campaign.DEMO_FLAG)
 	Saves.persist(storage, null, r.state, content)
 	state = r.state
 	last_events = r.events
 	_clear_ui()
 	saved_at = Time.get_ticks_msec()
 	changed.emit()
+
+
+## Сохранение демоверсии в полной игре: следующая фаза операции.
+func continue_full() -> void:
+	var prev := state
+	var r := Campaign.continue_full(prev, content)
+	if r.error != "":
+		last_error = r.error
+		changed.emit()
+		return
+	Saves.persist(storage, prev, r.state, content)
+	state = r.state
+	last_events = r.events
+	_clear_ui()
+	phase_card = int(prev.act)
+	saved_at = Time.get_ticks_msec()
+	changed.emit()
+
+
+## Демоверсия: страница полной игры в магазине (оверлей Steam или браузер).
+func open_store() -> void:
+	if steam != null:
+		steam.open_store(int(ProjectSettings.get_setting("steam/full_app_id", 0)))
 
 
 ## Загрузить слот; возвращает текст ошибки или "".
@@ -574,6 +602,7 @@ func _clear_ui() -> void:
 	card_selected = ""
 	console_tab = "list"
 	epilogue_page = -1
+	phase_card = 0
 
 
 func _load_settings() -> void:

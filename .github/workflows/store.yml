@@ -1,0 +1,34 @@
+# Материалы для страниц в Steam и VK Play: скриншоты 1920×1080, заглушки капсул и черновой
+# трейлер. Запуск вручную: Actions → Store → Run workflow; результат — артефакт «store».
+name: Store
+
+on:
+  workflow_dispatch:
+
+jobs:
+  store:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Виртуальный экран и ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 ffmpeg > /dev/null
+      - name: Godot
+        run: tools/get-godot.sh
+      - name: Импорт проекта
+        run: timeout 300 "$(tools/get-godot.sh)" --headless --path . --import || true
+      - name: Скриншоты
+        run: tools/store-shots.sh
+      - name: Капсулы-заглушки
+        run: tools/store-art.sh
+      - name: Трейлер
+        run: tools/trailer.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: store
+          path: |
+            build/store/screenshots/
+            build/store/art/
+            build/store/trailer.mp4
+          retention-days: 30

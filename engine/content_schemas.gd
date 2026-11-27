@@ -418,6 +418,9 @@ static func _build() -> void:
 			"intro": Schema.opt(text),
 			"outro": Schema.opt(text),
 		}), 1),
+		# Демоверсия: после какой фазы операции она заканчивается (0 — демоверсии нет).
+		# Сохранение демоверсии продолжается в полной игре со следующей фазы.
+		"demo": Schema.opt(Schema.obj({"last_act": Schema.i(0, 4)}), {"last_act": 0}),
 	})
 
 	_cache["balance"] = Schema.obj({

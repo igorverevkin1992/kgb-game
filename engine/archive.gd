@@ -4,7 +4,7 @@ class_name Archive
 const SECTIONS := ["history", "technique", "law", "fiction", "epilogue"]
 ## campaign_complete — любая из четырёх концовок кампании (для листов эпилога, общих для всех).
 const ENDINGS := ["persona_non_grata", "recalled", "mole_arrested", "campaign_complete",
-	"clean_triumph", "pyrrhic_victory", "shadow_exchange", "double_bottom"]
+	"clean_triumph", "pyrrhic_victory", "shadow_exchange", "double_bottom", "demo_complete"]
 
 
 ## Условие открытия: пусто — сразу; событие движка; «ending:<концовка>»; «flag:<флаг>»;

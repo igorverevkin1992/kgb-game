@@ -58,3 +58,13 @@ func unlock(id: String) -> void:
 		_steam.call("setAchievement", id)
 	if _steam.has_method("storeStats"):
 		_steam.call("storeStats")
+
+
+## Страница полной игры: оверлей Steam, без Steam — магазин в браузере. 0 — App ID ещё нет.
+func open_store(app_id: int) -> void:
+	if app_id <= 0:
+		return
+	if connected and _steam.has_method("activateGameOverlayToStore"):
+		_steam.call("activateGameOverlayToStore", app_id, 0)
+	else:
+		OS.shell_open("https://store.steampowered.com/app/%d/" % app_id)

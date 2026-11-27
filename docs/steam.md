@@ -13,6 +13,10 @@
    Subdirectory: `GodShpionov/saves`, Pattern: `*.json`. (Журнал плейтеста `telemetry/` в облако
    не нужен.)
 4. **Depot**: содержимое `build/windows/` без `steam_appid.txt`: `GodShpionov.exe`, `steam_api64.dll`.
+5. **Демоверсия** — отдельное приложение Steam: depot из `build/windows-demo/` (без
+   `steam_appid.txt`), App ID полной игры — в `project.godot` (`steam/full_app_id`), тогда на экране
+   «Конец демоверсии» появится кнопка «Добавить полную игру в список желаемого». Страница, капсулы,
+   трейлер и Next Fest — `docs/store/README.md`.
 
 ## VK Play
 

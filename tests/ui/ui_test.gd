@@ -6,7 +6,8 @@ extends RefCounted
 var tree: SceneTree
 var main: Control
 var failures: Array[String] = []
-var shots_dir := "res://build/screens"
+## Папку можно сменить переменной окружения UI_SHOTS_DIR (кадры для магазина — tools/store-shots.sh).
+var shots_dir := OS.get_environment("UI_SHOTS_DIR") if OS.get_environment("UI_SHOTS_DIR") != "" else "res://build/screens"
 
 
 func setup(p_tree: SceneTree, p_main: Control) -> void:
@@ -107,7 +108,14 @@ func enabled(name: String) -> bool:
 	return b != null and not b.disabled
 
 
+## Трейлер (tools/trailer.gd) подменяет снимок: на этом кадре сцена показывается в записи.
+var on_shot := Callable()
+
+
 func shot(file: String) -> void:
+	if on_shot.is_valid():
+		await on_shot.call(file)
+		return
 	await RenderingServer.frame_post_draw
 	var img := main.get_viewport().get_texture().get_image()
 	if img == null or img.is_empty():

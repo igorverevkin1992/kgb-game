@@ -24,8 +24,8 @@ jobs:
         run: timeout 300 "$(tools/get-godot.sh)" --headless --path . --import || true
       - name: Проверка контента и тесты движка
         run: tools/validate.sh && tools/test.sh
-      - name: Windows-сборка
-        run: tools/export.sh windows
+      - name: Windows-сборки (полная и демоверсия)
+        run: tools/export.sh windows && tools/export.sh demo
       - name: Архив и релиз
         run: |
           set -euo pipefail
@@ -33,6 +33,8 @@ jobs:
           [[ "$TAG" == playtest-* ]] || TAG="playtest-$(date -u +%Y%m%d-%H%M)"
           cp docs/playtest-tester.txt build/windows/ПРОЧТИ.txt
           (cd build/windows && zip -q -r "../../GodShpionov-$TAG.zip" .)
+          cp docs/playtest-tester.txt build/windows-demo/ПРОЧТИ.txt
+          (cd build/windows-demo && zip -q -r "../../GodShpionovDemo-$TAG.zip" .)
           gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --prerelease \
-            --title "Плейтест: $TAG" --notes "Сборка для закрытого плейтеста (Windows). Инструкция — файл ПРОЧТИ.txt в архиве."
-          gh release upload "$TAG" "GodShpionov-$TAG.zip" --clobber
+            --title "Плейтест: $TAG" --notes "Сборка для закрытого плейтеста (Windows): полная игра и демоверсия (первые две фазы операции). Инструкция — файл ПРОЧТИ.txt в архиве."
+          gh release upload "$TAG" "GodShpionov-$TAG.zip" "GodShpionovDemo-$TAG.zip" --clobber

@@ -26,6 +26,9 @@ tools/ui-test.sh [фильтр]    # сценарии интерфейса по�
 tools/export.sh windows|web|all   # build/windows/GodShpionov.exe (+ Steam), build/web/
 tools/telemetry-report.sh [папка] # сводка журналов плейтеста (session-*.jsonl)
 tools/balance.sh             # балансный прогон: автоигрок проходит кампанию тремя стратегиями
+tools/store-shots.sh         # скриншоты для магазинов 1920×1080 → build/store/screenshots/
+tools/store-art.sh [имя]     # заглушки капсул Steam и обложек VK Play → build/store/art/
+tools/trailer.sh             # черновой трейлер (Movie Maker + ffmpeg) → build/store/trailer.mp4
 ```
 Шаг готов, когда зелёные все три проверки и снят скриншот нового экрана. `test.sh` и `ui-test.sh`
 сначала запускают `tools/check_scripts.tscn` — проверку, что все скрипты компилируются. Прогон, в выводе
@@ -96,7 +99,11 @@ tools/balance.sh             # балансный прогон: автоигро
   `approve()` прикалывает улики и утверждает заключение); `tests/ui/` — сценарии (`UiTest`:
   `start(actions)` собирает состояние движком, `press`, `click`, `key`, `has_text`, `shot`).
   `Game.reset_for_test` включает «Мгновенный вывод текста» (лента шифроузла без анимации). После действия экран перестроен — узлы, найденные до него, уже удалены: ищи заново по имени.
-- Сборки: `export_presets.cfg` — Windows (`.exe` со встроенным pck) и Web (без потоков, для Pages).
+- Сборки: `export_presets.cfg` — Windows (`.exe` со встроенным pck), Windows Demo (признак `demo`,
+  `Game.demo_build`) и Web (без потоков, для Pages). Демоверсия: флаг `mode_demo` (`Campaign.DEMO_FLAG`)
+  при новой игре, после фазы `campaign.demo.last_act` — итог `demo_complete`; в полной игре
+  `Campaign.continue_full` продолжает сохранение. App ID полной игры — `steam/full_app_id` в
+  `project.godot`. Материалы для магазинов и Next Fest — `docs/store/`, workflow «Store».
   Каталог данных — `user://` = `%APPDATA%\GodShpionov` (`custom_user_dir_name`). Сборка для
   тестеров — тег `playtest-N` (workflow «Playtest», архив в Releases); памятки `docs/playtest.md`, `docs/steam.md`.
 
