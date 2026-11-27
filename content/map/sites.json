@@ -498,6 +498,19 @@
         "x": 21.0,
         "y": 11.6
       }
+    },
+    {
+      "site_id": "site_old_town_antiques",
+      "name": {
+        "ru": "Антикварная лавка в Старом городе Александрии"
+      },
+      "kind": "antiques",
+      "role": "target",
+      "district": "alexandria",
+      "pos": {
+        "x": 34.3,
+        "y": 23.5
+      }
     }
   ]
 }

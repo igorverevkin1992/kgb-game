@@ -59,6 +59,8 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 				st.ops[op.op_id] = true
 				if op.get("contact_target_id", "") != "":
 					st.flags["contact_" + op.contact_target_id] = true
+				if String(op.get("success_flag", "")) != "":
+					st.flags[op.success_flag] = true
 				if package_ops.has(op.op_id):
 					st.flags[Dangle.ACCEPTED_FLAG] = true
 					st.flags[Dangle.REJECTED_FLAG] = true

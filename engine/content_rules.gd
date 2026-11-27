@@ -553,7 +553,7 @@ static func _age16(ctx: Dictionary) -> void:
 			_age16_re[k] = AGE16_WARN[k].map(_age16_compile)
 	var c: Dictionary = ctx.content
 	var texts: Array = []
-	for key in ["targets", "clues", "cables", "ops", "polygraph", "requests", "dialogs", "achievements", "archive"]:
+	for key in ["targets", "clues", "cables", "ops", "polygraph", "requests", "dialogs", "achievements", "archive", "decisions", "list"]:
 		for item in c.get(key, []):
 			var id := _item_id(item)
 			_collect_ru(item, id, id, texts)
@@ -584,7 +584,7 @@ static func _age16_compile(p: String) -> RegEx:
 
 
 static func _item_id(item: Dictionary) -> String:
-	for k in ["target_id", "clue_id", "cable_id", "op_id", "exam_id", "request_id", "dialog_id", "id"]:
+	for k in ["target_id", "clue_id", "cable_id", "op_id", "exam_id", "request_id", "dialog_id", "decision_id", "card_id", "id"]:
 		if item.has(k):
 			return str(item[k])
 	return ""
@@ -684,6 +684,8 @@ static func _act3(ctx: Dictionary) -> void:
 	for o in c.ops:
 		if o.get("contact_target_id", "") != "":
 			flags_known["contact_" + o.contact_target_id] = true
+		if String(o.get("success_flag", "")) != "":
+			flags_known[o.success_flag] = true
 	for dd in c.dialogs:
 		for key in ["success", "failure"]:
 			var fx = dd.get(key)

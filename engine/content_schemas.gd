@@ -263,6 +263,8 @@ static func _build() -> void:
 		# Ключевое мероприятие сюжета: после отмены его можно повторить, валидатор не ищет
 		# обходной путь на случай его «срыва».
 		"essential": Schema.opt({"type": "bool"}, false),
+		# Флаг, который ставит чисто проведённый выход (для сюжетных линий).
+		"success_flag": Schema.opt(Schema.s(), ""),
 		"location": Schema.obj({
 			"site_id": Schema.id("site"),
 			"codename": Schema.opt(Schema.s()),

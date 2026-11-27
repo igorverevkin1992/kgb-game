@@ -1,0 +1,31 @@
+{
+  "op_id": "op_a2_illegal_drop",
+  "act": 2,
+  "week": 10,
+  "type": "dead_drop_load",
+  "title": {
+    "ru": "Закладка для «Гроссмейстера»"
+  },
+  "location": {
+    "site_id": "site_old_town_antiques"
+  },
+  "sdr": {
+    "surveillance_present": true,
+    "repeating_cue": "man_umbrella_cane",
+    "technique": "relay",
+    "ignore_consequence": {
+      "sog_heat_delta": 15,
+      "flag_set": "illegal_drop_burned"
+    }
+  },
+  "success_flag": "illegal_supplied",
+  "drop": {
+    "codename": "ЛАДЬЯ",
+    "signal": {
+      "ru": "Шахматная задача в витрине лавки: мат в два хода"
+    },
+    "container": {
+      "ru": "Полая ножка старинного столика в подсобке"
+    }
+  }
+}

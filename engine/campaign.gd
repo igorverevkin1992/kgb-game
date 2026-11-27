@@ -698,6 +698,8 @@ static func _resolve_op(ctx: Dictionary, op: Dictionary, decision: String) -> vo
 			_set_flag(ctx, c.flag_set)
 	s.op_results[op.op_id] = outcome
 	_emit(ctx, {"type": "op_resolved", "op_id": op.op_id, "outcome": outcome})
+	if outcome == "clean" and String(op.get("success_flag", "")) != "":
+		_set_flag(ctx, op.success_flag)
 	# Тайник для бесконтактного агента: чистая закладка — контакт установлен.
 	var contact: String = op.get("contact_target_id", "")
 	if contact != "" and outcome == "clean" and s.targets.has(contact) and not s.targets[contact].recruited and not s.targets[contact].lost:
