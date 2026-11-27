@@ -12,6 +12,7 @@ const OBJECTS := {
 	"finance": [950, 560, 230, 280, 5.0, "ledger"],
 	"dialog": [1230, 590, 320, 260, 0.0, "recorder"],
 	"archive": [40, 166, 300, 118, 0.0, "archive"],
+	"evidence": [1395, 36, 180, 240, 0.0, "safe"],
 }
 
 
@@ -23,7 +24,6 @@ static func build() -> Control:
 	room.add_child(Style.gradient(Style.WALL, Style.WALL_DARK, Rect2(0, 0, 1600, 300)))
 	room.add_child(Style.gradient(Style.VENEER_LIGHT, Style.VENEER_DARK, Rect2(0, 300, 1600, 600)))
 	room.add_child(Style.rect(Color("#6b4f35"), Rect2(0, 300, 1600, 6)))
-	room.add_child(Style.art("window", Rect2(1400, 30, 170, 230)))
 	room.add_child(Style.art("lamp", Rect2(1000, 322, 150, 190)))
 	room.add_child(_plaque())
 	for v in OBJECTS:
@@ -124,6 +124,15 @@ static func _object(v: String) -> Control:
 			badge.add_child(Style.label(str(unread), Style.form(true), 20, Style.PAPER_LIGHT, false))
 			badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			b.add_child(badge)
+	if v == "evidence":
+		var left: int = Evidence.open_count(Game.state, Game.content)
+		if left > 0:
+			var eb := Style.panel(Style.STAMP_RED, 6)
+			eb.name = "evidence-new"
+			eb.position = Vector2(b.size.x - 44, 20)
+			eb.add_child(Style.label(str(left), Style.form(true), 20, Style.PAPER_LIGHT, false))
+			eb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			b.add_child(eb)
 	# Бумажный ярлык с названием и клавишей.
 	var tag := Style.panel(Style.PAPER_LIGHT, 4)
 	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE

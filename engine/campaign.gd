@@ -86,6 +86,7 @@ static func new_campaign(content: Dictionary) -> Dictionary:
 		"payments": [],
 		"decisions": {},
 		"tasks": {},
+		"evidence": {},
 		"personal_ops": 0,
 		"package": null,
 		"handled": {},
@@ -337,6 +338,14 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			if o.is_empty():
 				return _reject(state, "Выберите один из вариантов")
 			_decide(ctx, d, o)
+
+		"inspect_detail":
+			var iid: String = action.get("item_id", "")
+			var did: String = action.get("detail_id", "")
+			var ierr := Evidence.inspect_error(s, content, iid, did)
+			if ierr != "":
+				return _reject(state, ierr)
+			_inspect(ctx, Evidence.by_id(content, iid), did)
 
 		"answer_task":
 			var tid: String = action.get("task_id", "")
@@ -1064,6 +1073,26 @@ static func continue_full(state: Dictionary, content: Dictionary) -> Dictionary:
 	_enter_act(ctx, nxt)
 	_start_morning(ctx)
 	return {"state": s, "events": ctx.events, "error": ""}
+
+
+## Осмотр детали вещдока: верная — сведения на доску и флаг линии, неверная — пометка.
+static func _inspect(ctx: Dictionary, item: Dictionary, detail_id: String) -> void:
+	var s: Dictionary = ctx.s
+	if not s.has("evidence"):
+		s.evidence = {}
+	var r: Dictionary = s.evidence.get(item.item_id, {"found": [], "tried": []})
+	var d := Evidence.detail(item, detail_id)
+	r.tried.append(detail_id)
+	if d.correct:
+		r.found.append(detail_id)
+		_emit(ctx, {"type": "evidence_found", "item_id": item.item_id, "detail_id": detail_id})
+		if d.clue_id != "":
+			_give_clue(ctx, d.clue_id)
+		if d.flag_set != "":
+			_set_flag(ctx, d.flag_set)
+	else:
+		_emit(ctx, {"type": "evidence_nothing", "item_id": item.item_id, "detail_id": detail_id})
+	s.evidence[item.item_id] = r
 
 
 ## Ответ на задание Центра: Доверие и давление по итогу, последствия выбранных предложений.

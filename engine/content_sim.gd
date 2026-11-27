@@ -65,6 +65,18 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 					st.flags[Dangle.ACCEPTED_FLAG] = true
 					st.flags[Dangle.REJECTED_FLAG] = true
 				changed = true
+		# Вещдоки: внимательный игрок находит все верные детали — флаги и сведения линии.
+		for it in content.get("evidence", []):
+			if st.decisions.has(it.item_id) or int(it.act) > max_act or not it.get("requires_flags", []).all(func(f): return st.flags.has(f)):
+				continue
+			st.decisions[it.item_id] = true
+			for side in it.sides:
+				for dt in side.details:
+					if dt.correct and dt.flag_set != "":
+						st.flags[dt.flag_set] = true
+					if dt.correct and dt.clue_id != "":
+						st.clues[dt.clue_id] = true
+			changed = true
 		# Разговоры и встречи на связи ставят флаги (идеальный игрок может прийти к любому исходу).
 		for d in content.get("dialogs", []):
 			if not Meeting.is_agreement(d) or st.decisions.has(d.dialog_id) or int(d.get("requires", {}).get("act", 1)) > max_act:

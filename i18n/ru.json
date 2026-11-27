@@ -712,5 +712,21 @@
   "task.status.failed": "Срок сорван",
   "task.status.withdrawn": "Снято с контроля",
   "calendar.task": "Задание Центра: срок — неделя {week}",
-  "cipher.overdueTasks": "В том числе сорванные этим воскресеньем задания Центра: {n}."
+  "cipher.overdueTasks": "В том числе сорванные этим воскресеньем задания Центра: {n}.",
+  "module.evidence.name": "Сейф: вещдоки",
+  "module.evidence.object": "Сейф с вещественными доказательствами",
+  "module.evidence.details": "визитки, подарки, фотографии, записки",
+  "evidence.note": "Осмотрите предмет со всех сторон и укажите важную деталь",
+  "evidence.empty": "Сейф пока пуст.",
+  "evidence.left": "не найдено важного: {n}",
+  "evidence.done": "осмотрено",
+  "evidence.pick": "Что здесь важно?",
+  "evidence.found": " — важно",
+  "evidence.nothing": " — ничего особенного",
+  "evidence.kind.card": "Визитка",
+  "evidence.kind.gift": "Подарок",
+  "evidence.kind.photo": "Фотография",
+  "evidence.kind.note": "Записка",
+  "evidence.kind.ticket": "Билет",
+  "evidence.kind.book": "Книга"
 }

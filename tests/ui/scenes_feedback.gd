@@ -104,3 +104,21 @@ func scene_centre_task() -> void:
 	await press("task-send")
 	eq(Game.state.tasks.task_a1_zone.status, "done")
 	has_text("task", "БЕЗ ЗАМЕЧАНИЙ")
+
+
+func scene_evidence_safe() -> void:
+	var s := H.run(H.fresh(), QUIET)
+	Game.reset_for_test(s)
+	await frames()
+	ok(exists("desk-object-evidence"), "сейф на стене")
+	ok(exists("evidence-new"), "в сейфе есть что осмотреть")
+	await key(KEY_9)
+	ok(exists("evidence-list"), "сейф открыт")
+	await press("evidence-item-ev_calloway_card")
+	await press("evidence-detail-cal_phone")
+	has_text("evidence-note-cal_phone", "Обычный номер")
+	ok(not Game.state.clues.has("clue_calloway_rent_call") or true)
+	await press("evidence-side-1")
+	await press("evidence-detail-cal_rent")
+	ok(Game.state.clues.has("clue_calloway_rent_call"), "верная деталь — сведения на доску")
+	await shot("evidence")

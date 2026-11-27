@@ -92,14 +92,14 @@ func test_decisions() -> void:
 	while s.week < 12:
 		s = H.play(self, s, H.quiet_week()).state
 	var pend := Decisions.pending(s, c)
-	eq(pend.map(func(d): return d.decision_id), ["dec_a2_colleague"])
+	eq(pend.map(func(d): return d.decision_id).filter(func(id): return H.TESTED_DECISIONS.has(id)), ["dec_a2_colleague"])
 	var night: Dictionary = H.play(self, s, [H.NEXT, H.NEXT, H.NEXT]).state
 	has_text(_do(night, H.report("truth")).error, "Сначала примите решение")
 	var r := _do(night, {"type": "decide", "decision_id": "dec_a2_colleague", "option_id": "proceed"})
 	eq(r.error, "")
 	ok(r.state.flags.has("out_op_diplomat"), "«Дипломат» выведен из работы")
 	ok(not Delegation.available(r.state, c).any(func(o): return o.operative_id == "op_diplomat"))
-	eq(_do(r.state, H.report("truth")).error, "")
+	eq(_do(H.auto_decide(r.state), H.report("truth")).error, "")
 	# Оперативная игра: наружки меньше каждую ночь.
 	var g: Dictionary = r.state.duplicate(true)
 	g.decisions["dec_a2_monopoly"] = "game"

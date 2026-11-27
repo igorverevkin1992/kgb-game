@@ -150,7 +150,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			Game.tape_next_slip()
 			get_viewport().set_input_as_handled()
 			return
-	if key >= KEY_1 and key <= KEY_8:
+	if key >= KEY_1 and key <= KEY_9:
 		var v := Modules.by_hotkey(key - KEY_0)
 		if v != "":
 			Game.open(v)

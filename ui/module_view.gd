@@ -3,10 +3,11 @@ class_name ModuleView
 ## остальными предметами (переход одним кликом или клавишей 1–7), Esc — к столу. Без меню.
 
 const FRAME := Rect2(32, 24, 1536, 756)
-const MINI := {"map": "map", "mice": "corkboard_mini", "cipher": "fialka", "finance": "ledger", "dialog": "recorder", "counterintel": "console", "inbox": "inbox_full", "archive": "archive"}
+const MINI := {"map": "map", "mice": "corkboard_mini", "cipher": "fialka", "finance": "ledger", "dialog": "recorder", "counterintel": "console", "inbox": "inbox_full", "archive": "archive", "evidence": "safe_mini"}
 const BG := {
 	"map": Color("#3b2d20"), "mice": Color("#4a3421"), "cipher": Color("#1d1e1b"), "finance": Color("#8a6a3b"),
 	"dialog": Color("#454b38"), "counterintel": Color("#3b3f35"), "inbox": Color("#2a2119"), "archive": Color("#2f2a22"),
+	"evidence": Color("#33362f"),
 }
 
 
@@ -52,6 +53,8 @@ static func _content(view: String) -> Control:
 			return DialogView.build()
 		"archive":
 			return ArchiveView.build()
+		"evidence":
+			return EvidenceView.build()
 		_:
 			return CounterintelView.build()
 

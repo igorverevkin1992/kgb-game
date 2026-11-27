@@ -32,6 +32,7 @@ static func check(content: Dictionary, file_of: Dictionary, opts := {}) -> Array
 	_age16(ctx)
 	_archive(ctx)
 	_tasks(ctx)
+	_evidence(ctx)
 	_act2(ctx)
 	_act3(ctx)
 	_act4(ctx)
@@ -554,7 +555,7 @@ static func _age16(ctx: Dictionary) -> void:
 			_age16_re[k] = AGE16_WARN[k].map(_age16_compile)
 	var c: Dictionary = ctx.content
 	var texts: Array = []
-	for key in ["targets", "clues", "cables", "ops", "polygraph", "requests", "dialogs", "achievements", "archive", "decisions", "list"]:
+	for key in ["targets", "clues", "cables", "ops", "polygraph", "requests", "dialogs", "achievements", "archive", "decisions", "list", "evidence", "tasks", "tutorial", "help"]:
 		for item in c.get(key, []):
 			var id := _item_id(item)
 			_collect_ru(item, id, id, texts)
@@ -604,6 +605,34 @@ static func _collect_ru(v: Variant, id: String, where: String, out: Array) -> vo
 
 
 ## 16. Архив: записи открываются по событиям, которые движок испускает.
+## Вещдоки: у каждого предмета есть верная деталь, сведения существуют, неделя внутри фазы.
+static func _evidence(ctx: Dictionary) -> void:
+	var c: Dictionary = ctx.content
+	var clues := {}
+	for cl in c.clues:
+		clues[cl.clue_id] = true
+	var seen := {}
+	for it in c.get("evidence", []):
+		var id: String = it.item_id
+		for a in c.campaign.acts:
+			if int(a.act) == int(it.act) and (int(it.week) < int(a.weeks.from) or int(it.week) > int(a.weeks.to)):
+				_push(ctx, "error", "evidence", "Неделя вещдока %d вне фазы операции %d" % [it.week, it.act], "%s.week" % id, id)
+		var right := 0
+		for side in it.sides:
+			for d in side.details:
+				if seen.has(d.detail_id):
+					_push(ctx, "error", "evidence", "Деталь «%s» уже есть у другого вещдока" % d.detail_id, "%s.%s" % [id, d.detail_id], id)
+				seen[d.detail_id] = true
+				if d.correct:
+					right += 1
+					if d.clue_id == "" and d.flag_set == "":
+						_push(ctx, "warning", "evidence", "Верная деталь ничего не даёт (нет clue_id и flag_set)", "%s.%s" % [id, d.detail_id], id)
+				if d.clue_id != "" and not clues.has(d.clue_id):
+					_push(ctx, "error", "evidence", "Деталь ссылается на несуществующие сведения «%s»" % d.clue_id, "%s.%s.clue_id" % [id, d.detail_id], id)
+		if right == 0:
+			_push(ctx, "error", "evidence", "У вещдока нет ни одной верной детали", id, id)
+
+
 ## Задания Центра: ссылки на агентов и документы, неделя внутри фазы, один верный ответ.
 static func _tasks(ctx: Dictionary) -> void:
 	var c: Dictionary = ctx.content
@@ -727,6 +756,11 @@ static func _act3(ctx: Dictionary) -> void:
 			flags_known["contact_" + o.contact_target_id] = true
 		if String(o.get("success_flag", "")) != "":
 			flags_known[o.success_flag] = true
+	for it in c.get("evidence", []):
+		for side in it.sides:
+			for d in side.details:
+				if d.correct and d.flag_set != "":
+					flags_known[d.flag_set] = true
 	for t in c.get("tasks", []):
 		for q in t.questions:
 			for o in q.get("options", []):

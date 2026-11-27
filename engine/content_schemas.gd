@@ -365,6 +365,29 @@ static func _build() -> void:
 		}),
 	})
 
+	# Вещественное доказательство: стороны с деталями; верная деталь — сведения и/или флаг.
+	_cache["evidence_item"] = Schema.obj({
+		"item_id": Schema.s("^ev_[a-z0-9_]+$", "id вещдока вида ev_…"),
+		"act": act,
+		"week": Schema.i(1, 80),
+		"requires_flags": Schema.opt(Schema.arr(flag), []),
+		"kind": Schema.e(["card", "gift", "photo", "note", "ticket", "book"]),
+		"title": text,
+		"source": text,
+		"sides": Schema.arr(Schema.obj({
+			"title": text,
+			"text": text,
+			"details": Schema.arr(Schema.obj({
+				"detail_id": Schema.s("^[a-z0-9_]+$"),
+				"label": text,
+				"correct": Schema.opt({"type": "bool"}, false),
+				"note": text,
+				"clue_id": Schema.opt(Schema.s(), ""),
+				"flag_set": Schema.opt(Schema.s(), ""),
+			}), 1),
+		}), 1),
+	})
+
 	# Задание Центра: приходит в неделю week фазы act, срок — due_weeks; вопросы с вариантами.
 	_cache["centre_task"] = Schema.obj({
 		"task_id": Schema.s("^task_[a-z0-9_]+$", "id задания вида task_…"),

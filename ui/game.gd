@@ -5,7 +5,7 @@ extends Node
 
 signal changed
 
-const VIEWS := ["map", "mice", "cipher", "finance", "dialog", "counterintel", "inbox", "archive"]
+const VIEWS := ["map", "mice", "cipher", "finance", "dialog", "counterintel", "inbox", "archive", "evidence"]
 const SETTINGS_SLOT := "settings"
 const TEXT_SCALES := [1.0, 1.15, 1.3]
 
@@ -67,6 +67,9 @@ var meeting_trump := ""
 var finance_agent := ""
 ## «Архив 1985»: открытая запись.
 var archive_selected := ""
+## Сейф с вещдоками: выбранный предмет и его сторона.
+var evidence_selected := ""
+var evidence_side := 0
 ## Пульт обстановки: выбранное дело «Списка» и вкладка (картотека / полиграф).
 var card_selected := ""
 var console_tab := "list"
@@ -224,6 +227,19 @@ func set_task_answer(task_id: String, q_id: String, option_id: String) -> void:
 	changed.emit()
 
 
+func select_evidence(item_id: String) -> void:
+	evidence_selected = item_id
+	evidence_side = 0
+	sfx("paper")
+	changed.emit()
+
+
+func set_evidence_side(i: int) -> void:
+	evidence_side = i
+	sfx("paper")
+	changed.emit()
+
+
 func set_inbox_folder(f: String) -> void:
 	inbox_folder = f
 	changed.emit()
@@ -278,7 +294,7 @@ func is_unlocked(v: String) -> bool:
 	return v == "inbox" or act() >= Modules.unlock_act(v)
 
 
-const OPEN_SOUNDS := {"archive": "paper", "map": "paper", "mice": "paper", "inbox": "paper", "finance": "paper", "cipher": "click", "dialog": "reel", "counterintel": "click"}
+const OPEN_SOUNDS := {"evidence": "click", "archive": "paper", "map": "paper", "mice": "paper", "inbox": "paper", "finance": "paper", "cipher": "click", "dialog": "reel", "counterintel": "click"}
 
 
 func open(v: String) -> void:
@@ -653,6 +669,8 @@ func _clear_ui() -> void:
 	inbox_selected = ""
 	inbox_folder = "all"
 	task_draft = {}
+	evidence_selected = ""
+	evidence_side = 0
 	board_selected = ""
 	board_analysis = ""
 	board_form = {}

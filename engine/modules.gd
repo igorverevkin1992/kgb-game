@@ -2,9 +2,10 @@ class_name Modules
 ## Модули рабочего стола и с какого акта они доступны (GDD, Блок 3 + риск №2):
 ## в первые 45 минут игрок видит только карту, шифроузел и доску мотивов.
 
-const UNLOCK := {"map": 1, "mice": 1, "cipher": 1, "finance": 1, "dialog": 1, "counterintel": 3, "inbox": 1, "archive": 1}
-## Порядок на краю стола и горячие клавиши 1–8 («Архив 1985» — справочник, восьмой).
-const ORDER := ["map", "mice", "cipher", "finance", "dialog", "counterintel", "inbox", "archive"]
+const UNLOCK := {"map": 1, "mice": 1, "cipher": 1, "finance": 1, "dialog": 1, "counterintel": 3, "inbox": 1, "archive": 1, "evidence": 1}
+## Порядок на краю стола и горячие клавиши 1–9 («Архив 1985» — справочник, восьмой; сейф с
+## вещественными доказательствами — девятый).
+const ORDER := ["map", "mice", "cipher", "finance", "dialog", "counterintel", "inbox", "archive", "evidence"]
 
 
 static func unlock_act(view: String) -> int:
