@@ -24,6 +24,8 @@ class_name Campaign
 ##   {type: "list_action", card_id, action: "arrest"|"natural"|"game"|"cancel"} — «Окно арестов»
 ##   {type: "contest_quota"} — оспорить ближайшую квоту Центра · {type: "restrain_agent", target_id}
 ##     — «притормозить» траты агента (раз в неделю)
+##   {type: "polygraph_prep", prep_id} · {type: "polygraph_start", rehearsal: bool}
+##   {type: "polygraph_answer", choice_id} · {type: "polygraph_rationalize", option_id} — полиграф ЦРУ
 ##   {type: "submit_report", report: "truth"|"embellished"|"silence"} — быстрое донесение, или
 ##   {type: "submit_report", choices: {fact_key: "as_is"|"embellish"|"omit"}, request: "req_…"|""}
 ##     — шифрограмма из фактов недели (Cipher.week_facts); вид донесения определяет Cipher.classify
@@ -79,6 +81,7 @@ static func new_campaign(content: Dictionary) -> Dictionary:
 		"personal_ops": 0,
 		"package": null,
 		"list": null,
+		"polygraph": null,
 		"rng": b.start.seed,
 		"ending": null,
 		"log": [],
@@ -397,6 +400,52 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			_emit(ctx, {"type": "agent_restrained", "target_id": id})
 			_emit(ctx, {"type": "loyalty_changed", "target_id": id, "from": from, "to": ag.loyalty, "reason": "restrained"})
 
+		"polygraph_prep":
+			var err := Polygraph.prep_error(s, content, action.get("prep_id", ""))
+			if err != "":
+				return _reject(state, err)
+			s.polygraph.prep.append(action.prep_id)
+			_emit(ctx, {"type": "polygraph_prep", "prep_id": action.prep_id})
+
+		"polygraph_start":
+			var p = s.get("polygraph")
+			if p == null or p.result != "":
+				return _reject(state, "Проверки на полиграфе сейчас нет")
+			var rehearsal: bool = action.get("rehearsal", false)
+			var e := Polygraph.by_id(content, p.exam_id)
+			if p.exam != null and not p.exam.rehearsal:
+				return _reject(state, "Проверка уже идёт")
+			if not rehearsal and int(s.week) < int(e.week):
+				return _reject(state, "Проверка назначена на неделю %d — пока можно провести репетицию" % e.week)
+			if s.phase == "night":
+				return _reject(state, "Ночью проверку не проводят")
+			p.exam = Polygraph.start_exam(s, content, rehearsal)
+			if rehearsal:
+				p.rehearsals = int(p.rehearsals) + 1
+			_emit(ctx, {"type": "polygraph_started", "rehearsal": rehearsal})
+
+		"polygraph_answer", "polygraph_rationalize":
+			var p = s.get("polygraph")
+			if p == null or p.exam == null or p.exam.has("verdict"):
+				return _reject(state, "Проверка не идёт")
+			var e := Polygraph.by_id(content, p.exam_id)
+			if action.type == "polygraph_answer":
+				if p.exam.pending:
+					return _reject(state, "Пик на значимом вопросе: сначала объясните волнение")
+				var ch: Array = Polygraph.choices(content, s).filter(func(c): return c.choice_id == action.get("choice_id", ""))
+				if ch.is_empty():
+					return _reject(state, "Такого ответа нет")
+				p.exam = Polygraph.answer(content, s, ch[0])
+			else:
+				if not p.exam.pending:
+					return _reject(state, "Объяснять нечего: пика не было")
+				var opt: Array = e.rationalizations.filter(func(o): return o.option_id == action.get("option_id", "") and not p.exam.used.has(o.option_id))
+				if opt.is_empty():
+					return _reject(state, "Этим объяснением уже воспользовались")
+				p.exam = Polygraph.rationalize(s, opt[0])
+			if Polygraph.finished(content, s):
+				_finish_polygraph(ctx)
+
 		"verify_cable":
 			var cable := cable_by_id(content, action.cable_id)
 			if cable.is_empty() or cable.kind != "directive" or not s.delivered_cables.has(cable.cable_id):
@@ -415,6 +464,9 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			var waiting := Decisions.pending(s, content)
 			if not waiting.is_empty():
 				return _reject(state, "Сначала примите решение: «%s»" % waiting[0].title.ru)
+			var pg = s.get("polygraph")
+			if pg != null and pg.result == "" and int(s.week) >= int(Polygraph.by_id(content, pg.exam_id).week):
+				return _reject(state, "Сначала — проверка «Кроноса» на полиграфе (пульт обстановки)")
 			var report: String = action.get("report", "")
 			if action.has("choices"):
 				var choices: Dictionary = action.choices
@@ -537,6 +589,7 @@ static func _start_morning(ctx: Dictionary) -> void:
 			# Улики из документов игрок снимает сам (подсвеченные фрагменты, take_clue).
 	_deliver_payments(ctx)
 	_check_unlocks(ctx)  # новая фаза операции: могли открыться кандидаты по старым сведениям
+	_polygraph_notice(ctx)
 	# Каждый завербованный агент приносит по одному донесению в неделю — если лоялен.
 	for t in content.targets:
 		var ts = s.targets.get(t.target_id)
@@ -959,6 +1012,42 @@ static func _list_night(ctx: Dictionary) -> void:
 		_set_flag(ctx, ArrestWindow.WINDOW_CLOSED_FLAG)
 		_emit(ctx, {"type": "list_window_closed", "realized": ArrestWindow.realized(s, content)})
 		_check_goal(ctx)
+
+
+## Утро: «Кроноса» вызывают на плановый полиграф (с источником в Управлении безопасности —
+## заранее, без него — в последний момент).
+static func _polygraph_notice(ctx: Dictionary) -> void:
+	var s: Dictionary = ctx.s
+	var e := Polygraph.exam_def(ctx.content)
+	if e.is_empty() or s.get("polygraph") != null or int(s.act) != int(e.act) or s.flags.has(Polygraph.DONE_FLAG):
+		return
+	if int(s.week) < Polygraph.notice_week(s, ctx.content, e):
+		return
+	var ts = s.targets.get(e.subject)
+	s.polygraph = Polygraph.new_state(s, ctx.content, e)
+	if ts == null or not ts.recruited or ts.lost:
+		s.polygraph.result = "none"
+		_set_flag(ctx, Polygraph.DONE_FLAG)
+		return
+	_emit(ctx, {"type": "polygraph_scheduled", "week": int(e.week), "source": s.polygraph.source})
+
+
+## Итог проверки на полиграфе (репетиция — только вердикт без последствий).
+static func _finish_polygraph(ctx: Dictionary) -> void:
+	var s: Dictionary = ctx.s
+	var p: Dictionary = s.polygraph
+	var v := Polygraph.verdict(ctx.content, p.exam, p.exam_id)
+	p.exam.verdict = v
+	if p.exam.rehearsal:
+		_emit(ctx, {"type": "polygraph_rehearsed", "result": v})
+		return
+	var e := Polygraph.by_id(ctx.content, p.exam_id)
+	p.result = v
+	_emit(ctx, {"type": "polygraph_result", "result": v})
+	_add_risk(ctx, "mole_hunt", int(e.outcomes[v].mole_hunt), "polygraph")
+	_set_flag(ctx, {"pass": Polygraph.PASS_FLAG, "inconclusive": Polygraph.INCONCLUSIVE_FLAG, "fail": Polygraph.FAIL_FLAG}[v])
+	_set_flag(ctx, Polygraph.DONE_FLAG)
+	_check_goal(ctx)
 
 
 static func _end(ctx: Dictionary, ending: String) -> void:

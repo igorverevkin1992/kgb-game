@@ -92,12 +92,13 @@ func test_dangle_cards() -> void:
 	eq(ArrestWindow.status(clean, "card_iki"), "arrested", "без подставы дело настоящее")
 
 
-func test_window_closes_and_campaign_completes() -> void:
+func test_window_closes() -> void:
 	var s := H.act4_state()
 	var r := H.play(self, s, H.weeks(8, _night()))
 	ok(r.events.any(func(e): return e.type == "list_window_closed"))
 	ok(r.state.flags.has("arrest_window_closed"))
-	ok(r.events.any(func(e): return e.type == "act_completed" and e.act == 4), "четвёртая фаза завершена")
+	ok(not r.events.any(func(e): return e.type == "act_completed"), "фаза ещё не закончена: впереди полиграф «Кроноса»")
+	eq(r.state.ending, null)
 
 
 func test_kronos_spending_and_restrain() -> void:

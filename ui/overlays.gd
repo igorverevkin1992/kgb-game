@@ -177,6 +177,14 @@ static func _event_text(e: Dictionary) -> String:
 			return T.t("event.quota_contested_yes" if e.granted else "event.quota_contested_no", {"week": e.by_week})
 		"list_window_closed":
 			return T.t("event.list_window_closed", {"n": e.realized})
+		"polygraph_scheduled":
+			return T.t("event.polygraph_scheduled", {"week": e.week})
+		"polygraph_prep":
+			return T.t("event.polygraph_prep", {"name": T.loc(Polygraph.prep_option(Polygraph.exam_def(c), e.prep_id).get("label", {"ru": e.prep_id}))})
+		"polygraph_started":
+			return T.t("event.polygraph_rehearsal" if e.rehearsal else "event.polygraph_started")
+		"polygraph_rehearsed", "polygraph_result":
+			return T.t("event." + e.type, {"result": T.t("polygraph.verdict." + e.result)})
 		"agent_restrained":
 			return T.t("event.agent_restrained", {"name": _tname(e.target_id)})
 		"package_checked":

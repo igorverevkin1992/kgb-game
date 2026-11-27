@@ -328,6 +328,24 @@ tools/validate.sh
   последнюю неделю графика.
 - **Траты агента** — `finance.spending_per_week` у цели: образ жизни растёт без выплат.
 
+## Полиграф ЦРУ (`polygraph/`)
+
+- **Когда и кого**: `act`, `week` (неделя проверки), `subject` (кого проверяют),
+  `source_agent` (агент в Управлении безопасности ЦРУ: с ним вызов приходит за
+  `notice.weeks_with_source` недель и виден профиль экзаменатора).
+- **Подготовка**: `notice.prep_slots_with_source` / `prep_slots_without` — сколько пунктов
+  инструктажа успеть; `prep_options` — пункты: `kind` (sleep, sedatives, strategy, legend),
+  `stability` (снижает пики на значимых вопросах), `rapport`, `skepticism`; у стратегии —
+  `archetype` (под какого экзаменатора она подходит). Легенда снимает `finance_stress` с
+  финансового вопроса (скромный образ жизни агента — тоже).
+- **Вопросы**: `neutral`, `control_comparison` (ответы задают `control_peak`),
+  `relevant_critical` (`base_peak`, `finance`, `pass_formula`). У ответов — `effects`
+  (`rapport`, `skepticism`, `control_peak`, `relevant_peak`) и `requires_prep`.
+- **Пик**: если реакция на значимый вопрос выше контрольного пика, игрок выбирает объяснение
+  из `rationalizations`.
+- **Итог** — `outcomes.pass/inconclusive/fail`: тревога в Лэнгли и текст. Валидатор проверяет,
+  что проверку можно пройти с полной подготовкой, и предупреждает, если без подготовки — нельзя.
+
 ## Письма из дома и «Архив 1985»
 
 **Письмо** — обычный документ почты с `"kind": "letter"`: рисуется тетрадным листом синей ручкой.

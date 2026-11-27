@@ -220,5 +220,18 @@
     },
     "event": "list_fake_revealed",
     "match": {}
+  },
+  {
+    "id": "ACH_NON_DECEPTIVE",
+    "title": {
+      "ru": "Признаков обмана не выявлено"
+    },
+    "description": {
+      "ru": "Провести «Кроноса» через полиграф ЦРУ."
+    },
+    "event": "polygraph_result",
+    "match": {
+      "result": "pass"
+    }
   }
 ]

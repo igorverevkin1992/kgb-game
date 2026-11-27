@@ -32,6 +32,10 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 	var aw := ArrestWindow.act_of(content)
 	if aw > 0 and aw <= max_act:
 		st.flags[ArrestWindow.WINDOW_CLOSED_FLAG] = true
+	# Проверка на полиграфе завершается при любом исходе.
+	var pe := Polygraph.exam_def(content)
+	if not pe.is_empty() and int(pe.act) <= max_act:
+		st.flags[Polygraph.DONE_FLAG] = true
 	var changed := true
 	while changed:
 		changed = false

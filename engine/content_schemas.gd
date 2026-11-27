@@ -260,28 +260,74 @@ static func _build() -> void:
 		})),
 	})
 
-	var effects := Schema.obj({
-		"rapport": Schema.opt(Schema.i()), "skepticism": Schema.opt(Schema.i()), "control_peak": Schema.opt(Schema.i()), "relevant_peak": Schema.opt(Schema.i()),
+	# Полиграф ЦРУ: подготовка «крота» и допрос по методу контрольных вопросов.
+	var pfx := Schema.obj({
+		"rapport": Schema.opt(Schema.i(), 0), "skepticism": Schema.opt(Schema.i(), 0),
+		"control_peak": Schema.opt(Schema.i(), 0), "relevant_peak": Schema.opt(Schema.i(), 0),
 	})
 	_cache["polygraph"] = Schema.obj({
 		"exam_id": Schema.id("exam"),
+		"act": act,
+		# Неделя экзамена; кого проверяют; чей агент заранее узнаёт дату и профиль экзаменатора.
+		"week": week,
+		"subject": Schema.id("tar"),
+		"source_agent": Schema.id("tar"),
+		"title": text,
+		"notice": Schema.obj({
+			"weeks_with_source": Schema.i(0, 4),
+			"prep_slots_with_source": Schema.i(1, 6),
+			"prep_slots_without": Schema.i(0, 6),
+			"text_with_source": text,
+			"text_without": text,
+		}),
 		"examiner_profile": Schema.obj({
 			"name": text,
 			"archetype": Schema.e(["chummy_veteran", "rigid_formalist"]),
+			"description": text,
 			"rapport_threshold_pass": scale,
 			"skepticism_fail_limit": scale,
 		}),
-		"pre_test_modifiers": {"type": "dict", "of": Schema.obj({
-			"baseline_stability": Schema.opt(Schema.i()), "chart_authenticity": Schema.opt(Schema.i()), "finance_question_stress": Schema.opt(Schema.i()),
-			"required_prep_id": Schema.opt(Schema.s()), "condition": Schema.opt(Schema.s()),
-		})},
+		"start": Schema.obj({"rapport": scale, "skepticism": scale}),
+		# Финансовый вопрос без прикрытия: насколько выше пик (легенда или скромный образ жизни снимают).
+		"finance_stress": Schema.i(0, 100),
+		"prep_options": Schema.arr(Schema.obj({
+			"prep_id": Schema.s("^prep_[a-z0-9_]+$", "id подготовки: prep_ и латиница"),
+			"kind": Schema.e(["sleep", "sedatives", "strategy", "legend"]),
+			"label": text,
+			"text": text,
+			# Для стратегии: под какого экзаменатора она подходит.
+			"archetype": Schema.opt(Schema.e(["", "chummy_veteran", "rigid_formalist"]), ""),
+			"stability": Schema.opt(Schema.i(-50, 50), 0),
+			"rapport": Schema.opt(Schema.i(-50, 50), 0),
+			"skepticism": Schema.opt(Schema.i(-50, 50), 0),
+		}), 1),
 		"question_sequence": Schema.arr(Schema.obj({
 			"q_id": Schema.s("^q_[a-z0-9_]+$", "q_id должен начинаться с «q_»"),
 			"category": Schema.e(["neutral", "control_comparison", "relevant_critical"]),
 			"text": text,
-			"choices": Schema.opt(Schema.arr(Schema.obj({"choice_id": Schema.s("^[a-z0-9_]+$"), "label": text, "effects": effects})), []),
+			# Значимый вопрос: исходный пик реакции и касается ли он денег.
+			"base_peak": Schema.opt(Schema.i(0, 100), 0),
+			"finance": Schema.opt({"type": "bool"}, false),
+			"choices": Schema.arr(Schema.obj({
+				"choice_id": Schema.s("^[a-z0-9_]+$"),
+				"label": text,
+				"effects": pfx,
+				"requires_prep": Schema.opt(Schema.s(), ""),
+			}), 1),
 			"pass_formula": Schema.opt(Schema.s()),
 		}), 1),
+		# Если на значимом вопросе проскочил пик — объяснение волнения.
+		"rationalizations": Schema.arr(Schema.obj({
+			"option_id": Schema.s("^[a-z0-9_]+$"),
+			"label": text,
+			"effects": pfx,
+		}), 1),
+		# Итоги проверки: последствия для охоты на «крота».
+		"outcomes": Schema.obj({
+			"pass": Schema.obj({"mole_hunt": delta, "text": text}),
+			"inconclusive": Schema.obj({"mole_hunt": delta, "text": text}),
+			"fail": Schema.obj({"mole_hunt": delta, "text": text}),
+		}),
 	})
 
 	_cache["campaign"] = Schema.obj({

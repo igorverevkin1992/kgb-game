@@ -19,6 +19,19 @@ static func build() -> Control:
 	var cfg := ArrestWindow.config(c)
 	var note := T.t("counterintel.note", {"from": cfg.get("from", 0), "to": cfg.get("to", 0)}) if not cfg.is_empty() else ""
 	root.add_child(ModuleView.header(T.t("module.counterintel.name"), note))
+	# Вкладки: картотека и протокол полиграфа (когда «Кроноса» вызвали на проверку).
+	if s.get("polygraph") != null:
+		var tabs := Style.hbox(8)
+		tabs.position = Vector2(28, 70)
+		for t in ["list", "polygraph"]:
+			var on: bool = Game.console_tab == t
+			var b := Style.button(T.t("counterintel.tab." + t), "console-tab-" + t, Style.INK if on else Style.PAPER, Style.PAPER if on else Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.5), 14)
+			b.pressed.connect(Game.set_console_tab.bind(t))
+			tabs.add_child(b)
+		root.add_child(tabs)
+		if Game.console_tab == "polygraph":
+			root.add_child(PolygraphView.build())
+			return root
 	if s.get("list") == null:
 		var empty := Style.para(T.t("counterintel.empty"), 900, Style.mono(), 15, Color(Style.PAPER, 0.8))
 		empty.position = Vector2(28, 90)
@@ -35,7 +48,7 @@ static func build() -> Control:
 static func _schedule(s: Dictionary, c: Dictionary, cfg: Dictionary) -> Control:
 	var box := Style.vbox(6)
 	box.name = "list-schedule"
-	box.position = Vector2(28, 70)
+	box.position = Vector2(28, 70 if s.get("polygraph") == null else 112)
 	box.custom_minimum_size.x = 1480
 	var weeks := Style.hbox(6)
 	for w in range(int(cfg.from), int(cfg.to) + 1):
@@ -95,8 +108,9 @@ static func _schedule(s: Dictionary, c: Dictionary, cfg: Dictionary) -> Control:
 
 static func _grid(s: Dictionary, c: Dictionary) -> Control:
 	var scroll := ScrollContainer.new()
-	scroll.position = Vector2(28, 216)
-	scroll.size = Vector2(930, 524)
+	var shift := 42.0 if s.get("polygraph") != null else 0.0
+	scroll.position = Vector2(28, 216 + shift)
+	scroll.size = Vector2(930, 524 - shift)
 	var grid := GridContainer.new()
 	grid.name = "list-grid"
 	grid.columns = 3
@@ -140,7 +154,7 @@ static func _card(s: Dictionary, card: Dictionary) -> Control:
 static func _detail(s: Dictionary, c: Dictionary) -> Control:
 	var panel := Style.panel(Color("#e8dcb8"), 22)
 	panel.name = "card-detail"
-	panel.position = Vector2(DETAIL_X, 216)
+	panel.position = Vector2(DETAIL_X, 216 + (42.0 if s.get("polygraph") != null else 0.0))
 	panel.custom_minimum_size = Vector2(DETAIL_W, 0)
 	var v := Style.vbox(8)
 	v.custom_minimum_size.x = DETAIL_W - 44

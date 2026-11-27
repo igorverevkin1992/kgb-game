@@ -1,71 +1,404 @@
 {
   "exam_id": "exam_cia_may_1986",
+  "act": 4,
+  "week": 45,
+  "subject": "tar_caldwell_arthur",
+  "source_agent": "tar_jenkins_clara",
+  "title": {
+    "ru": "Плановая проверка на полиграфе перед командировкой в Рим"
+  },
+  "notice": {
+    "weeks_with_source": 1,
+    "prep_slots_with_source": 4,
+    "prep_slots_without": 2,
+    "text_with_source": {
+      "ru": "Дженкинс: «Кроноса» проверят на полиграфе перед командировкой в Рим — через две недели. Экзаменатор известен."
+    },
+    "text_without": {
+      "ru": "«Кронос» сообщил по аварийному каналу: завтра — полиграф перед командировкой в Рим. На подготовку — три дня, об экзаменаторе ничего не известно."
+    }
+  },
   "examiner_profile": {
     "name": {
-      "ru": "Дэвид Хэллман",
-      "en": "David Hallman"
+      "ru": "Дэвид Хэллман"
     },
     "archetype": "chummy_veteran",
+    "description": {
+      "ru": "Ветеран Управления безопасности, общительный, любит разговоры о рыбалке и бейсболе. Доверяет тем, кто держится свободно, и настораживается от сухих ответов."
+    },
     "rapport_threshold_pass": 65,
     "skepticism_fail_limit": 80
   },
-  "pre_test_modifiers": {
-    "rested_48h": {
-      "baseline_stability": 20,
-      "required_prep_id": "prep_sleep_order"
-    },
-    "no_sedatives": {
-      "chart_authenticity": 15,
-      "required_prep_id": "prep_ban_pills"
-    },
-    "cover_story_verified": {
-      "finance_question_stress": -25,
-      "condition": "cover_story_strength >= 70"
-    }
+  "start": {
+    "rapport": 45,
+    "skepticism": 35
   },
+  "finance_stress": 20,
+  "prep_options": [
+    {
+      "prep_id": "prep_sleep_order",
+      "kind": "sleep",
+      "label": {
+        "ru": "Режим: полноценный сон за 48 часов до проверки"
+      },
+      "text": {
+        "ru": "Отдохнувший организм даёт ровные исходные кривые: пики на значимых вопросах ниже."
+      },
+      "stability": 15
+    },
+    {
+      "prep_id": "prep_ban_pills",
+      "kind": "sedatives",
+      "label": {
+        "ru": "Никаких седативных препаратов"
+      },
+      "text": {
+        "ru": "Успокоительные смазывают контрольные кривые — опытный экзаменатор это видит. Чистые кривые снижают его скепсис."
+      },
+      "skepticism": -10
+    },
+    {
+      "prep_id": "prep_strategy_friendly",
+      "kind": "strategy",
+      "archetype": "chummy_veteran",
+      "label": {
+        "ru": "Стратегия: держаться дружески и разговорчиво"
+      },
+      "text": {
+        "ru": "Подходит к общительному экзаменатору. К формалисту — во вред."
+      },
+      "rapport": 15
+    },
+    {
+      "prep_id": "prep_strategy_formal",
+      "kind": "strategy",
+      "archetype": "rigid_formalist",
+      "label": {
+        "ru": "Стратегия: отвечать коротко и по делу"
+      },
+      "text": {
+        "ru": "Подходит к жёсткому формалисту. К общительному экзаменатору — во вред."
+      },
+      "rapport": 15
+    },
+    {
+      "prep_id": "prep_legend",
+      "kind": "legend",
+      "label": {
+        "ru": "Финансовая легенда: деньги — наследство семьи невесты"
+      },
+      "text": {
+        "ru": "Через банковский контур Мендосы траты «Кроноса» подтверждены документами: финансовый вопрос не даст лишнего пика."
+      }
+    }
+  ],
   "question_sequence": [
     {
-      "q_id": "q_04_control",
-      "category": "control_comparison",
+      "q_id": "q_01_neutral",
+      "category": "neutral",
       "text": {
-        "ru": "Артур, случалось ли вам за последние пять лет нарушать правила отчётности о личных контактах?",
-        "en": "Arthur, in the last five years, have you ever broken the rules on reporting personal contacts?"
+        "ru": "Сегодня пятница?"
       },
       "choices": [
         {
-          "choice_id": "limited_hangout_honest",
+          "choice_id": "plain",
           "label": {
-            "ru": "Усмехнуться и признать мелкое нарушение: «Пару раз забывал вписать ужины с журналистами»",
-            "en": "Smirk and admit a minor lapse: \"A couple of times I forgot to log dinners with journalists\""
+            "ru": "«Да»."
           },
           "effects": {
-            "rapport": 15,
-            "skepticism": -10,
-            "control_peak": 45
+            "rapport": 0,
+            "skepticism": 0,
+            "control_peak": 0,
+            "relevant_peak": 0
           }
         },
         {
-          "choice_id": "rigid_denial",
+          "choice_id": "joke",
           "label": {
-            "ru": "Ответить сухо и категорично: «Никогда»",
-            "en": "Answer flatly: \"Never\""
+            "ru": "«Да — и, судя по кофе в коридоре, утро ещё не кончилось»"
           },
           "effects": {
-            "rapport": -10,
-            "skepticism": 15,
-            "control_peak": 15
+            "rapport": 8,
+            "skepticism": 0,
+            "control_peak": 0,
+            "relevant_peak": 0
           }
         }
       ]
     },
     {
-      "q_id": "q_05_relevant_espionage",
-      "category": "relevant_critical",
+      "q_id": "q_02_neutral",
+      "category": "neutral",
       "text": {
-        "ru": "Передавали ли вы когда-либо секретные сведения представителю иностранной разведки?",
-        "en": "Have you ever passed classified information to a representative of a foreign intelligence service?"
+        "ru": "Вы живёте в Арлингтоне?"
       },
-      "pass_formula": "control_peak >= relevant_peak - 5 AND rapport >= 65"
+      "choices": [
+        {
+          "choice_id": "plain",
+          "label": {
+            "ru": "«Да»."
+          },
+          "effects": {
+            "rapport": 0,
+            "skepticism": 0,
+            "control_peak": 0,
+            "relevant_peak": 0
+          }
+        },
+        {
+          "choice_id": "house",
+          "label": {
+            "ru": "«Да, недавно купили дом — выбирала невеста»"
+          },
+          "effects": {
+            "rapport": 4,
+            "skepticism": 6,
+            "control_peak": 0,
+            "relevant_peak": 0
+          }
+        }
+      ]
+    },
+    {
+      "q_id": "q_03_control",
+      "category": "control_comparison",
+      "text": {
+        "ru": "Случалось ли вам за последние пять лет нарушать правила отчётности о личных контактах?"
+      },
+      "choices": [
+        {
+          "choice_id": "limited_hangout",
+          "label": {
+            "ru": "Усмехнуться и признать мелочь: «Пару раз забывал вписать обеды с журналистами»"
+          },
+          "effects": {
+            "rapport": 15,
+            "skepticism": -10,
+            "control_peak": 45,
+            "relevant_peak": 0
+          }
+        },
+        {
+          "choice_id": "rigid_denial",
+          "label": {
+            "ru": "Ответить сухо: «Никогда»"
+          },
+          "effects": {
+            "rapport": -10,
+            "skepticism": 15,
+            "control_peak": 15,
+            "relevant_peak": 0
+          }
+        }
+      ]
+    },
+    {
+      "q_id": "q_04_relevant_espionage",
+      "category": "relevant_critical",
+      "base_peak": 60,
+      "text": {
+        "ru": "Передавали ли вы когда-либо секретные сведения представителю иностранной разведки?"
+      },
+      "pass_formula": "control_peak >= relevant_peak - 5 AND rapport >= 65",
+      "choices": [
+        {
+          "choice_id": "calm_no",
+          "label": {
+            "ru": "Спокойно: «Нет»."
+          },
+          "effects": {
+            "rapport": 0,
+            "skepticism": 0,
+            "control_peak": 0,
+            "relevant_peak": 0
+          }
+        },
+        {
+          "choice_id": "eyes_no",
+          "label": {
+            "ru": "«Нет», глядя экзаменатору в глаза"
+          },
+          "effects": {
+            "rapport": 0,
+            "skepticism": 5,
+            "control_peak": 0,
+            "relevant_peak": -5
+          }
+        },
+        {
+          "choice_id": "angry_no",
+          "label": {
+            "ru": "С раздражением: «Нет. Что за вопрос?»"
+          },
+          "effects": {
+            "rapport": -10,
+            "skepticism": 10,
+            "control_peak": 0,
+            "relevant_peak": 10
+          }
+        }
+      ]
+    },
+    {
+      "q_id": "q_05_control",
+      "category": "control_comparison",
+      "text": {
+        "ru": "Брали ли вы когда-нибудь то, что вам не принадлежит?"
+      },
+      "choices": [
+        {
+          "choice_id": "apples",
+          "label": {
+            "ru": "Признать: «В детстве таскал яблоки у соседа. Мать заставила извиняться»"
+          },
+          "effects": {
+            "rapport": 5,
+            "skepticism": 0,
+            "control_peak": 50,
+            "relevant_peak": 0
+          }
+        },
+        {
+          "choice_id": "never",
+          "label": {
+            "ru": "«Никогда в жизни»"
+          },
+          "effects": {
+            "rapport": 0,
+            "skepticism": 10,
+            "control_peak": 15,
+            "relevant_peak": 0
+          }
+        }
+      ]
+    },
+    {
+      "q_id": "q_06_relevant_money",
+      "category": "relevant_critical",
+      "base_peak": 55,
+      "finance": true,
+      "text": {
+        "ru": "Получали ли вы деньги от иностранного правительства?"
+      },
+      "pass_formula": "control_peak >= relevant_peak - 10 AND skepticism < 60",
+      "choices": [
+        {
+          "choice_id": "calm_no",
+          "label": {
+            "ru": "Спокойно: «Нет»."
+          },
+          "effects": {
+            "rapport": 0,
+            "skepticism": 0,
+            "control_peak": 0,
+            "relevant_peak": 0
+          }
+        },
+        {
+          "choice_id": "legend_no",
+          "label": {
+            "ru": "«Нет. У семьи моей невесты деньги в Колумбии — это есть в моём деле»"
+          },
+          "effects": {
+            "rapport": 0,
+            "skepticism": -5,
+            "control_peak": 0,
+            "relevant_peak": -10
+          },
+          "requires_prep": "prep_legend"
+        }
+      ]
+    },
+    {
+      "q_id": "q_07_neutral",
+      "category": "neutral",
+      "text": {
+        "ru": "Вы понимаете, почему мы задаём эти вопросы?"
+      },
+      "choices": [
+        {
+          "choice_id": "defector",
+          "label": {
+            "ru": "«Конечно. После истории с тем полковником все на нервах»"
+          },
+          "effects": {
+            "rapport": 5,
+            "skepticism": -5,
+            "control_peak": 0,
+            "relevant_peak": 0
+          }
+        },
+        {
+          "choice_id": "dry",
+          "label": {
+            "ru": "«Нет»"
+          },
+          "effects": {
+            "rapport": 0,
+            "skepticism": 5,
+            "control_peak": 0,
+            "relevant_peak": 0
+          }
+        }
+      ]
     }
-  ]
+  ],
+  "rationalizations": [
+    {
+      "option_id": "defector",
+      "label": {
+        "ru": "Списать волнение на опросы перебежчика: «Я неделями слушал, как он сдаёт своих. Тут любой занервничает»"
+      },
+      "effects": {
+        "rapport": 0,
+        "skepticism": -10,
+        "control_peak": 0,
+        "relevant_peak": -20
+      }
+    },
+    {
+      "option_id": "witch_hunt",
+      "label": {
+        "ru": "Сослаться на «охоту на ведьм» в отделе: «Нас всех сейчас подозревают»"
+      },
+      "effects": {
+        "rapport": 0,
+        "skepticism": 0,
+        "control_peak": 0,
+        "relevant_peak": -10
+      }
+    },
+    {
+      "option_id": "silence",
+      "label": {
+        "ru": "Промолчать и ждать следующего вопроса"
+      },
+      "effects": {
+        "rapport": -5,
+        "skepticism": 15,
+        "control_peak": 0,
+        "relevant_peak": 0
+      }
+    }
+  ],
+  "outcomes": {
+    "pass": {
+      "mole_hunt": -10,
+      "text": {
+        "ru": "Экзаменатор закрыл протокол: «Признаков обмана не выявлено». «Кронос» улетает в Рим — вне досягаемости следствия."
+      }
+    },
+    "inconclusive": {
+      "mole_hunt": 15,
+      "text": {
+        "ru": "Протокол «на грани»: результат неубедителен, назначена повторная проверка. «Кронос» улетает в Рим, но его имя теперь в списке подозреваемых."
+      }
+    },
+    "fail": {
+      "mole_hunt": 40,
+      "text": {
+        "ru": "Экзаменатор остановил проверку: «Признаки обмана». «Кроноса» отстранили от дел, служба безопасности начинает разработку."
+      }
+    }
+  }
 }

@@ -24,7 +24,8 @@ const ANLACE_FLAG := "anlace"
 const EXPOSED_FLAG := "vgu_methods_exposed"
 const ACTIONS := ["arrest", "natural", "game", "cancel"]
 ## Флаги, которые ставит сам движок «Окна арестов» (валидатор знает о них).
-const ENGINE_FLAGS := [WINDOW_CLOSED_FLAG, CASCADE_FLAG, ANLACE_FLAG, EXPOSED_FLAG]
+const ENGINE_FLAGS := [WINDOW_CLOSED_FLAG, CASCADE_FLAG, ANLACE_FLAG, EXPOSED_FLAG,
+	"polygraph_done", "polygraph_passed", "polygraph_inconclusive", "polygraph_failed"]
 const DONE := ["arrested", "natural", "game", "fake", "fake_arrested"]
 
 

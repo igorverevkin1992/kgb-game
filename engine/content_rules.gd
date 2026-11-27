@@ -293,19 +293,38 @@ static func _count_translations(v: Variant, counts: Array) -> void:
 			_count_translations(v[k], counts)
 
 
-## 8. Экзамены на полиграфе: категории вопросов и формулы.
+## 8. Экзамены на полиграфе: категории вопросов, формулы, неделя, проходимость.
 static func _polygraph(ctx: Dictionary) -> void:
+	var c: Dictionary = ctx.content
 	var allowed := POLYGRAPH_VARS + ["AND", "OR"]
 	var word := RegEx.create_from_string("[A-Za-z_]+")
 	var junk := RegEx.create_from_string("[A-Za-z_]+|\\d+|>=|<=|==|[<>+\\-()\\s]")
-	for exam in ctx.content.polygraph:
+	var target_ids := _ids(c.targets, "target_id")
+	for exam in c.polygraph:
+		var id: String = exam.exam_id
+		for key in ["subject", "source_agent"]:
+			if not target_ids.has(exam[key]):
+				_push(ctx, "error", "refs", "Нет кандидата «%s»" % exam[key], key, id)
+		var act: Dictionary = {}
+		for a in c.campaign.acts:
+			if int(a.act) == int(exam.act):
+				act = a
+		if act.is_empty():
+			_push(ctx, "error", "polygraph", "Фазы %d нет в campaign.json" % exam.act, "act", id)
+		elif int(exam.week) < int(act.weeks.from) or int(exam.week) > int(act.weeks.to):
+			_push(ctx, "error", "polygraph", "Неделя проверки %d вне фазы %d (недели %d–%d)" % [exam.week, exam.act, act.weeks.from, act.weeks.to], "week", id)
 		for i in exam.question_sequence.size():
 			var q: Dictionary = exam.question_sequence[i]
 			var where := "question_sequence[%d]" % i
 			if q.category == "relevant_critical" and not q.has("pass_formula"):
-				_push(ctx, "error", "polygraph", "Значимый вопрос «%s» без условия прохождения pass_formula" % q.q_id, where, exam.exam_id)
+				_push(ctx, "error", "polygraph", "Значимый вопрос «%s» без условия прохождения pass_formula" % q.q_id, where, id)
+			if q.category == "relevant_critical" and int(q.base_peak) == 0:
+				_push(ctx, "warning", "polygraph", "Значимый вопрос «%s» без исходного пика base_peak" % q.q_id, where, id)
 			if q.category == "control_comparison" and q.choices.size() < 2:
-				_push(ctx, "error", "polygraph", "У контрольного вопроса «%s» должно быть минимум 2 варианта ответа" % q.q_id, where, exam.exam_id)
+				_push(ctx, "error", "polygraph", "У контрольного вопроса «%s» должно быть минимум 2 варианта ответа" % q.q_id, where, id)
+			for ch in q.choices:
+				if ch.requires_prep != "" and Polygraph.prep_option(exam, ch.requires_prep).is_empty():
+					_push(ctx, "error", "polygraph", "Ответ «%s» ждёт несуществующей подготовки «%s»" % [ch.choice_id, ch.requires_prep], where, id)
 			if q.has("pass_formula"):
 				var bad: Array = []
 				for m in word.search_all(q.pass_formula):
@@ -315,7 +334,19 @@ static func _polygraph(ctx: Dictionary) -> void:
 				if not bad.is_empty() or rest != "":
 					if rest != "":
 						bad.append(rest)
-					_push(ctx, "error", "polygraph", "Непонятная формула: %s. Допустимо: %s, числа, >= <= == < > + - ( )" % [", ".join(bad), ", ".join(allowed)], where + ".pass_formula", exam.exam_id)
+					_push(ctx, "error", "polygraph", "Непонятная формула: %s. Допустимо: %s, числа, >= <= == < > + - ( )" % [", ".join(bad), ", ".join(allowed)], where + ".pass_formula", id)
+		if not exam.prep_options.any(func(o): return o.kind == "strategy" and o.archetype == exam.examiner_profile.archetype):
+			_push(ctx, "error", "polygraph", "Нет стратегии поведения под экзаменатора «%s»" % exam.examiner_profile.archetype, "prep_options", id)
+		# Проходимость: с лучшей подготовкой на все пункты — обязательно; вслепую — желательно.
+		var best: Array = []
+		for o in exam.prep_options:
+			if o.kind != "strategy" or o.archetype == exam.examiner_profile.archetype:
+				best.append(o.prep_id)
+		best = best.slice(0, int(exam.notice.prep_slots_with_source))
+		if not Polygraph.winnable(c, exam, best):
+			_push(ctx, "error", "polygraph", "Проверку невозможно пройти даже с полной подготовкой (%s)" % ", ".join(best), id, id)
+		elif not Polygraph.winnable(c, exam, []):
+			_push(ctx, "warning", "polygraph", "Без подготовки проверку не пройти никакой тактикой", id, id)
 
 
 ## 9. Пороги сигналов баланса идут по возрастанию.

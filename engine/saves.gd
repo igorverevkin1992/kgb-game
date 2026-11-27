@@ -130,6 +130,11 @@ static func _state_spec() -> Dictionary:
 		"routes": {"type": "dict", "of": Schema.obj({"stops": strs, "observations": Schema.arr(strs), "operative": Schema.opt(Schema.s(), "op_resident_player")})},
 		"decisions": Schema.opt({"type": "dict", "of": Schema.s()}, {}),
 		"personal_ops": Schema.opt(Schema.i(0), 0),
+		"polygraph": Schema.opt(Schema.nullable(Schema.obj({
+			"exam_id": Schema.s(), "notified_week": Schema.i(1), "source": {"type": "bool"}, "slots": Schema.i(0),
+			"prep": strs, "exam": Schema.nullable({"type": "dict", "of": {"type": "any"}}),
+			"result": Schema.e([""] + Polygraph.RESULTS), "rehearsals": Schema.i(0),
+		})), null),
 		"list": Schema.opt(Schema.nullable(Schema.obj({
 			"cards": {"type": "dict", "of": Schema.obj({"status": Schema.e(["pending", "arrest", "prep", "game_plan"] + ArrestWindow.DONE), "week": Schema.i(0)})},
 			"quotas": {"type": "dict", "of": Schema.e(["met", "failed", "contested"])},

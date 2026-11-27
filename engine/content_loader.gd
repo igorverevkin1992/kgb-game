@@ -104,7 +104,7 @@ static func parse(entries: Array) -> Dictionary:
 			continue
 		var folder: String = path.get_slice("/", 0) if path.contains("/") else ""
 		if not FOLDERS.has(folder):
-			issues.append({"level": "error", "rule": "layout", "file": path, "message": "Файл лежит вне известных папок. Допустимо: campaign.json, balance.json, map/sites.json, map/cues.json, targets/, clues/, cables/, ops/, polygraph/, requests/, dialogs/, achievements/, archive/, operatives/, decisions/"})
+			issues.append({"level": "error", "rule": "layout", "file": path, "message": "Файл лежит вне известных папок. Допустимо: campaign.json, balance.json, map/sites.json, map/cues.json, targets/, clues/, cables/, ops/, polygraph/, requests/, dialogs/, achievements/, archive/, operatives/, decisions/, list/"})
 			continue
 		var f: Dictionary = FOLDERS[folder]
 		var spec := ContentSchemas.get_spec(f.spec)

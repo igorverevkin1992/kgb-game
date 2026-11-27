@@ -155,6 +155,10 @@ tools/telemetry-report.sh [папка] # сводка журналов плей�
   `contest_quota`, `restrain_agent`; ночь — `Campaign._list_night`); траты агента
   `finance.spending_per_week`; задача акта `goal.flags_all`. UI — `counterintel_view.gd`
   (пульт обстановки, клавиша 6; `Game.card_selected`, `Game.console_tab`).
+- Полиграф (шаг 14): `engine/polygraph.gd` (`state.polygraph`, действия `polygraph_prep`,
+  `polygraph_start {rehearsal}`, `polygraph_answer`, `polygraph_rationalize`; вызов утром —
+  `Campaign._polygraph_notice`; формулы через `Expression`; `Polygraph.winnable` — для
+  валидатора). Экзамен — `content/polygraph/`. UI — `polygraph_view.gd` (вкладка пульта).
 
 ## Договорённости
 - Пользователь немного программировал. Объясняй ключевые решения коротко и по-русски.
