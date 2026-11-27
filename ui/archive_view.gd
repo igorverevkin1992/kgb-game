@@ -60,7 +60,6 @@ static func build() -> Control:
 	p.name = "archive-text"
 	p.set_meta("entry", cur.id)
 	p.set_meta("status", cur.status)
-	p.position = Vector2(RIGHT_X, TOP)
 	p.custom_minimum_size = Vector2(RIGHT_W, 0)
 	var v := Style.vbox(14)
 	var head := Style.hbox(16)
@@ -75,5 +74,12 @@ static func build() -> Control:
 	v.add_child(body)
 	v.add_child(Style.para(T.t("archive.footer"), RIGHT_W - 64, Style.mono(), 12, Color(Style.INK, 0.55)))
 	p.add_child(v)
-	root.add_child(p)
+	# Длинный лист прокручивается.
+	var rs := ScrollContainer.new()
+	rs.name = "archive-scroll"
+	rs.position = Vector2(RIGHT_X, TOP)
+	rs.size = Vector2(RIGHT_W + 16, H)
+	rs.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	rs.add_child(p)
+	root.add_child(rs)
 	return root

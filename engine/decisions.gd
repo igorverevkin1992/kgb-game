@@ -20,7 +20,8 @@ static func option(d: Dictionary, option_id: String) -> Dictionary:
 
 static func triggered(s: Dictionary, d: Dictionary) -> bool:
 	var t: Dictionary = d.trigger
-	if int(d.act) > int(s.act):
+	# Решение относится к своей фазе операции: после неё оно уже не актуально.
+	if int(d.act) != int(s.act):
 		return false
 	if int(t.week) > 0 and int(s.week) < int(t.week):
 		return false

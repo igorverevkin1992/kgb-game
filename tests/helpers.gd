@@ -69,6 +69,8 @@ static func play(t: TestCase, state: Dictionary, actions: Array, collect := true
 	if collect:
 		s = _collect(s, events)
 	for a in actions:
+		if a.type == "submit_report":
+			s = auto_decide(s)
 		var r := Campaign.dispatch(s, content(), a)
 		if r.error != "":
 			t.failures.append("действие %s отклонено: %s" % [JSON.stringify(a), r.error])
@@ -149,6 +151,8 @@ static func act3_state(agents: Array = []) -> Dictionary:
 static func run(state: Dictionary, actions: Array) -> Dictionary:
 	var s := _collect(state, [])
 	for a in actions:
+		if a.type == "submit_report":
+			s = auto_decide(s)
 		var r := Campaign.dispatch(s, content(), a)
 		if r.error != "":
 			push_error("действие %s отклонено: %s" % [JSON.stringify(a), r.error])
@@ -168,3 +172,19 @@ static func act4_state(agents: Array = ["tar_caldwell_arthur"], flags: Array = [
 	for f in flags:
 		s.flags.append(f)
 	return Campaign.dispatch(s, c, report("truth")).state
+
+
+
+## Решения «для атмосферы», которые старые сценарии не проверяют: перед ночным докладом
+## принимаются первым вариантом, чтобы не блокировать неделю. Решения второй фазы
+## (их проверяют тесты) сюда не входят.
+const AUTO_DECISIONS := ["dec_a1_journalist", "dec_a3_wedding", "dec_a4_draconian", "dec_a4_rome"]
+
+
+static func auto_decide(s: Dictionary) -> Dictionary:
+	for d in Decisions.pending(s, content()):
+		if AUTO_DECISIONS.has(d.decision_id):
+			var r := Campaign.dispatch(s, content(), {"type": "decide", "decision_id": d.decision_id, "option_id": d.options[0].option_id})
+			if r.error == "":
+				s = r.state
+	return s

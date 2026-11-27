@@ -123,6 +123,8 @@ func seed_state(actions: Array, collect := true) -> Dictionary:
 	if collect:
 		s = _collect_docs(s)
 	for a in actions:
+		if a.type == "submit_report":
+			s = H.auto_decide(s)
 		var r := Campaign.dispatch(s, Game.content, a)
 		if r.error != "":
 			failures.append("подготовка: %s — %s" % [JSON.stringify(a), r.error])

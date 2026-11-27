@@ -34,6 +34,9 @@ func scene_manual_slot_save_and_load() -> void:
 
 func scene_month_checkpoint() -> void:
 	await start(QUIET + QUIET + QUIET + QUIET + [NEXT, NEXT, NEXT])
+	# Неделя 5: сначала решение резидента («Журналист просит интервью»), потом доклад.
+	Game.dispatch({"type": "decide", "decision_id": "dec_a1_journalist", "option_id": "decline"})
+	await frames()
 	await press("report-truth")
 	has_text("calendar-week", "Неделя 6")
 	await key(KEY_ESCAPE)

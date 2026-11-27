@@ -10,10 +10,10 @@ func test_new_campaign() -> void:
 	eq(s.risks, {"sog_heat": 10, "mole_hunt": 0, "treasury": 0, "moscow_pressure": 20})
 	var cables: Array = s.delivered_cables.duplicate()
 	cables.sort()
-	eq(cables, ["cable_a1_w1_directive", "cable_a1_w1_file_vargas", "cable_a1_w1_post_clipping"])
+	eq(cables, ["cable_a1_w1_directive", "cable_a1_w1_file_vargas", "cable_a1_w1_post_clipping", "cable_a1_w1_press_campaign", "cable_a1_w1_staff"])
 	eq(s.clues, [], "улики из документов игрок снимает сам")
 	eq(Campaign.untaken_chunks(s, H.content(), "cable_a1_w1_file_vargas").size(), 1)
-	eq(Campaign.unread_cables(s).size(), 3)
+	eq(Campaign.unread_cables(s).size(), 5)
 	eq(Campaign.available_ops(s, H.content()), [])
 
 

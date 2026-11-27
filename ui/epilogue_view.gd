@@ -60,6 +60,12 @@ static func build() -> Control:
 	foot.add_child(close)
 	v.add_child(foot)
 	p.add_child(v)
-	root.add_child(p)
-	p.position = Vector2((1600 - W) / 2, 90)
+	# Длинный лист прокручивается; кнопки листания — внизу листа.
+	var sc := ScrollContainer.new()
+	sc.name = "epilogue-scroll"
+	sc.position = Vector2((1600 - W) / 2, 60)
+	sc.size = Vector2(W + 16, 780)
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.add_child(p)
+	root.add_child(sc)
 	return root
