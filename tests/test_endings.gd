@@ -51,3 +51,16 @@ func test_epilogue_per_ending() -> void:
 	var early := H.fresh()
 	early.ending = "recalled"
 	ok(Archive.epilogue(early, c).is_empty(), "при раннем провале эпилога нет")
+
+
+func test_fate_pages_by_flags() -> void:
+	var c := H.content()
+	var s := H.fresh()
+	s.ending = "clean_triumph"
+	s.flags.append_array(["kronos_farewell", "vargas_handed"])
+	var ids: Array = Archive.epilogue(s, c).map(func(p): return p.id)
+	ok(ids.has("arc_fate_kronos_rome") and ids.has("arc_fate_vargas") and ids.has("arc_fate_home"), "судьбы — по флагам финала")
+	ok(not ids.has("arc_fate_kronos_evacuated"), "чужих судеб нет")
+	var mid := H.fresh()
+	mid.flags.append("kronos_farewell")
+	ok(not Archive.is_open(mid, Archive.entry_by_id(c, "arc_fate_kronos_rome")), "до финала лист закрыт")

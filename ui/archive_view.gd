@@ -41,7 +41,7 @@ static func build() -> Control:
 		for e in items:
 			var open := Archive.is_open(s, e)
 			var on: bool = not cur.is_empty() and e.id == cur.id
-			var text := T.loc(e.title) if open else T.t("archive.lockedFinal" if String(e.get("unlock", "")).begins_with("ending:") else "archive.locked")
+			var text := T.loc(e.title) if open else T.t("archive.lockedFinal" if String(e.get("unlock", "")).contains("ending:") else "archive.locked")
 			var b := Style.button(text, "archive-entry-" + e.id, Style.INK if on else Style.PAPER, Style.PAPER if on else Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.4), 14)
 			b.custom_minimum_size.x = LEFT_W - 16
 			b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

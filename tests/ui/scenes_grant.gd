@@ -55,6 +55,8 @@ func scene_epilogue_after_phase_one() -> void:
 	eq(node("epilogue").get_meta("page"), 0)
 	has_text("epilogue", "чистая партия")
 	await press("epilogue-next")
+	has_text("epilogue", "Шереметьеве")
+	await press("epilogue-next")
 	has_text("epilogue", "16 апреля 1985")
 	for i in 2:
 		await press("epilogue-next")
@@ -62,7 +64,7 @@ func scene_epilogue_after_phase_one() -> void:
 	await shot("epilogue-cherkashin")
 	while exists("epilogue-next"):
 		await press("epilogue-next")
-	has_text("epilogue", "Лист 6 из 6")
+	has_text("epilogue", "Лист 7 из 7")
 	await press("epilogue-close")
 	ok(exists("ending"), "назад к итогу")
 	await press("ending-archive")

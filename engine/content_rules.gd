@@ -605,6 +605,14 @@ static func _collect_ru(v: Variant, id: String, where: String, out: Array) -> vo
 ## 16. Архив: записи открываются по событиям, которые движок испускает.
 static func _archive(ctx: Dictionary) -> void:
 	for a in ctx.content.archive:
+		for part in String(a.unlock).split("+"):
+			if part.begins_with("flag:") or part.begins_with("ending:") or part == "" or Achievements.EVENTS.has(part):
+				continue
+			_push(ctx, "error", "archive", "Запись открывается по неизвестному событию «%s»" % part, "%s.unlock" % a.id, a.id)
+		if a.unlock.contains("+"):
+			continue
+		if a.unlock.begins_with("flag:"):
+			continue
 		if a.unlock.begins_with("ending:"):
 			if not Archive.ENDINGS.has(a.unlock.trim_prefix("ending:")):
 				_push(ctx, "error", "archive", "Неизвестная концовка в «%s». Допустимо: %s" % [a.unlock, ", ".join(Archive.ENDINGS)], "%s.unlock" % a.id, a.id)
