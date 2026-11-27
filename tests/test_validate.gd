@@ -143,9 +143,12 @@ func test_perfect_player_act1() -> void:
 	rec.sort()
 	eq(rec, ["tar_calloway_martin", "tar_vargas_ellen"])
 	eq(res.clues.size(), c.clues.filter(func(x): return x.source.channel != "agent" or int(x.get("act", 1)) <= 1).size() - c.clues.filter(func(x): return x.source.channel in ["document", "field", "meeting"] and _act_of(c, x) > 1).size())
-	var full := ContentSim.run(c, {"max_act": 2})
-	eq(full.clues.size(), c.clues.size(), "во второй фазе находятся все сведения")
-	ok(full.recruited.has("tar_hales_robert") and full.recruited.has("tar_jenkins_clara"), "второй эшелон достижим")
+	var two := ContentSim.run(c, {"max_act": 2})
+	ok(two.recruited.has("tar_hales_robert") and two.recruited.has("tar_jenkins_clara"), "второй эшелон достижим")
+	var full := ContentSim.run(c)
+	eq(full.clues.size(), c.clues.size(), "к концу кампании находятся все сведения")
+	ok(full.recruited.has("tar_caldwell_arthur") and full.recruited.has("tar_mendoza_sofia"), "«Кронос» и Мендоса достижимы")
+	ok(full.clues.has("clue_caldwell_list"), "«Список» достижим")
 
 
 func _act_of(c: Dictionary, clue: Dictionary) -> int:

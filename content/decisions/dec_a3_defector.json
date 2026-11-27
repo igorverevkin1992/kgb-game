@@ -1,0 +1,65 @@
+{
+  "decision_id": "dec_a3_defector",
+  "act": 3,
+  "trigger": {
+    "flag": "package_accepted"
+  },
+  "sender": {
+    "ru": "Центр — срочно"
+  },
+  "title": {
+    "ru": "Ушёл к противнику"
+  },
+  "text": {
+    "ru": "Сотрудник Первого главного управления, полковник, ушёл к американцам. ЦРУ включило «Кроноса» в группу, которая ведёт опросы перебежчика. «Кронос» напуган: перебежчик может знать о работе в Вашингтоне. Решение — за резидентом."
+  },
+  "options": [
+    {
+      "option_id": "calm",
+      "label": {
+        "ru": "Внеочередная встреча: удержать «Кроноса» от паники"
+      },
+      "outcome": {
+        "ru": "Встреча прошла тяжело, но «Кронос» успокоился: перебежчик о нём не знает. Риск выхода ФБР заметило."
+      },
+      "effects": {
+        "sog_heat": 8,
+        "loyalty": 10,
+        "loyalty_target": "tar_caldwell_arthur",
+        "flag_set": "kronos_calmed"
+      }
+    },
+    {
+      "option_id": "debrief",
+      "label": {
+        "ru": "Поручить «Кроносу» докладывать о ходе опросов"
+      },
+      "outcome": {
+        "ru": "Центр получает отчёты об опросах из первых рук. Но в Лэнгли начинают сверять, кто читал протоколы."
+      },
+      "effects": {
+        "mole_hunt": 10,
+        "centre_trust": 8,
+        "loyalty": -5,
+        "loyalty_target": "tar_caldwell_arthur",
+        "flag_set": "defector_debrief"
+      }
+    },
+    {
+      "option_id": "freeze",
+      "label": {
+        "ru": "Заморозить связь на месяц"
+      },
+      "outcome": {
+        "ru": "Связь прервана. Центр недоволен паузой, а «Кронос» чувствует себя брошенным."
+      },
+      "effects": {
+        "moscow_pressure": 12,
+        "mole_hunt": -5,
+        "loyalty": -10,
+        "loyalty_target": "tar_caldwell_arthur",
+        "flag_set": "kronos_frozen"
+      }
+    }
+  ]
+}

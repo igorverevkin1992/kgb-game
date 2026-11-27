@@ -1,0 +1,16 @@
+{
+  "op_id": "op_a3_recon_reception",
+  "act": 3,
+  "week": 19,
+  "type": "recon",
+  "title": {
+    "ru": "Приём в Панамериканском союзе"
+  },
+  "location": {
+    "site_id": "site_pan_american_hall"
+  },
+  "sdr": {
+    "surveillance_present": false,
+    "repeating_cue": null
+  }
+}

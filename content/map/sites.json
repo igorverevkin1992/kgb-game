@@ -420,6 +420,84 @@
         "x": 26.9,
         "y": 15.1
       }
+    },
+    {
+      "site_id": "site_canal_house",
+      "name": {
+        "ru": "Ресторан «Кэнел-хаус»"
+      },
+      "kind": "restaurant",
+      "role": "target",
+      "district": "georgetown",
+      "pos": {
+        "x": 32.0,
+        "y": 18.0
+      }
+    },
+    {
+      "site_id": "site_tysons_motors",
+      "name": {
+        "ru": "Автосалон «Тайсонс моторс»"
+      },
+      "kind": "car_dealer",
+      "role": "target",
+      "district": "vienna",
+      "pos": {
+        "x": 23.6,
+        "y": 16.4
+      }
+    },
+    {
+      "site_id": "site_pan_american_hall",
+      "name": {
+        "ru": "Зал Панамериканского союза"
+      },
+      "kind": "mission",
+      "role": "target",
+      "district": "dc_northwest",
+      "pos": {
+        "x": 34.3,
+        "y": 18.9
+      }
+    },
+    {
+      "site_id": "site_bethesda_tearoom",
+      "name": {
+        "ru": "Кондитерская «Сент-Элмо» в Бетесде"
+      },
+      "kind": "cafe",
+      "role": "target",
+      "district": "bethesda",
+      "pos": {
+        "x": 30.4,
+        "y": 12.9
+      }
+    },
+    {
+      "site_id": "site_nottoway_park",
+      "name": {
+        "ru": "Парк Ноттоуэй"
+      },
+      "kind": "park",
+      "role": "target",
+      "district": "vienna",
+      "pos": {
+        "x": 21.4,
+        "y": 18.2
+      }
+    },
+    {
+      "site_id": "site_great_falls",
+      "name": {
+        "ru": "Парк Грейт-Фолс"
+      },
+      "kind": "park",
+      "role": "target",
+      "district": "mclean",
+      "pos": {
+        "x": 21.0,
+        "y": 11.6
+      }
     }
   ]
 }

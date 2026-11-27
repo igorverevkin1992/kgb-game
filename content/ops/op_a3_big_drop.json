@@ -1,0 +1,39 @@
+{
+  "op_id": "op_a3_big_drop",
+  "act": 3,
+  "week": 20,
+  "type": "dead_drop_clear",
+  "title": {
+    "ru": "Большой сброс в Грейт-Фолс"
+  },
+  "location": {
+    "site_id": "site_great_falls"
+  },
+  "sdr": {
+    "surveillance_present": true,
+    "repeating_cue": "red_pickup_maryland",
+    "ignore_consequence": {
+      "sog_heat_delta": 25,
+      "flag_set": "fbi_photo_list"
+    }
+  },
+  "requires_recruited": [
+    "tar_caldwell_arthur"
+  ],
+  "requires_flags": [
+    "package_accepted"
+  ],
+  "requires_decisions": [
+    "dec_a3_defector"
+  ],
+  "essential": true,
+  "drop": {
+    "codename": "ВОДОПАД",
+    "signal": {
+      "ru": "Пустая банка у указателя тропы"
+    },
+    "container": {
+      "ru": "Ниша под камнем у второй смотровой площадки"
+    }
+  }
+}

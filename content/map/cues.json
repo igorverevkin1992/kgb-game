@@ -348,5 +348,26 @@
     "text": {
       "ru": "Бордовый универсал «Плимут»"
     }
+  },
+  {
+    "tag": "couple_beige_coats",
+    "kind": "tail",
+    "text": {
+      "ru": "Пара в одинаковых бежевых плащах"
+    }
+  },
+  {
+    "tag": "jogger_blue_headband",
+    "kind": "tail",
+    "text": {
+      "ru": "Бегун с синей повязкой на лбу"
+    }
+  },
+  {
+    "tag": "red_pickup_maryland",
+    "kind": "tail",
+    "text": {
+      "ru": "Красный пикап с мэрилендскими номерами"
+    }
   }
 ]

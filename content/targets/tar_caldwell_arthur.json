@@ -1,0 +1,96 @@
+{
+  "target_id": "tar_caldwell_arthur",
+  "codename_kgb": "КРОНОС",
+  "tier": 3,
+  "act": 3,
+  "name": {
+    "ru": "Артур Колдуэлл"
+  },
+  "role": {
+    "ru": "Начальник контрразведывательной группы отдела СССР и Восточной Европы ЦРУ"
+  },
+  "affiliation": "CIA_SE_DIVISION",
+  "access_tags": [
+    "moscow_asset_list",
+    "ci_investigations",
+    "se_cables"
+  ],
+  "unlock": {
+    "clues_required": 2,
+    "clue_ids": [
+      "clue_caldwell_post",
+      "clue_caldwell_snobs",
+      "clue_caldwell_jaguar",
+      "clue_caldwell_by_calloway",
+      "clue_caldwell_by_hales"
+    ]
+  },
+  "mice_profile": {
+    "money": {
+      "true_value": 92,
+      "trigger": "divorce_debt"
+    },
+    "ideology": {
+      "true_value": 8,
+      "trigger": null
+    },
+    "compromise": {
+      "true_value": 45,
+      "trigger": "lost_briefcase_1984",
+      "backfire_risk": 0.85
+    },
+    "ego": {
+      "true_value": 78,
+      "trigger": "passed_over_promotion"
+    }
+  },
+  "approach": {
+    "flag_mode": "true_flag",
+    "cover": {
+      "ru": "Открытая вербовка под своим флагом: «деловое партнёрство»"
+    },
+    "key_axes": [
+      "ego",
+      "money"
+    ]
+  },
+  "analysis": {
+    "leading_axis": "money",
+    "access_options": [
+      {
+        "id": "se_assets",
+        "text": {
+          "ru": "Дела агентуры ЦРУ в СССР: отдел СССР и Восточной Европы"
+        }
+      },
+      {
+        "id": "langley_budget",
+        "text": {
+          "ru": "Бюджет и штатное расписание Директората операций"
+        }
+      },
+      {
+        "id": "embassy_security",
+        "text": {
+          "ru": "Технические средства охраны американского посольства в Москве"
+        }
+      }
+    ],
+    "correct_access": "se_assets",
+    "hint": {
+      "ru": "Что сильнее давит на человека, который двадцать лет ловит чужих шпионов: обида на начальство — или долг, который растёт быстрее зарплаты?"
+    }
+  },
+  "finance": {
+    "salary_usd": 45000,
+    "promised_usd": 50000,
+    "promise": {
+      "ru": "Аванс 50 000 долларов наличными — закрыть долги после развода"
+    }
+  },
+  "initial_state": {
+    "rapport": 20,
+    "paranoia": 40,
+    "lifestyle_spending_index": 15
+  }
+}

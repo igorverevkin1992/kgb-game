@@ -447,6 +447,7 @@ static func _give_clue(ctx: Dictionary, clue_id: String) -> void:
 			ts.discovered_axes.append(r.axis)
 			_emit(ctx, {"type": "axis_discovered", "target_id": r.target_id, "axis": r.axis})
 	_check_unlocks(ctx)
+	_check_goal(ctx)  # задача фазы может требовать сведений (например, «Список»)
 
 
 ## Кандидаты открываются по найденным сведениям — но не раньше своей фазы операции.

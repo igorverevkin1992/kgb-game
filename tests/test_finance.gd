@@ -75,7 +75,7 @@ func test_escrow() -> void:
 	var s := _agent()
 	has_text(_do(s, H.pay(V, 11400, "escrow")).error, "от 60%")
 	s.agents[V].loyalty = 70
-	has_text(_do(s, H.pay(V, 11400, "escrow", 2)).error, "одним переводом")
+	has_text(_do(s, H.pay(V, 11400, "escrow", 2)).error, "одной суммой")
 	var r := _do(s, H.pay(V, 11400, "escrow"))
 	eq(r.error, "")
 	eq(r.state.risks.treasury, s.risks.treasury, "эскроу — без следа в США")

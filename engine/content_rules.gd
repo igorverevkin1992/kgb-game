@@ -372,7 +372,7 @@ static func _cipher(ctx: Dictionary) -> void:
 		if not acts.has(r.act):
 			_push(ctx, "error", "cipher", "Запрос привязан к акту %d, которого нет в campaign.json" % r.act, "%s.act" % r.request_id, r.request_id)
 		var g: Dictionary = r.granted
-		if g.fund_usd == 0 and g.centre_trust == 0 and g.moscow_pressure == 0 and g.extend_act_weeks == 0:
+		if not r.get("package_check", false) and g.fund_usd == 0 and g.centre_trust == 0 and g.moscow_pressure == 0 and g.extend_act_weeks == 0:
 			_push(ctx, "warning", "cipher", "Одобренный запрос ничего не меняет: задайте хотя бы одно поле в granted", "%s.granted" % r.request_id, r.request_id)
 
 

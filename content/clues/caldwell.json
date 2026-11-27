@@ -1,0 +1,194 @@
+[
+  {
+    "clue_id": "clue_caldwell_post",
+    "source": {
+      "channel": "document",
+      "from": "cable_a3_w17_spravka"
+    },
+    "title": {
+      "ru": "Должность и допуск"
+    },
+    "text": {
+      "ru": "Колдуэлл возглавляет контрразведывательную группу отдела СССР и Восточной Европы: через него проходят дела агентуры ЦРУ в Москве."
+    },
+    "reveals": [],
+    "chunk": "возглавляет контрразведывательную группу отдела СССР и Восточной Европы"
+  },
+  {
+    "clue_id": "clue_caldwell_divorce",
+    "source": {
+      "channel": "document",
+      "from": "cable_a3_w17_spravka"
+    },
+    "title": {
+      "ru": "Развод"
+    },
+    "text": {
+      "ru": "После развода суд обязал Колдуэлла выплачивать бывшей жене содержание; дом в Рестоне продан за долги."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_caldwell_arthur",
+        "axis": "money"
+      }
+    ],
+    "chunk": "дом в Рестоне продан за долги"
+  },
+  {
+    "clue_id": "clue_caldwell_snobs",
+    "source": {
+      "channel": "document",
+      "from": "cable_a3_w18_intercept"
+    },
+    "title": {
+      "ru": "«Кабинетные снобы»"
+    },
+    "text": {
+      "ru": "В телефонном разговоре Колдуэлл называет руководство «кабинетными снобами с седьмого этажа», которые не видели живого русского."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_caldwell_arthur",
+        "axis": "ego"
+      }
+    ],
+    "chunk": "кабинетные снобы с седьмого этажа"
+  },
+  {
+    "clue_id": "clue_caldwell_fiancee",
+    "source": {
+      "channel": "document",
+      "from": "cable_a3_w19_society"
+    },
+    "title": {
+      "ru": "Свадьба на триста гостей"
+    },
+    "text": {
+      "ru": "Светская хроника: свадьба Колдуэлла и Софии Мендосы назначена на осень, гостей — триста человек."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_caldwell_arthur",
+        "axis": "money"
+      }
+    ],
+    "chunk": "приглашены триста гостей"
+  },
+  {
+    "clue_id": "clue_caldwell_jaguar",
+    "source": {
+      "channel": "field",
+      "from": "op_a3_recon_dealer"
+    },
+    "title": {
+      "ru": "«Ягуар» в кредит"
+    },
+    "text": {
+      "ru": "Колдуэлл приценивался к «Ягуару» и уверял продавца, что «на службе его скоро оценят по достоинству». Кредит банк не одобрил."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_caldwell_arthur",
+        "axis": "money"
+      },
+      {
+        "target_id": "tar_caldwell_arthur",
+        "axis": "ego"
+      }
+    ]
+  },
+  {
+    "clue_id": "clue_caldwell_by_calloway",
+    "source": {
+      "channel": "agent",
+      "from": "tar_calloway_martin"
+    },
+    "title": {
+      "ru": "Со слов Кэллоуэя"
+    },
+    "text": {
+      "ru": "Кэллоуэй: «Арт Колдуэлл в клубе один вечер жаловался, что его в третий раз обошли с назначением — отдали место выпускнику из Йеля»."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_caldwell_arthur",
+        "axis": "ego"
+      }
+    ],
+    "act": 3
+  },
+  {
+    "clue_id": "clue_caldwell_by_vargas",
+    "source": {
+      "channel": "agent",
+      "from": "tar_vargas_ellen"
+    },
+    "title": {
+      "ru": "Со слов Варгас"
+    },
+    "text": {
+      "ru": "Варгас: на счетах Колдуэлла в «Ферст Вирджиния бэнк» долг 47 000 долларов — кредитные карты и просроченный заём."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_caldwell_arthur",
+        "axis": "money"
+      }
+    ],
+    "act": 3
+  },
+  {
+    "clue_id": "clue_caldwell_by_hales",
+    "source": {
+      "channel": "agent",
+      "from": "tar_hales_robert"
+    },
+    "title": {
+      "ru": "Со слов Хэйлса"
+    },
+    "text": {
+      "ru": "Хэйлс: ЦРУ согласовало с ФБР легальные контакты Колдуэлла с советскими дипломатами. В переписке он пишет, что «никто, кроме него, в этом не разбирается»."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_caldwell_arthur",
+        "axis": "ego"
+      }
+    ],
+    "act": 3
+  },
+  {
+    "clue_id": "clue_caldwell_by_jenkins",
+    "source": {
+      "channel": "agent",
+      "from": "tar_jenkins_clara"
+    },
+    "title": {
+      "ru": "Со слов Дженкинс"
+    },
+    "text": {
+      "ru": "Дженкинс: в личном деле Колдуэлла — взыскание 1984 года: оставил служебный портфель в вагоне метро. Дело замяли, но запись осталась."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_caldwell_arthur",
+        "axis": "compromise"
+      }
+    ],
+    "act": 3
+  },
+  {
+    "clue_id": "clue_caldwell_list",
+    "source": {
+      "channel": "field",
+      "from": "op_a3_big_drop"
+    },
+    "title": {
+      "ru": "«Список»"
+    },
+    "text": {
+      "ru": "Пакет из тайника: восемнадцать дел — офицеры, инженеры и дипломаты в Москве, работающие на ЦРУ и ФБР. Главный результат операции."
+    },
+    "reveals": []
+  }
+]

@@ -1,0 +1,125 @@
+[
+  {
+    "clue_id": "clue_mendoza_engagement",
+    "source": {
+      "channel": "document",
+      "from": "cable_a3_w19_society"
+    },
+    "title": {
+      "ru": "Помолвка"
+    },
+    "text": {
+      "ru": "София Мендоса, «наследница старинной семьи из Боготы», — невеста Артура Колдуэлла; хроника пишет о её любви к светским приёмам."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_mendoza_sofia",
+        "axis": "ego"
+      }
+    ],
+    "chunk": "наследница старинной семьи из Боготы"
+  },
+  {
+    "clue_id": "clue_mendoza_broke",
+    "source": {
+      "channel": "document",
+      "from": "cable_a3_w20_intercept"
+    },
+    "title": {
+      "ru": "Звонок в Боготу"
+    },
+    "text": {
+      "ru": "Мендоса звонит матери в Боготу. Мать: «Денег больше не будет, дочка, поместье ушло за долги»."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_mendoza_sofia",
+        "axis": "money"
+      }
+    ],
+    "chunk": "поместье ушло за долги"
+  },
+  {
+    "clue_id": "clue_mendoza_jewelry",
+    "source": {
+      "channel": "field",
+      "from": "op_a3_recon_reception"
+    },
+    "title": {
+      "ru": "Фамильный браслет"
+    },
+    "text": {
+      "ru": "После приёма Мендоса сдала в комиссионный магазин на Коннектикут-авеню фамильный браслет — и попросила не выставлять его в витрине."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_mendoza_sofia",
+        "axis": "money"
+      }
+    ]
+  },
+  {
+    "clue_id": "clue_mendoza_by_vargas",
+    "source": {
+      "channel": "agent",
+      "from": "tar_vargas_ellen"
+    },
+    "title": {
+      "ru": "Со слов Варгас"
+    },
+    "text": {
+      "ru": "Варгас: на счёте Мендосы перерасход третий месяц; она спрашивала о кредите под залог драгоценностей."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_mendoza_sofia",
+        "axis": "money"
+      }
+    ],
+    "act": 3
+  },
+  {
+    "clue_id": "clue_mendoza_by_calloway",
+    "source": {
+      "channel": "agent",
+      "from": "tar_calloway_martin"
+    },
+    "title": {
+      "ru": "Со слов Кэллоуэя"
+    },
+    "text": {
+      "ru": "Кэллоуэй: «Мендоса рассказывает о поместье семьи так, будто оно всё ещё есть. И всегда садится за стол к самым важным гостям»."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_mendoza_sofia",
+        "axis": "ego"
+      }
+    ],
+    "act": 3
+  },
+  {
+    "clue_id": "clue_mendoza_house",
+    "source": {
+      "channel": "meeting",
+      "from": "dlg_a3_caldwell"
+    },
+    "title": {
+      "ru": "«Дом, достойный её семьи»"
+    },
+    "text": {
+      "ru": "Колдуэлл на встрече: Софии нужен дом, достойный её семьи. Её семья — главная тема и главная тревога."
+    },
+    "reveals": [
+      {
+        "target_id": "tar_mendoza_sofia",
+        "axis": "money"
+      },
+      {
+        "target_id": "tar_mendoza_sofia",
+        "axis": "ego"
+      }
+    ],
+    "chunk": "Софии нужен дом, достойный её семьи"
+  }
+]

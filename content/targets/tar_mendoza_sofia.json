@@ -1,0 +1,90 @@
+{
+  "target_id": "tar_mendoza_sofia",
+  "tier": 2,
+  "act": 3,
+  "name": {
+    "ru": "София Мендоса"
+  },
+  "role": {
+    "ru": "Бывшая сотрудница культурного атташата южноамериканской миссии, невеста Колдуэлла"
+  },
+  "affiliation": "PRIVATE",
+  "unlock": {
+    "clues_required": 2,
+    "clue_ids": [
+      "clue_mendoza_engagement",
+      "clue_mendoza_broke",
+      "clue_mendoza_jewelry",
+      "clue_mendoza_by_vargas"
+    ]
+  },
+  "mice_profile": {
+    "money": {
+      "true_value": 80,
+      "trigger": "lost_family_fortune"
+    },
+    "ideology": {
+      "true_value": 5,
+      "trigger": null
+    },
+    "compromise": {
+      "true_value": 15,
+      "trigger": null
+    },
+    "ego": {
+      "true_value": 70,
+      "trigger": "society_ambitions"
+    }
+  },
+  "approach": {
+    "flag_mode": "indirect",
+    "cover": {
+      "ru": "Через посредника: кредитный маклер и легенда о наследстве"
+    },
+    "key_axes": [
+      "money",
+      "ego"
+    ]
+  },
+  "perks": [
+    "legend"
+  ],
+  "analysis": {
+    "leading_axis": "money",
+    "access_options": [
+      {
+        "id": "family_legend",
+        "text": {
+          "ru": "Легенда богатства семьи: счета родственников в Боготе"
+        }
+      },
+      {
+        "id": "mission_cables",
+        "text": {
+          "ru": "Переписка южноамериканской миссии"
+        }
+      },
+      {
+        "id": "caldwell_schedule",
+        "text": {
+          "ru": "Служебное расписание Колдуэлла"
+        }
+      }
+    ],
+    "correct_access": "family_legend",
+    "hint": {
+      "ru": "Чем дорожит женщина, которая продаёт фамильные драгоценности и приглашает на свадьбу триста гостей?"
+    }
+  },
+  "finance": {
+    "salary_usd": 20000,
+    "promised_usd": 5000,
+    "promise": {
+      "ru": "Погашение кредита под залог фамильного браслета"
+    }
+  },
+  "initial_state": {
+    "rapport": 35,
+    "paranoia": 30
+  }
+}

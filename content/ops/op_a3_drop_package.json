@@ -1,0 +1,33 @@
+{
+  "op_id": "op_a3_drop_package",
+  "act": 3,
+  "week": 19,
+  "type": "dead_drop_clear",
+  "title": {
+    "ru": "Тайник «ЛЕСНИК»: пробный пакет"
+  },
+  "location": {
+    "site_id": "site_nottoway_park"
+  },
+  "sdr": {
+    "surveillance_present": true,
+    "repeating_cue": "jogger_blue_headband",
+    "ignore_consequence": {
+      "sog_heat_delta": 15,
+      "flag_set": "fbi_at_package_drop"
+    }
+  },
+  "requires_recruited": [
+    "tar_caldwell_arthur"
+  ],
+  "essential": true,
+  "drop": {
+    "codename": "ЛЕСНИК",
+    "signal": {
+      "ru": "Кнопка в столбе у теннисного корта"
+    },
+    "container": {
+      "ru": "Полое бревно у ручья за кортами"
+    }
+  }
+}

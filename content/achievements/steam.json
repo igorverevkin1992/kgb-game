@@ -146,5 +146,44 @@
     "match": {
       "option_id": "protect"
     }
+  },
+  {
+    "id": "ACH_KRONOS",
+    "title": {
+      "ru": "«Кронос»"
+    },
+    "description": {
+      "ru": "Завербовать главную цель — Артура Колдуэлла."
+    },
+    "event": "target_recruited",
+    "match": {
+      "target_id": "tar_caldwell_arthur"
+    }
+  },
+  {
+    "id": "ACH_THREE_CHANNELS",
+    "title": {
+      "ru": "Три канала"
+    },
+    "description": {
+      "ru": "Принять пробный пакет, сверив его по всем трём каналам."
+    },
+    "event": "package_accepted",
+    "match": {
+      "checked": 3
+    }
+  },
+  {
+    "id": "ACH_THE_LIST",
+    "title": {
+      "ru": "Большой сброс"
+    },
+    "description": {
+      "ru": "Получить «Список»."
+    },
+    "event": "clue_found",
+    "match": {
+      "clue_id": "clue_caldwell_list"
+    }
   }
 ]

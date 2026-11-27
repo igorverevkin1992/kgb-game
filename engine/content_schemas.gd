@@ -345,7 +345,7 @@ static func _build() -> void:
 		"sites": Schema.arr(Schema.obj({
 			"site_id": Schema.id("site"),
 			"name": text,
-			"kind": Schema.e(["embassy", "fbi", "cia", "bank", "bar", "park", "pharmacy", "post_office", "bookshop", "tobacconist", "cleaners", "grocery", "gas_station", "hardware", "antiques", "cafe"]),
+			"kind": Schema.e(["embassy", "fbi", "cia", "bank", "bar", "park", "pharmacy", "post_office", "bookshop", "tobacconist", "cleaners", "grocery", "gas_station", "hardware", "antiques", "cafe", "restaurant", "car_dealer", "mission"]),
 			"role": Schema.e(["stop", "target", "landmark"]),
 			"district": Schema.s("^[a-z_]+$", "район: латиница в нижнем регистре и «_»"),
 			"pos": Schema.obj({"x": Schema.n(0, 60), "y": Schema.n(0, 40)}),
