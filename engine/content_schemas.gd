@@ -414,6 +414,11 @@ static func _build() -> void:
 			"loyalty_per_1000_extra": Schema.n(0, 10), "escrow_min_loyalty": scale, "reports_min_loyalty": scale,
 			"coerced_loyalty_penalty": Schema.i(0, 100), "loyalty_coerced_week": Schema.i(0, 100),
 		}),
+		# Пороги четырёх концовок кампании.
+		"endings": Schema.obj({
+			"triumph_realized": Schema.i(0, 18), "triumph_mole_hunt_below": scale, "control_below": scale,
+			"double_bottom_trust_below": scale,
+		}),
 		# «Окно арестов» и образ жизни «крота» (четвёртая фаза).
 		"list": Schema.obj({
 			"howard_mole_hunt": delta, "natural_mole_hunt": delta, "plain_mole_hunt": delta,

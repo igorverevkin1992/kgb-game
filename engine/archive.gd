@@ -2,7 +2,9 @@ class_name Archive
 ## «Архив эпохи: 1985»: какие записи уже открыты (по событиям в журнале кампании).
 
 const SECTIONS := ["history", "technique", "law", "fiction", "epilogue"]
-const ENDINGS := ["persona_non_grata", "recalled", "mole_arrested", "campaign_complete"]
+## campaign_complete — любая из четырёх концовок кампании (для листов эпилога, общих для всех).
+const ENDINGS := ["persona_non_grata", "recalled", "mole_arrested", "campaign_complete",
+	"clean_triumph", "pyrrhic_victory", "shadow_exchange", "double_bottom"]
 
 
 static func is_open(s: Dictionary, entry: Dictionary) -> bool:
@@ -10,7 +12,8 @@ static func is_open(s: Dictionary, entry: Dictionary) -> bool:
 	if u == "":
 		return true
 	if u.begins_with("ending:"):
-		return s.ending == u.trim_prefix("ending:")
+		var want := u.trim_prefix("ending:")
+		return s.ending == want or (want == "campaign_complete" and Endings.is_final(s.ending))
 	return s.log.any(func(x): return x.event.type == u)
 
 

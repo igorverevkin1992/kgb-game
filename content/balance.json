@@ -111,5 +111,11 @@
     "lifestyle_mole_hunt": 3,
     "restrain_lifestyle": -20,
     "restrain_loyalty": -6
+  },
+  "endings": {
+    "triumph_realized": 14,
+    "triumph_mole_hunt_below": 65,
+    "control_below": 75,
+    "double_bottom_trust_below": 20
   }
 }

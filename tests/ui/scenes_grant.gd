@@ -41,14 +41,20 @@ func scene_epilogue_after_phase_one() -> void:
 		{"type": "pay_agent", "target_id": C, "amount": 4800, "instrument": "cash", "parts": 1}, NEXT,
 		{"type": "submit_report", "report": "truth"}])
 	# Финал всей операции (после последней фазы) — ставим его прямо, без прохождения второй фазы.
-	Game.state.ending = "campaign_complete"
+	Game.state.ending = "clean_triumph"
 	Game.phase_card = 0
 	Game.changed.emit()
 	await frames()
-	eq(node("ending").get_meta("ending"), "campaign_complete")
-	# Документальный эпилог: хроника дела Эймса по листам.
+	eq(node("ending").get_meta("ending"), "clean_triumph")
+	has_text("ending", "ЧИСТЫЙ ТРИУМФ")
+	has_text("ending-checklist", "Условия «Чистого триумфа»")
+	has_text("ending-stats", "реализовано дел")
+	await shot("ending-clean-triumph")
+	# Эпилог: хроника своей концовки, затем документальная хроника дела Эймса.
 	await press("ending-epilogue")
 	eq(node("epilogue").get_meta("page"), 0)
+	has_text("epilogue", "чистая партия")
+	await press("epilogue-next")
 	has_text("epilogue", "16 апреля 1985")
 	for i in 2:
 		await press("epilogue-next")
@@ -56,7 +62,7 @@ func scene_epilogue_after_phase_one() -> void:
 	await shot("epilogue-cherkashin")
 	while exists("epilogue-next"):
 		await press("epilogue-next")
-	has_text("epilogue", "Лист 5 из 5")
+	has_text("epilogue", "Лист 6 из 6")
 	await press("epilogue-close")
 	ok(exists("ending"), "назад к итогу")
 	await press("ending-archive")

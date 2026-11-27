@@ -171,7 +171,7 @@ static func _state_spec() -> Dictionary:
 			"target_id": Schema.s(), "dialog_id": Schema.s(), "week": Schema.i(1),
 			"outcome": Schema.e(["recruited", "failed", "aborted"]), "lines": Schema.arr({"type": "dict", "of": {"type": "any"}}),
 		})),
-		"ending": Schema.nullable(Schema.e(["persona_non_grata", "recalled", "mole_arrested", "campaign_complete"])),
+		"ending": Schema.nullable(Schema.e(Archive.ENDINGS)),
 		"log": Schema.arr({"type": "dict", "of": {"type": "any"}}),
 	})
 	return _spec

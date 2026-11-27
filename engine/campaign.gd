@@ -925,7 +925,7 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 	if s.goal_reached:
 		var nxt := next_act_def(s, content)
 		if nxt.is_empty():
-			_end(ctx, "campaign_complete")
+			_end(ctx, Endings.final(s, content))  # четыре концовки кампании
 			return
 		s.act = nxt.act
 		s.week = maxi(s.week + 1, nxt.weeks.from)  # сюжетный скачок во времени между актами

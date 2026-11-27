@@ -25,6 +25,7 @@ tools/test.sh [фильтр]       # unit-тесты движка (tests/test_*.
 tools/ui-test.sh [фильтр]    # сценарии интерфейса под Xvfb + OpenGL, скриншоты в build/screens/
 tools/export.sh windows|web|all   # build/windows/GodShpionov.exe (+ Steam), build/web/
 tools/telemetry-report.sh [папка] # сводка журналов плейтеста (session-*.jsonl)
+tools/balance.sh             # балансный прогон: автоигрок проходит кампанию тремя стратегиями
 ```
 Шаг готов, когда зелёные все три проверки и снят скриншот нового экрана. `test.sh` и `ui-test.sh`
 сначала запускают `tools/check_scripts.tscn` — проверку, что все скрипты компилируются. Прогон, в выводе
@@ -159,6 +160,11 @@ tools/telemetry-report.sh [папка] # сводка журналов плей�
   `polygraph_start {rehearsal}`, `polygraph_answer`, `polygraph_rationalize`; вызов утром —
   `Campaign._polygraph_notice`; формулы через `Expression`; `Polygraph.winnable` — для
   валидатора). Экзамен — `content/polygraph/`. UI — `polygraph_view.gd` (вкладка пульта).
+- Концовки (шаг 15): `engine/endings.gd` — `final()` после четвёртой фазы (clean_triumph,
+  pyrrhic_victory, shadow_exchange, double_bottom; пороги `balance.endings`), `checklist()` для
+  итогового экрана; `ending:campaign_complete` в архиве — любая из четырёх. Эпилог концовки —
+  листы `arc_end_<концовка>`. Балансный прогон — `engine/autoplay.gd` (стратегии careful, rush,
+  hasty), `tools/balance.sh`, тест `tests/test_balance.gd`.
 
 ## Договорённости
 - Пользователь немного программировал. Объясняй ключевые решения коротко и по-русски.

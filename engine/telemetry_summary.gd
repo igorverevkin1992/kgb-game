@@ -39,7 +39,7 @@ static func summarize(sessions: Array) -> Dictionary:
 						out.hints += 1
 				"event":
 					var ev: String = e.get("e", "")
-					if (ev == "act_completed" and int(e.get("act", 0)) == 1) or (ev == "game_over" and e.get("ending", "") == "campaign_complete"):
+					if (ev == "act_completed" and int(e.get("act", 0)) == 1) or (ev == "game_over" and (e.get("ending", "") == "campaign_complete" or Endings.is_final(e.get("ending", "")))):
 						done = true
 					if ev == "game_over":
 						out.endings[e.get("ending", "?")] = out.endings.get(e.get("ending", "?"), 0) + 1

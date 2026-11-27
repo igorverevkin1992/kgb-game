@@ -417,6 +417,21 @@ static func ending() -> Control:
 	o[2].set_meta("ending", e)
 	_title(v, T.t("ending.%s.title" % e), T.t("ending.stamp"))
 	v.add_child(Style.para(T.t("ending.%s.text" % e, {"week": Game.state.week}), PANEL_W - 104, Style.mono(), 16, Style.INK))
+	# Итог кампании: цифры и условия «Чистого триумфа» — без скрытых чисел.
+	if Endings.is_final(e):
+		var st: Dictionary = Game.state
+		var poly = st.get("polygraph")
+		var stats := Style.para(T.t("ending.stats", {"realized": ArrestWindow.realized(st, Game.content), "sog": st.risks.sog_heat,
+			"mole": st.risks.mole_hunt, "tr": st.risks.treasury, "mp": st.risks.moscow_pressure,
+			"poly": T.t("ending.poly." + (poly.result if poly != null and poly.result != "" else "none"))}), PANEL_W - 104, Style.mono(), 14, Style.INK)
+		stats.name = "ending-stats"
+		v.add_child(stats)
+		var chk := Style.vbox(2)
+		chk.name = "ending-checklist"
+		chk.add_child(Style.label(T.t("ending.check.title"), Style.form(true), 14, Style.INK))
+		for x in Endings.checklist(st, Game.content):
+			chk.add_child(Style.label((T.t("ending.check.yes") if x.ok else T.t("ending.check.no")) + T.t("ending.check." + x.id, {"need": x.need, "value": x.value}), Style.mono(), 13, Style.INK if x.ok else Style.STAMP_RED))
+		v.add_child(chk)
 	var row := Style.hbox(12)
 	if not Campaign.is_ironman(Game.state):
 		var ld := Style.paper_button(T.t("ending.load"), "ending-load")

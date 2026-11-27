@@ -68,7 +68,7 @@ func test_rehearsal_then_pass() -> void:
 	ok(r.flags.has("polygraph_passed") and r.flags.has("polygraph_done"))
 	ok(r.goal_reached, "окно закрыто и проверка пройдена — задача фазы выполнена")
 	var end: Dictionary = H.play(self, r, [H.NEXT, H.NEXT, H.NEXT, H.report("truth")]).state
-	eq(end.ending, "campaign_complete")
+	eq(end.ending, "pyrrhic_victory", "полиграф пройден, но «Список» не реализован — пиррова победа")
 
 
 func test_spike_needs_rationalization() -> void:

@@ -233,5 +233,57 @@
     "match": {
       "result": "pass"
     }
+  },
+  {
+    "id": "ACH_CLEAN_TRIUMPH",
+    "title": {
+      "ru": "Чистый триумф"
+    },
+    "description": {
+      "ru": "Завершить операцию концовкой «Чистый триумф»."
+    },
+    "event": "game_over",
+    "match": {
+      "ending": "clean_triumph"
+    }
+  },
+  {
+    "id": "ACH_PYRRHIC",
+    "title": {
+      "ru": "Пиррова победа"
+    },
+    "description": {
+      "ru": "Завершить операцию концовкой «Пиррова победа»."
+    },
+    "event": "game_over",
+    "match": {
+      "ending": "pyrrhic_victory"
+    }
+  },
+  {
+    "id": "ACH_SHADOWS",
+    "title": {
+      "ru": "Обмен тенями"
+    },
+    "description": {
+      "ru": "Завершить операцию концовкой «Обмен тенями»."
+    },
+    "event": "game_over",
+    "match": {
+      "ending": "shadow_exchange"
+    }
+  },
+  {
+    "id": "ACH_DOUBLE_BOTTOM",
+    "title": {
+      "ru": "Двойное дно"
+    },
+    "description": {
+      "ru": "Завершить операцию концовкой «Двойное дно»."
+    },
+    "event": "game_over",
+    "match": {
+      "ending": "double_bottom"
+    }
   }
 ]
