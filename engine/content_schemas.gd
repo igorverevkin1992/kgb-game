@@ -58,6 +58,8 @@ static func _build() -> void:
 			"salary_usd": Schema.i(1),
 			"promised_usd": Schema.i(0),
 			"promise": text,
+			# Сколько агент сам тратит каждую неделю (образ жизни растёт без выплат).
+			"spending_per_week": Schema.opt(Schema.i(0, 50), 0),
 		})),
 		"initial_state": Schema.obj({
 			"rapport": scale,
@@ -118,6 +120,24 @@ static func _build() -> void:
 			"ready": fx,
 			"early": fx,
 		})), []),
+	})
+
+	# Дело из «Списка»: агент ЦРУ в Москве. Ущерб, привязка к перебежчику-«Ховарду», способ
+	# обосновать арест «естественным провалом» и пригодность к оперативной игре.
+	_cache["list_card"] = Schema.obj({
+		"card_id": Schema.s("^card_[a-z0-9_]+$", "id дела: card_ и латиница, цифры, «_»"),
+		"name": text,
+		"role": text,
+		"agency": Schema.e(["gru", "kgb", "research", "mfa", "defence", "other"]),
+		"damage": Schema.e(["critical", "high", "medium"]),
+		"howard": {"type": "bool"},
+		# seventh — 7-е управление (наружное наблюдение), spy_dust — «шпионская пыль» (метка),
+		# srac — ошибка с передатчиком; "" — естественный провал не обосновать.
+		"natural": Schema.e(["", "seventh", "spy_dust", "srac"]),
+		"game": {"type": "bool"},
+		# Дезинформация ЦРУ — если пробный пакет принят подставой.
+		"dangle": Schema.opt({"type": "bool"}, false),
+		"text": text,
 	})
 
 	# «Архив эпохи: 1985» — справочник: техника, история, законы и эпилог «факт и вымысел».
@@ -276,11 +296,25 @@ static func _build() -> void:
 				"settle_promise": Schema.opt({"type": "bool"}, false),
 				# …и добыты все эти сведения (например, «Список»).
 				"clues_all": Schema.opt(Schema.arr(Schema.id("clue")), []),
+				# …и поставлены флаги (например, «окно арестов закрыто»).
+				"flags_all": Schema.opt(Schema.arr(flag), []),
 			}),
 			# Валютные средства, которые Центр переводит резидентуре в начале фазы.
 			"fund_usd": Schema.opt(Schema.i(0, 1000000), 0),
 			# Сколько дней в одном ходе-«неделе» (четвёртая фаза идёт по две недели за ход).
 			"days_per_week": Schema.opt(Schema.i(1, 31), 7),
+			# «Окно арестов» (четвёртая фаза): недели графика и квоты Центра (нарастающим итогом).
+			"arrest_window": Schema.opt(Schema.obj({
+				"from": week,
+				"to": week,
+				"quotas": Schema.arr(Schema.obj({
+					"by_week": week,
+					# Сколько арестов к этой неделе: всего или только критических дел.
+					"arrests": Schema.i(1, 18),
+					"damage": Schema.opt(Schema.e(["", "critical"]), ""),
+					"text": text,
+				})),
+			})),
 			# Пробный пакет «крота» и его проверка на подставу (третья фаза).
 			"package": Schema.opt(Schema.obj({
 				"agent": Schema.id("tar"),
@@ -333,6 +367,17 @@ static func _build() -> void:
 			"loyalty_unpaid_week": Schema.i(0, 100), "loyalty_promise_cash": delta, "loyalty_promise_escrow": delta,
 			"loyalty_per_1000_extra": Schema.n(0, 10), "escrow_min_loyalty": scale, "reports_min_loyalty": scale,
 			"coerced_loyalty_penalty": Schema.i(0, 100), "loyalty_coerced_week": Schema.i(0, 100),
+		}),
+		# «Окно арестов» и образ жизни «крота» (четвёртая фаза).
+		"list": Schema.obj({
+			"howard_mole_hunt": delta, "natural_mole_hunt": delta, "plain_mole_hunt": delta,
+			"cascade_after": Schema.i(0, 18), "cascade_mole_hunt": delta,
+			"game_mole_hunt": delta, "game_pressure": delta, "game_critical_pressure": delta,
+			"natural_prep_weeks": Schema.i(1, 4),
+			"quota_failed_pressure": delta, "quota_failed_trust": delta, "quota_met_trust": delta, "quota_met_pressure": delta,
+			"contest_trust_cost": Schema.i(0, 100), "contest_min_trust": scale, "contest_panic_mole_hunt": scale, "contest_refused_pressure": delta,
+			"anlace_mole_hunt": scale, "anlace_weekly_sog": delta, "fake_trust": delta,
+			"lifestyle_mole_hunt": delta, "restrain_lifestyle": delta, "restrain_loyalty": delta,
 		}),
 		"cipher": Schema.obj({
 			"accept_forged_sog_heat": delta, "accept_forged_flag": flag,

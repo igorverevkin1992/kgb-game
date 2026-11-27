@@ -86,5 +86,30 @@
   "delegation": {
     "unlock_after_personal_ops": 3,
     "few_districts_penalty": 0.3
+  },
+  "list": {
+    "howard_mole_hunt": 1,
+    "natural_mole_hunt": 2,
+    "plain_mole_hunt": 6,
+    "cascade_after": 2,
+    "cascade_mole_hunt": 25,
+    "game_mole_hunt": -3,
+    "game_pressure": 3,
+    "game_critical_pressure": 8,
+    "natural_prep_weeks": 1,
+    "quota_failed_pressure": 15,
+    "quota_failed_trust": -5,
+    "quota_met_trust": 5,
+    "quota_met_pressure": -8,
+    "contest_trust_cost": 8,
+    "contest_min_trust": 35,
+    "contest_panic_mole_hunt": 40,
+    "contest_refused_pressure": 6,
+    "anlace_mole_hunt": 60,
+    "anlace_weekly_sog": 3,
+    "fake_trust": -10,
+    "lifestyle_mole_hunt": 3,
+    "restrain_lifestyle": -20,
+    "restrain_loyalty": -6
   }
 }

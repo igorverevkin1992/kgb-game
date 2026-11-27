@@ -86,7 +86,8 @@
     "promised_usd": 50000,
     "promise": {
       "ru": "Аванс 50 000 долларов наличными — закрыть долги после развода"
-    }
+    },
+    "spending_per_week": 8
   },
   "initial_state": {
     "rapport": 20,

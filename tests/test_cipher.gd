@@ -147,6 +147,8 @@ func test_validator_cipher_rules() -> void:
 			x["forged"] = true
 	var reqs: Array = H.file(e, "requests/act1.json")
 	reqs[0]["act"] = 4
+	var camp: Dictionary = H.file(e, "campaign.json")
+	camp.acts = camp.acts.filter(func(a): return int(a.act) != 4)  # фазы 4 нет — запрос к ней висит
 	var errs := H.errors(e)
 	has_issue(errs, "cipher", "только директива")
 	has_issue(errs, "cipher", "акту 4")

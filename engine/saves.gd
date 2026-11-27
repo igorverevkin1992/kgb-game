@@ -130,6 +130,11 @@ static func _state_spec() -> Dictionary:
 		"routes": {"type": "dict", "of": Schema.obj({"stops": strs, "observations": Schema.arr(strs), "operative": Schema.opt(Schema.s(), "op_resident_player")})},
 		"decisions": Schema.opt({"type": "dict", "of": Schema.s()}, {}),
 		"personal_ops": Schema.opt(Schema.i(0), 0),
+		"list": Schema.opt(Schema.nullable(Schema.obj({
+			"cards": {"type": "dict", "of": Schema.obj({"status": Schema.e(["pending", "arrest", "prep", "game_plan"] + ArrestWindow.DONE), "week": Schema.i(0)})},
+			"quotas": {"type": "dict", "of": Schema.e(["met", "failed", "contested"])},
+			"contests": Schema.opt(Schema.arr(Schema.i()), []),
+		})), null),
 		"package": Schema.opt(Schema.nullable(Schema.obj({
 			"source": Schema.e(["drop", "handover"]), "week": Schema.i(1), "dangle": {"type": "bool"},
 			"archive": Schema.e(["", "ok", "mismatch"]), "centre": Schema.e(["", "ok", "mismatch"]),
@@ -150,7 +155,7 @@ static func _state_spec() -> Dictionary:
 		})),
 		"agents": {"type": "dict", "of": Schema.obj({
 			"loyalty": pct, "paid_usd": Schema.i(0), "lifestyle": pct, "trace": pct, "since_week": Schema.i(1), "promise_kept": {"type": "bool"},
-			"coerced": Schema.opt({"type": "bool"}, false),
+			"coerced": Schema.opt({"type": "bool"}, false), "restrained_week": Schema.opt(Schema.i(0), 0),
 		})},
 		"payments": Schema.arr(Schema.obj({
 			"target_id": Schema.s(), "week": Schema.i(1), "amount": Schema.i(1), "instrument": Schema.e(Finance.INSTRUMENTS),

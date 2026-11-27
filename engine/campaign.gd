@@ -21,6 +21,9 @@ class_name Campaign
 ##   {type: "verify_cable", cable_id, decision: "accept"|"query"} — сверка директивы (шифроузел)
 ##   {type: "check_package", channel: "archive"} · {type: "accept_package"} · {type: "reject_package"}
 ##     — пробный пакет «крота» и проверка на подставу (Dangle)
+##   {type: "list_action", card_id, action: "arrest"|"natural"|"game"|"cancel"} — «Окно арестов»
+##   {type: "contest_quota"} — оспорить ближайшую квоту Центра · {type: "restrain_agent", target_id}
+##     — «притормозить» траты агента (раз в неделю)
 ##   {type: "submit_report", report: "truth"|"embellished"|"silence"} — быстрое донесение, или
 ##   {type: "submit_report", choices: {fact_key: "as_is"|"embellish"|"omit"}, request: "req_…"|""}
 ##     — шифрограмма из фактов недели (Cipher.week_facts); вид донесения определяет Cipher.classify
@@ -75,6 +78,7 @@ static func new_campaign(content: Dictionary) -> Dictionary:
 		"decisions": {},
 		"personal_ops": 0,
 		"package": null,
+		"list": null,
 		"rng": b.start.seed,
 		"ending": null,
 		"log": [],
@@ -337,6 +341,61 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			s.package.rejected = true
 			_set_flag(ctx, Dangle.REJECTED_FLAG)
 			_emit(ctx, {"type": "package_rejected"})
+
+		"list_action":
+			var err := ArrestWindow.action_error(s, content, action.get("card_id", ""), action.get("action", ""))
+			if err != "":
+				return _reject(state, err)
+			var st: Dictionary = s.list.cards[action.card_id]
+			match action.action:
+				"arrest":
+					st.status = "arrest"
+				"natural":
+					st.status = "prep"
+					st.week = int(s.week) + int(content.balance.list.natural_prep_weeks)
+				"game":
+					st.status = "game_plan"
+				"cancel":
+					st.status = "pending"
+					st.week = 0
+			_emit(ctx, {"type": "list_planned", "card_id": action.card_id, "action": action.action})
+
+		"contest_quota":
+			if not ArrestWindow.open(s, content):
+				return _reject(state, "«Окно арестов» закрыто")
+			var q := ArrestWindow.next_quota(s, content)
+			if q.is_empty():
+				return _reject(state, "Квот Центра больше нет")
+			if s.list.get("contests", []).has(int(q.by_week)):
+				return _reject(state, "Эту квоту уже оспаривали")
+			var lb: Dictionary = content.balance.list
+			if not s.list.has("contests"):
+				s.list.contests = []
+			s.list.contests.append(int(q.by_week))
+			var granted := ArrestWindow.contest_granted(s, content)
+			_emit(ctx, {"type": "quota_contested", "by_week": int(q.by_week), "granted": granted})
+			if granted:
+				s.list.quotas[str(q.by_week)] = "contested"
+				_add_trust(ctx, -int(lb.contest_trust_cost), "quota_contested")
+			else:
+				_add_risk(ctx, "moscow_pressure", int(lb.contest_refused_pressure), "quota_contested")
+
+		"restrain_agent":
+			var id: String = action.get("target_id", "")
+			if not Finance.agents(s).has(id):
+				return _reject(state, "Такого агента нет")
+			var ag: Dictionary = s.agents[id]
+			if int(ag.lifestyle) <= 0:
+				return _reject(state, "Агент и так живёт скромно")
+			if int(ag.get("restrained_week", 0)) == int(s.week):
+				return _reject(state, "С агентом уже говорили об этом на этой неделе")
+			var lb: Dictionary = content.balance.list
+			ag.restrained_week = int(s.week)
+			ag.lifestyle = Util.clamp100(int(ag.lifestyle) + int(lb.restrain_lifestyle))
+			var from: int = ag.loyalty
+			ag.loyalty = Util.clamp100(from + int(lb.restrain_loyalty))
+			_emit(ctx, {"type": "agent_restrained", "target_id": id})
+			_emit(ctx, {"type": "loyalty_changed", "target_id": id, "from": from, "to": ag.loyalty, "reason": "restrained"})
 
 		"verify_cable":
 			var cable := cable_by_id(content, action.cable_id)
@@ -620,6 +679,8 @@ static func _check_goal(ctx: Dictionary) -> void:
 		return
 	if not def.goal.get("clues_all", []).all(func(c): return s.clues.has(c)):
 		return
+	if not def.goal.get("flags_all", []).all(func(f): return s.flags.has(f)):
+		return
 	for id in def.goal.recruit_any_of:
 		if s.targets.has(id) and s.targets[id].recruited and not s.targets[id].lost \
 				and (not def.goal.settle_promise or (s.agents.has(id) and s.agents[id].promise_kept)):
@@ -678,6 +739,11 @@ static func _agents_night(ctx: Dictionary) -> void:
 		if int(ag.lifestyle) >= int(ctx.content.balance.thresholds.danger):
 			ag.trace = Util.clamp100(int(ag.trace) + int(b.lifestyle_danger_treasury))
 			_add_risk(ctx, "treasury", int(b.lifestyle_danger_treasury), "lifestyle")
+		# Агент тратит и сам (дом, машина): образ жизни растёт без выплат.
+		ag.lifestyle = Util.clamp100(int(ag.lifestyle) + int(Finance.profile(ctx.content, id).get("spending_per_week", 0)))
+		if int(ag.lifestyle) >= int(ctx.content.balance.thresholds.danger) and ArrestWindow.act_of(ctx.content) > 0 \
+				and int(s.act) >= ArrestWindow.act_of(ctx.content):
+			_add_risk(ctx, "mole_hunt", int(ctx.content.balance.list.lifestyle_mole_hunt), "lifestyle")
 		ag.lifestyle = maxi(0, int(ag.lifestyle) - int(b.lifestyle_decay))
 		# Завербованный принуждением служит из страха, а не по согласию: лояльность тает.
 		if ag.get("coerced", false):
@@ -781,6 +847,9 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 				_set_flag(ctx, "centre_caught_lie")
 		s.lies = []
 
+	_list_night(ctx)
+	if s.flags.has(ArrestWindow.ANLACE_FLAG):
+		_add_risk(ctx, "sog_heat", int(b.list.anlace_weekly_sog), "anlace")
 	var act := current_act_def(s, content)
 	if s.goal_reached:
 		_add_risk(ctx, "moscow_pressure", mp.act_goal_reached, "act_goal_reached")
@@ -809,6 +878,8 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 		s.week = maxi(s.week + 1, nxt.weeks.from)  # сюжетный скачок во времени между актами
 		s.goal_reached = false
 		_change_fund(ctx, int(nxt.get("fund_usd", 0)), "allocation", "act_%d" % nxt.act)
+		if nxt.get("arrest_window") != null and s.get("list") == null:
+			s.list = ArrestWindow.new_state(content)
 	else:
 		s.week += 1
 		# Задача фазы сорвана окончательно: Центр отзывает резидента.
@@ -816,6 +887,78 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 			_end(ctx, "recalled")
 			return
 	_start_morning(ctx)
+
+
+## Ночь «Окна арестов»: исполнение мер, каскад тревоги в Лэнгли, квоты Центра, закрытие окна.
+static func _list_night(ctx: Dictionary) -> void:
+	var s: Dictionary = ctx.s
+	var content: Dictionary = ctx.content
+	if s.get("list") == null or int(s.act) != ArrestWindow.act_of(content) or s.flags.has(ArrestWindow.WINDOW_CLOSED_FLAG):
+		return
+	var b: Dictionary = content.balance.list
+	var cfg := ArrestWindow.config(content)
+	var plain := 0
+	for c in content.list:
+		var st: Dictionary = s.list.cards[c.card_id]
+		var fake := ArrestWindow.is_fake(s, c)
+		match st.status:
+			"arrest":
+				if fake:
+					st.status = "fake_arrested"
+					_emit(ctx, {"type": "list_fake_arrested", "card_id": c.card_id})
+					_add_trust(ctx, int(b.fake_trust), "fake_arrested")
+					_set_flag(ctx, ArrestWindow.EXPOSED_FLAG)
+				else:
+					st.status = "arrested"
+					_emit(ctx, {"type": "list_arrested", "card_id": c.card_id, "howard": c.howard, "natural": false})
+					_add_risk(ctx, "mole_hunt", int(b.howard_mole_hunt) if c.howard else int(b.plain_mole_hunt), "arrest")
+					if not c.howard:
+						plain += 1
+			"prep":
+				if int(st.week) > int(s.week):
+					continue
+				if fake:
+					st.status = "fake"
+					_emit(ctx, {"type": "list_fake_revealed", "card_id": c.card_id})
+				else:
+					st.status = "natural"
+					_emit(ctx, {"type": "list_arrested", "card_id": c.card_id, "howard": c.howard, "natural": true})
+					_add_risk(ctx, "mole_hunt", int(b.natural_mole_hunt), "natural_arrest")
+			"game_plan":
+				if fake:
+					st.status = "fake"
+					_emit(ctx, {"type": "list_fake_revealed", "card_id": c.card_id})
+				else:
+					st.status = "game"
+					_emit(ctx, {"type": "list_game", "card_id": c.card_id})
+					_add_risk(ctx, "mole_hunt", int(b.game_mole_hunt), "operational_game")
+					_add_risk(ctx, "moscow_pressure", int(b.game_critical_pressure) if c.damage == "critical" else int(b.game_pressure), "operational_game")
+	# Слишком много арестов «без Ховарда» за неделю — в Лэнгли понимают, что течёт изнутри.
+	if plain > int(b.cascade_after):
+		_emit(ctx, {"type": "list_cascade", "arrests": plain})
+		_add_risk(ctx, "mole_hunt", int(b.cascade_mole_hunt), "cascade")
+		_set_flag(ctx, ArrestWindow.CASCADE_FLAG)
+		_set_flag(ctx, ArrestWindow.ANLACE_FLAG)
+	if int(s.risks.mole_hunt) >= int(b.anlace_mole_hunt):
+		_set_flag(ctx, ArrestWindow.ANLACE_FLAG)
+	for q in cfg.quotas:
+		var key := str(q.by_week)
+		if int(q.by_week) != int(s.week) or s.list.quotas.has(key):
+			continue
+		var done := ArrestWindow.quota_progress(s, content, q)
+		var met: bool = done >= int(q.arrests)
+		s.list.quotas[key] = "met" if met else "failed"
+		_emit(ctx, {"type": "quota_checked", "by_week": int(q.by_week), "met": met, "done": done, "need": int(q.arrests)})
+		if met:
+			_add_trust(ctx, int(b.quota_met_trust), "quota_met")
+			_add_risk(ctx, "moscow_pressure", int(b.quota_met_pressure), "quota_met")
+		else:
+			_add_trust(ctx, int(b.quota_failed_trust), "quota_failed")
+			_add_risk(ctx, "moscow_pressure", int(b.quota_failed_pressure), "quota_failed")
+	if int(s.week) >= int(cfg.to):
+		_set_flag(ctx, ArrestWindow.WINDOW_CLOSED_FLAG)
+		_emit(ctx, {"type": "list_window_closed", "realized": ArrestWindow.realized(s, content)})
+		_check_goal(ctx)
 
 
 static func _end(ctx: Dictionary, ending: String) -> void:

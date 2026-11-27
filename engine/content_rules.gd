@@ -33,6 +33,7 @@ static func check(content: Dictionary, file_of: Dictionary, opts := {}) -> Array
 	_archive(ctx)
 	_act2(ctx)
 	_act3(ctx)
+	_act4(ctx)
 	return ctx.issues
 
 
@@ -614,7 +615,7 @@ static func _act3(ctx: Dictionary) -> void:
 			if not target_ids.has(t):
 				_push(ctx, "error", "refs", "Выход ждёт вербовки несуществующего кандидата «%s»" % t, "%s.requires_recruited" % id, id)
 		for f in o.get("requires_flags", []):
-			if not flags_known.has(f):
+			if not flags_known.has(f) and not ArrestWindow.ENGINE_FLAGS.has(f):
 				_push(ctx, "error", "refs", "Выход ждёт флаг «%s», который ничто не ставит" % f, "%s.requires_flags" % id, id)
 		for d in o.get("requires_decisions", []):
 			if not dec_ids.has(d):
@@ -624,9 +625,44 @@ static func _act3(ctx: Dictionary) -> void:
 		if need != "" and not op_ids.has(need):
 			_push(ctx, "error", "dialog", "Встреча назначается несуществующим выходом «%s»" % need, "%s.requires_op" % d.dialog_id, d.dialog_id)
 	for d in c.decisions:
-		if d.trigger.flag != "" and not flags_known.has(d.trigger.flag):
+		if d.trigger.flag != "" and not flags_known.has(d.trigger.flag) and not ArrestWindow.ENGINE_FLAGS.has(d.trigger.flag):
 			_push(ctx, "error", "decisions", "Решение ждёт флаг «%s», который ничто не ставит" % d.trigger.flag, "%s.trigger.flag" % d.decision_id, d.decision_id)
 		for o in d.options:
 			var lt: String = o.effects.get("loyalty_target", "")
 			if lt != "" and not target_ids.has(lt):
 				_push(ctx, "error", "decisions", "Вариант меняет лояльность несуществующего агента «%s»" % lt, "%s.options" % d.decision_id, d.decision_id)
+
+
+## 19. Четвёртая фаза: «Окно арестов» — квоты выполнимы, дела описаны.
+static func _act4(ctx: Dictionary) -> void:
+	var c: Dictionary = ctx.content
+	var cfg := ArrestWindow.config(c)
+	if cfg.is_empty():
+		if not c.get("list", []).is_empty():
+			_push(ctx, "warning", "list", "Дела «Списка» есть, но ни у одной фазы нет arrest_window", "", "", "campaign.json")
+		return
+	var act := ArrestWindow.act_of(c)
+	var where := "acts[act %d].arrest_window" % act
+	var a: Dictionary = {}
+	for x in c.campaign.acts:
+		if int(x.act) == act:
+			a = x
+	if int(cfg.from) < int(a.weeks.from) or int(cfg.to) > int(a.weeks.to) or int(cfg.from) > int(cfg.to):
+		_push(ctx, "error", "list", "Недели окна %d–%d вне фазы %d (недели %d–%d)" % [cfg.from, cfg.to, act, a.weeks.from, a.weeks.to], where, "", "campaign.json")
+	var cards: Array = c.get("list", [])
+	if cards.is_empty():
+		_push(ctx, "error", "list", "«Окно арестов» без дел: добавьте content/list/", where, "", "campaign.json")
+	var last := 0
+	for q in cfg.quotas:
+		if int(q.by_week) < int(cfg.from) or int(q.by_week) > int(cfg.to):
+			_push(ctx, "error", "list", "Квота к неделе %d вне окна %d–%d" % [q.by_week, cfg.from, cfg.to], where + ".quotas", "", "campaign.json")
+		if int(q.by_week) <= last:
+			_push(ctx, "error", "list", "Квоты должны идти по возрастанию недель", where + ".quotas", "", "campaign.json")
+		last = int(q.by_week)
+		# Квота выполнима даже при подставе: подделки не в счёт.
+		var pool: int = cards.filter(func(x): return not x.get("dangle", false) and (q.get("damage", "") == "" or x.damage == q.damage)).size()
+		if int(q.arrests) > pool:
+			_push(ctx, "error", "list", "Квота к неделе %d требует %d арестов, а подходящих настоящих дел только %d" % [q.by_week, q.arrests, pool], where + ".quotas", "", "campaign.json")
+	var howard: int = cards.filter(func(x): return x.howard).size()
+	if howard * 2 >= cards.size() and cards.size() > 0:
+		_push(ctx, "warning", "list", "Флаг «Ховард» у %d из %d дел: перебежчик объясняет слишком многое — выбор теряет смысл" % [howard, cards.size()], "", "", "list/")

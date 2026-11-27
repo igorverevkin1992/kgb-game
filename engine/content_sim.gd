@@ -28,6 +28,10 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 		dialog_target[d.dialog_id] = d.target_id
 		dialog_op[d.target_id] = d.get("requires_op", "")
 	var st := {"clues": {}, "unlocked": {}, "recruited": {}, "ops": {}, "flags": {}, "decisions": {}}
+	# «Окно арестов» закрывается само по графику.
+	var aw := ArrestWindow.act_of(content)
+	if aw > 0 and aw <= max_act:
+		st.flags[ArrestWindow.WINDOW_CLOSED_FLAG] = true
 	var changed := true
 	while changed:
 		changed = false
@@ -90,6 +94,8 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 ## Цель акта достигнута в прогоне: кто-то из списка завербован и все нужные сведения добыты.
 static func goal_met(act: Dictionary, st: Dictionary, failed_targets := []) -> bool:
 	if not act.goal.get("clues_all", []).all(func(c): return st.clues.has(c)):
+		return false
+	if not act.goal.get("flags_all", []).all(func(f): return st.flags.has(f)):
 		return false
 	return act.goal.recruit_any_of.any(func(id): return not failed_targets.has(id) and st.recruited.has(id))
 

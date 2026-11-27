@@ -1,0 +1,326 @@
+[
+  {
+    "card_id": "card_sfera",
+    "name": {
+      "ru": "Инженер «Сфера»"
+    },
+    "role": {
+      "ru": "Ведущий конструктор НИИ радиоэлектроники"
+    },
+    "agency": "research",
+    "damage": "critical",
+    "howard": true,
+    "natural": "spy_dust",
+    "game": false,
+    "dangle": false,
+    "text": {
+      "ru": "Передал ЦРУ документацию по бортовым радиолокаторам перехватчиков. Связь — через сотрудника посольства США; его знал бежавший из ЦРУ офицер."
+    }
+  },
+  {
+    "card_id": "card_general",
+    "name": {
+      "ru": "Генерал «Ветеран»"
+    },
+    "role": {
+      "ru": "Генерал-майор ГРУ в отставке, преподаватель академии"
+    },
+    "agency": "gru",
+    "damage": "critical",
+    "howard": false,
+    "natural": "",
+    "game": true,
+    "dangle": false,
+    "text": {
+      "ru": "Старейший источник ЦРУ: двадцать лет сведений о военных разведчиках за рубежом. Встречи — только во время зарубежных поездок."
+    }
+  },
+  {
+    "card_id": "card_k_officer",
+    "name": {
+      "ru": "Подполковник «Сокол»"
+    },
+    "role": {
+      "ru": "Подполковник КГБ, Управление «К»"
+    },
+    "agency": "kgb",
+    "damage": "high",
+    "howard": false,
+    "natural": "seventh",
+    "game": true,
+    "dangle": false,
+    "text": {
+      "ru": "Сообщал ЦРУ о контрразведывательных операциях против американцев. Вернулся в Москву в 1985 году."
+    }
+  },
+  {
+    "card_id": "card_major",
+    "name": {
+      "ru": "Майор «Матрос»"
+    },
+    "role": {
+      "ru": "Майор КГБ, вернувшийся из загранкомандировки"
+    },
+    "agency": "kgb",
+    "damage": "high",
+    "howard": false,
+    "natural": "seventh",
+    "game": false,
+    "dangle": false,
+    "text": {
+      "ru": "Завербован во время службы за рубежом, продолжал связь в Москве через тайники."
+    }
+  },
+  {
+    "card_id": "card_mfa_usa",
+    "name": {
+      "ru": "Советник «Дипломат-2»"
+    },
+    "role": {
+      "ru": "Советник Управления США и Канады МИД СССР"
+    },
+    "agency": "mfa",
+    "damage": "high",
+    "howard": true,
+    "natural": "spy_dust",
+    "game": true,
+    "dangle": false,
+    "text": {
+      "ru": "Передавал позиции делегации на переговорах по разоружению. О нём знал бежавший офицер ЦРУ."
+    }
+  },
+  {
+    "card_id": "card_colonel",
+    "name": {
+      "ru": "Полковник «Тень»"
+    },
+    "role": {
+      "ru": "Полковник ГРУ, Генеральный штаб"
+    },
+    "agency": "gru",
+    "damage": "critical",
+    "howard": false,
+    "natural": "srac",
+    "game": false,
+    "dangle": false,
+    "text": {
+      "ru": "Передавал сведения о системе управления войсками. Пользуется портативным передатчиком кратковременной связи."
+    }
+  },
+  {
+    "card_id": "card_aviation",
+    "name": {
+      "ru": "Инженер «Крыло»"
+    },
+    "role": {
+      "ru": "Инженер Министерства авиационной промышленности"
+    },
+    "agency": "defence",
+    "damage": "high",
+    "howard": true,
+    "natural": "srac",
+    "game": false,
+    "dangle": false,
+    "text": {
+      "ru": "Сведения о двигателях новых бомбардировщиков. Связь — через передатчик; о нём знал бежавший офицер ЦРУ."
+    }
+  },
+  {
+    "card_id": "card_iki",
+    "name": {
+      "ru": "Научный сотрудник «Звездочёт»"
+    },
+    "role": {
+      "ru": "Научный сотрудник Института космических исследований"
+    },
+    "agency": "research",
+    "damage": "medium",
+    "howard": false,
+    "natural": "spy_dust",
+    "game": true,
+    "dangle": true,
+    "text": {
+      "ru": "По «Списку» — передавал планы космических программ. Сведения о нём проверить нечем."
+    }
+  },
+  {
+    "card_id": "card_captain",
+    "name": {
+      "ru": "Капитан «Связист»"
+    },
+    "role": {
+      "ru": "Капитан ГРУ, узел связи Генерального штаба"
+    },
+    "agency": "gru",
+    "damage": "medium",
+    "howard": false,
+    "natural": "",
+    "game": true,
+    "dangle": true,
+    "text": {
+      "ru": "По «Списку» — сообщал расписание шифрованной связи. Контакты с американцами не отмечались."
+    }
+  },
+  {
+    "card_id": "card_translator",
+    "name": {
+      "ru": "Переводчица «Лира»"
+    },
+    "role": {
+      "ru": "Переводчица МИД СССР"
+    },
+    "agency": "mfa",
+    "damage": "medium",
+    "howard": true,
+    "natural": "seventh",
+    "game": true,
+    "dangle": false,
+    "text": {
+      "ru": "Пересказывала содержание переговоров, где переводила. Её знал бежавший офицер ЦРУ."
+    }
+  },
+  {
+    "card_id": "card_pvo",
+    "name": {
+      "ru": "Подполковник «Радар»"
+    },
+    "role": {
+      "ru": "Подполковник войск ПВО"
+    },
+    "agency": "defence",
+    "damage": "high",
+    "howard": false,
+    "natural": "srac",
+    "game": false,
+    "dangle": false,
+    "text": {
+      "ru": "Передал схемы развёртывания зенитных ракетных комплексов вокруг Москвы."
+    }
+  },
+  {
+    "card_id": "card_sredmash",
+    "name": {
+      "ru": "Инженер «Изотоп»"
+    },
+    "role": {
+      "ru": "Главный инженер предприятия Министерства среднего машиностроения"
+    },
+    "agency": "defence",
+    "damage": "critical",
+    "howard": false,
+    "natural": "seventh",
+    "game": true,
+    "dangle": false,
+    "text": {
+      "ru": "Сведения о производстве ядерных боеприпасов. Встречи с сотрудником посольства — в парке Горького."
+    }
+  },
+  {
+    "card_id": "card_kgb16",
+    "name": {
+      "ru": "Майор «Эфир»"
+    },
+    "role": {
+      "ru": "Майор КГБ, служба радиоперехвата"
+    },
+    "agency": "kgb",
+    "damage": "high",
+    "howard": false,
+    "natural": "seventh",
+    "game": false,
+    "dangle": false,
+    "text": {
+      "ru": "Сообщал ЦРУ, какие линии связи посольства США прослушиваются."
+    }
+  },
+  {
+    "card_id": "card_gosplan",
+    "name": {
+      "ru": "Экономист «Счётчик»"
+    },
+    "role": {
+      "ru": "Экономист Госплана СССР"
+    },
+    "agency": "other",
+    "damage": "medium",
+    "howard": true,
+    "natural": "spy_dust",
+    "game": true,
+    "dangle": false,
+    "text": {
+      "ru": "Передавал закрытые данные о военных расходах. Его знал бежавший офицер ЦРУ."
+    }
+  },
+  {
+    "card_id": "card_gru_lt",
+    "name": {
+      "ru": "Подполковник «Штурман»"
+    },
+    "role": {
+      "ru": "Подполковник ГРУ, вернувшийся из Азии"
+    },
+    "agency": "gru",
+    "damage": "high",
+    "howard": false,
+    "natural": "",
+    "game": true,
+    "dangle": false,
+    "text": {
+      "ru": "Завербован за рубежом; в Москве пользуется тайниками в лесопарках."
+    }
+  },
+  {
+    "card_id": "card_apn",
+    "name": {
+      "ru": "Журналист «Перо»"
+    },
+    "role": {
+      "ru": "Обозреватель агентства печати «Новости»"
+    },
+    "agency": "other",
+    "damage": "medium",
+    "howard": false,
+    "natural": "seventh",
+    "game": true,
+    "dangle": true,
+    "text": {
+      "ru": "По «Списку» — передавал сведения о настроениях в редакциях. Встречи не зафиксированы."
+    }
+  },
+  {
+    "card_id": "card_kb",
+    "name": {
+      "ru": "Конструктор «Пуск»"
+    },
+    "role": {
+      "ru": "Конструктор ракетного КБ"
+    },
+    "agency": "defence",
+    "damage": "critical",
+    "howard": true,
+    "natural": "srac",
+    "game": false,
+    "dangle": false,
+    "text": {
+      "ru": "Передал характеристики новой баллистической ракеты. О нём знал бежавший офицер ЦРУ."
+    }
+  },
+  {
+    "card_id": "card_protocol",
+    "name": {
+      "ru": "Сотрудник «Протокол»"
+    },
+    "role": {
+      "ru": "Сотрудник протокольного отдела МИД СССР"
+    },
+    "agency": "mfa",
+    "damage": "medium",
+    "howard": false,
+    "natural": "spy_dust",
+    "game": true,
+    "dangle": true,
+    "text": {
+      "ru": "По «Списку» — сообщал о встречах иностранных делегаций. Источник выглядит слишком удобным."
+    }
+  }
+]

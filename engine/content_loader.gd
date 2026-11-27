@@ -23,6 +23,7 @@ const FOLDERS := {
 	"archive": {"spec": "archive", "id": "id", "list": true, "kind": "Запись архива"},
 	"operatives": {"spec": "operative", "id": "operative_id", "list": true, "kind": "Оперработник"},
 	"decisions": {"spec": "decision", "id": "decision_id", "list": false, "kind": "Решение резидента"},
+	"list": {"spec": "list_card", "id": "card_id", "list": true, "kind": "Дело из «Списка»"},
 }
 
 static var _cached := {}
@@ -87,7 +88,7 @@ static func game_content() -> Dictionary:
 static func parse(entries: Array) -> Dictionary:
 	var issues: Array = []
 	var file_of := {}
-	var content := {"targets": [], "clues": [], "cables": [], "ops": [], "polygraph": [], "requests": [], "dialogs": [], "achievements": [], "archive": [], "operatives": [], "decisions": []}
+	var content := {"targets": [], "clues": [], "cables": [], "ops": [], "polygraph": [], "requests": [], "dialogs": [], "achievements": [], "archive": [], "operatives": [], "decisions": [], "list": []}
 	var singles := {}
 
 	var register := func(id: String, kind: String, path: String) -> void:
@@ -156,7 +157,7 @@ const RULE_RU := {
 	"three-clue": "три улики", "mice-three-clue": "три улики на мотив", "softlock": "тупик",
 	"robustness": "устойчивость", "unreachable": "недостижимо", "sdr": "проверочный маршрут",
 	"weeks": "недели", "text-length": "длина текста", "translation": "перевод", "polygraph": "полиграф",
-	"balance": "баланс", "board": "доска мотивов", "cipher": "шифроузел", "dialog": "беседа", "finance": "финансы", "achievements": "достижения", "age16": "возраст 16+", "archive": "архив", "decisions": "решения", "delegation": "поручения", "technique": "приёмы наружки", "package": "пробный пакет", "blind-window": "слепое окно",
+	"balance": "баланс", "board": "доска мотивов", "cipher": "шифроузел", "dialog": "беседа", "finance": "финансы", "achievements": "достижения", "age16": "возраст 16+", "archive": "архив", "decisions": "решения", "delegation": "поручения", "technique": "приёмы наружки", "package": "пробный пакет", "blind-window": "слепое окно", "list": "«Окно арестов»",
 }
 
 

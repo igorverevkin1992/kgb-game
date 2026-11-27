@@ -155,3 +155,16 @@ static func run(state: Dictionary, actions: Array) -> Dictionary:
 			return s
 		s = _collect(r.state, [])
 	return s
+
+
+## Начало четвёртой фазы (неделя 31, утро): «Кронос» завербован и лоялен, «Окно арестов» открыто.
+static func act4_state(agents: Array = ["tar_caldwell_arthur"], flags: Array = []) -> Dictionary:
+	var c := content()
+	var s := act3_state(agents)
+	s.act = 3
+	s.week = 30
+	s.phase = "night"
+	s.goal_reached = true
+	for f in flags:
+		s.flags.append(f)
+	return Campaign.dispatch(s, c, report("truth")).state
