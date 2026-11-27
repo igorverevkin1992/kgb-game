@@ -43,6 +43,8 @@ var saved_at := 0
 ## Открытый документ в лотке входящих и выбранный ящик (InboxView.FOLDERS).
 var inbox_selected := ""
 var inbox_folder := "all"
+## Черновики ответов на задания Центра: {task_id: {q_id: option_id}}.
+var task_draft := {}
 ## Доска мотивов: выбранная улика из стопки, открытое заключение и его черновик.
 var board_selected := ""
 var board_analysis := ""
@@ -211,6 +213,14 @@ func new_game(ironman := false) -> void:
 	last_events = r.events
 	_clear_ui()
 	saved_at = Time.get_ticks_msec()
+	changed.emit()
+
+
+func set_task_answer(task_id: String, q_id: String, option_id: String) -> void:
+	var d: Dictionary = task_draft.get(task_id, {}).duplicate()
+	d[q_id] = option_id
+	task_draft[task_id] = d
+	sfx("pencil")
 	changed.emit()
 
 
@@ -404,7 +414,7 @@ func set_instant_text(on: bool) -> void:
 ## Открыть документ в лотке; непрочитанный отмечается прочитанным.
 func select_document(cable_id: String) -> void:
 	inbox_selected = cable_id
-	if cable_id.begins_with("dec_") or cable_id == PackageView.ITEM:
+	if cable_id.begins_with("dec_") or cable_id.begins_with("task_") or cable_id == PackageView.ITEM:
 		changed.emit()
 		return
 	if not state.read_cables.has(cable_id):
@@ -642,6 +652,7 @@ func _clear_ui() -> void:
 	last_error = ""
 	inbox_selected = ""
 	inbox_folder = "all"
+	task_draft = {}
 	board_selected = ""
 	board_analysis = ""
 	board_form = {}

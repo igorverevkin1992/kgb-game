@@ -115,7 +115,16 @@ static func approve(t: TestCase, s: Dictionary, target_id: String) -> Dictionary
 	return res.state
 
 
+## Новая кампания для старых тестов: задания Центра сняты с контроля заранее, чтобы их сроки
+## не меняли числа сценариев (задания проверяет tests/test_tasks.gd на with_tasks()).
 static func fresh() -> Dictionary:
+	var s: Dictionary = Campaign.new_campaign(content()).state
+	for t in content().get("tasks", []):
+		s.tasks[t.task_id] = {"status": "withdrawn", "week": 0, "due": 0, "wrong": 0, "answered_week": 0, "answers": {}}
+	return s
+
+
+static func with_tasks() -> Dictionary:
 	return Campaign.new_campaign(content()).state
 
 

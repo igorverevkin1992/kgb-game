@@ -24,6 +24,7 @@ const FOLDERS := {
 	"operatives": {"spec": "operative", "id": "operative_id", "list": true, "kind": "Оперработник"},
 	"decisions": {"spec": "decision", "id": "decision_id", "list": false, "kind": "Решение резидента"},
 	"list": {"spec": "list_card", "id": "card_id", "list": true, "kind": "Дело из «Списка»"},
+	"tasks": {"spec": "centre_task", "id": "task_id", "list": true, "kind": "Задание Центра"},
 	"tutorial": {"spec": "tutorial_step", "id": "step_id", "list": true, "kind": "Шаг обучения"},
 	"help": {"spec": "help", "id": "view", "list": true, "kind": "Памятка модуля"},
 }
@@ -90,7 +91,7 @@ static func game_content() -> Dictionary:
 static func parse(entries: Array) -> Dictionary:
 	var issues: Array = []
 	var file_of := {}
-	var content := {"targets": [], "clues": [], "cables": [], "ops": [], "polygraph": [], "requests": [], "dialogs": [], "achievements": [], "archive": [], "operatives": [], "decisions": [], "list": [], "tutorial": [], "help": []}
+	var content := {"targets": [], "clues": [], "cables": [], "ops": [], "polygraph": [], "requests": [], "dialogs": [], "achievements": [], "archive": [], "operatives": [], "decisions": [], "list": [], "tasks": [], "tutorial": [], "help": []}
 	var singles := {}
 
 	var register := func(id: String, kind: String, path: String) -> void:
@@ -106,7 +107,7 @@ static func parse(entries: Array) -> Dictionary:
 			continue
 		var folder: String = path.get_slice("/", 0) if path.contains("/") else ""
 		if not FOLDERS.has(folder):
-			issues.append({"level": "error", "rule": "layout", "file": path, "message": "Файл лежит вне известных папок. Допустимо: campaign.json, balance.json, map/sites.json, map/cues.json, targets/, clues/, cables/, ops/, polygraph/, requests/, dialogs/, achievements/, archive/, operatives/, decisions/, list/, tutorial/, help/"})
+			issues.append({"level": "error", "rule": "layout", "file": path, "message": "Файл лежит вне известных папок. Допустимо: campaign.json, balance.json, map/sites.json, map/cues.json, targets/, clues/, cables/, ops/, polygraph/, requests/, dialogs/, achievements/, archive/, operatives/, decisions/, list/, tasks/, tutorial/, help/"})
 			continue
 		var f: Dictionary = FOLDERS[folder]
 		var spec := ContentSchemas.get_spec(f.spec)
@@ -159,7 +160,7 @@ const RULE_RU := {
 	"three-clue": "три улики", "mice-three-clue": "три улики на мотив", "softlock": "тупик",
 	"robustness": "устойчивость", "unreachable": "недостижимо", "sdr": "проверочный маршрут",
 	"weeks": "недели", "text-length": "длина текста", "translation": "перевод", "polygraph": "полиграф",
-	"balance": "баланс", "board": "доска мотивов", "cipher": "шифроузел", "dialog": "беседа", "finance": "финансы", "achievements": "достижения", "age16": "возраст 16+", "archive": "архив", "decisions": "решения", "delegation": "поручения", "technique": "приёмы наружки", "package": "пробный пакет", "blind-window": "слепое окно", "list": "«Окно арестов»", "volume": "объём текста", "diamond": "ветвление",
+	"balance": "баланс", "board": "доска мотивов", "cipher": "шифроузел", "dialog": "беседа", "finance": "финансы", "achievements": "достижения", "age16": "возраст 16+", "archive": "архив", "decisions": "решения", "delegation": "поручения", "technique": "приёмы наружки", "package": "пробный пакет", "blind-window": "слепое окно", "list": "«Окно арестов»", "tasks": "задания Центра", "volume": "объём текста", "diamond": "ветвление",
 }
 
 

@@ -83,3 +83,24 @@ func scene_inbox_folders() -> void:
 	for it in node("inbox-list").find_children("inbox-item-*", "", true, false):
 		eq(Campaign.cable_by_id(Game.content, String(it.name).trim_prefix("inbox-item-")).kind, "press_clipping")
 	await shot("inbox-folders")
+
+
+func scene_centre_task() -> void:
+	var s := H.run(H.with_tasks(), QUIET)
+	Game.reset_for_test(s)
+	await frames()
+	has_text("calendar", "Задание Центра")
+	await key(KEY_7)
+	await press("inbox-folder-tasks")
+	await press("task-item-task_a1_zone")
+	ok(exists("task"), "бланк задания")
+	ok(not enabled("task-send"), "без материала и ответов не отправить")
+	await press("task-material-cable_a1_w2_surveillance_summary")
+	await press("task-item-task_a1_zone")
+	await press("task-opt-zone-m25")
+	await press("task-opt-sign-repeat")
+	ok(enabled("task-send"), "можно отправить")
+	await shot("centre-task")
+	await press("task-send")
+	eq(Game.state.tasks.task_a1_zone.status, "done")
+	has_text("task", "БЕЗ ЗАМЕЧАНИЙ")

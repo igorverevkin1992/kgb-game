@@ -85,6 +85,7 @@ static func new_campaign(content: Dictionary) -> Dictionary:
 		"agents": {},
 		"payments": [],
 		"decisions": {},
+		"tasks": {},
 		"personal_ops": 0,
 		"package": null,
 		"handled": {},
@@ -336,6 +337,14 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			if o.is_empty():
 				return _reject(state, "Выберите один из вариантов")
 			_decide(ctx, d, o)
+
+		"answer_task":
+			var tid: String = action.get("task_id", "")
+			var answers: Dictionary = action.get("answers", {})
+			var terr := CentreTasks.answer_error(s, content, tid, answers)
+			if terr != "":
+				return _reject(state, terr)
+			_answer_task(ctx, CentreTasks.by_id(content, tid), answers)
 
 		"check_package":
 			if not Dangle.open(s):
@@ -610,6 +619,7 @@ static func _start_morning(ctx: Dictionary) -> void:
 			_emit(ctx, {"type": "cable_delivered", "cable_id": cable.cable_id})
 			# Улики из документов игрок снимает сам (подсвеченные фрагменты, take_clue).
 	_deliver_payments(ctx)
+	_deliver_tasks(ctx)
 	_check_unlocks(ctx)  # новая фаза операции: могли открыться кандидаты по старым сведениям
 	_polygraph_notice(ctx)
 	# Каждый завербованный агент приносит по одному донесению в неделю — если лоялен.
@@ -958,8 +968,9 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 	_emit(ctx, {"type": "report_submitted", "report": report, "request": request})
 	if request != "":
 		_request(ctx, request)
-	_add_trust(ctx, fx.trust, "report_" + report)
-	_add_risk(ctx, "moscow_pressure", fx.pressure, "report_" + report)
+	# Сорванные задания движок спишет сам в _tasks_night — здесь только сам доклад.
+	_add_trust(ctx, int(fx.report_trust), "report_" + report)
+	_add_risk(ctx, "moscow_pressure", int(fx.report_pressure), "report_" + report)
 	if fx.lie:
 		s.lies.append({"week": s.week, "kind": report})
 
@@ -975,6 +986,7 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 		s.lies = []
 
 	_list_night(ctx)
+	_tasks_night(ctx)
 	if s.flags.has(ArrestWindow.ANLACE_FLAG):
 		_add_risk(ctx, "sog_heat", int(b.list.anlace_weekly_sog), "anlace")
 	var act := current_act_def(s, content)
@@ -1017,6 +1029,10 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 ## Переход к следующей фазе операции (утро начинает вызывающий).
 static func _enter_act(ctx: Dictionary, nxt: Dictionary) -> void:
 	var s: Dictionary = ctx.s
+	# Задания прошлой фазы снимаются с контроля без штрафа.
+	for id in s.get("tasks", {}):
+		if s.tasks[id].status == "open":
+			s.tasks[id].status = "withdrawn"
 	s.act = nxt.act
 	s.week = maxi(s.week + 1, nxt.weeks.from)  # сюжетный скачок во времени между актами
 	s.goal_reached = false
@@ -1048,6 +1064,57 @@ static func continue_full(state: Dictionary, content: Dictionary) -> Dictionary:
 	_enter_act(ctx, nxt)
 	_start_morning(ctx)
 	return {"state": s, "events": ctx.events, "error": ""}
+
+
+## Ответ на задание Центра: Доверие и давление по итогу, последствия выбранных предложений.
+static func _answer_task(ctx: Dictionary, t: Dictionary, answers: Dictionary) -> void:
+	var s: Dictionary = ctx.s
+	var r := CentreTasks.evaluate(s, ctx.content, t, answers)
+	var st: Dictionary = s.tasks[t.task_id]
+	st.status = "done" if r.wrong == 0 else "partial"
+	st.wrong = r.wrong
+	st.answers = answers.duplicate()
+	st.answered_week = int(s.week)
+	_emit(ctx, {"type": "task_answered", "task_id": t.task_id, "wrong": r.wrong})
+	_add_trust(ctx, r.trust, "task")
+	_add_risk(ctx, "moscow_pressure", r.pressure, "task")
+	for fx in r.effects:
+		for risk in RISKS:
+			_add_risk(ctx, risk, int(fx.get(risk, 0)), "task")
+		_add_trust(ctx, int(fx.get("centre_trust", 0)), "task")
+		_change_fund(ctx, int(fx.get("fund_usd", 0)), "task", t.task_id)
+		if String(fx.get("flag_set", "")) != "":
+			_set_flag(ctx, fx.flag_set)
+		var lt: String = fx.get("loyalty_target", "")
+		if lt != "" and int(fx.get("loyalty", 0)) != 0 and s.agents.has(lt):
+			var ag: Dictionary = s.agents[lt]
+			var from: int = ag.loyalty
+			ag.loyalty = Util.clamp100(from + int(fx.loyalty))
+			_emit(ctx, {"type": "loyalty_changed", "target_id": lt, "from": from, "to": ag.loyalty, "reason": "task"})
+
+
+## Утро: новые задания Центра со сроком.
+static func _deliver_tasks(ctx: Dictionary) -> void:
+	var s: Dictionary = ctx.s
+	if not s.has("tasks"):
+		s.tasks = {}
+	for t in ctx.content.get("tasks", []):
+		if not s.tasks.has(t.task_id) and CentreTasks.due_now(s, t):
+			s.tasks[t.task_id] = {"status": "open", "week": int(s.week), "due": int(s.week) + int(t.due_weeks) - 1, "wrong": 0, "answered_week": 0, "answers": {}}
+			_emit(ctx, {"type": "task_arrived", "task_id": t.task_id})
+
+
+## Воскресенье: срок вышел — задание сорвано.
+static func _tasks_night(ctx: Dictionary) -> void:
+	var s: Dictionary = ctx.s
+	var b: Dictionary = ctx.content.balance.tasks
+	for id in s.get("tasks", {}):
+		var st: Dictionary = s.tasks[id]
+		if st.status == "open" and int(s.week) >= int(st.due):
+			st.status = "failed"
+			_emit(ctx, {"type": "task_failed", "task_id": id})
+			_add_trust(ctx, -int(b.overdue_trust), "task_overdue")
+			_add_risk(ctx, "moscow_pressure", int(b.overdue_pressure), "task_overdue")
 
 
 ## Ночь «Окна арестов»: исполнение мер, каскад тревоги в Лэнгли, квоты Центра, закрытие окна.

@@ -3,7 +3,7 @@ class_name InboxView
 
 
 ## Ящики входящих: id → виды документов (пусто — особое правило в in_folder).
-const FOLDERS := ["all", "new", "decisions", "reports", "notes", "press", "letters"]
+const FOLDERS := ["all", "new", "tasks", "decisions", "reports", "notes", "press", "letters"]
 const FOLDER_KINDS := {
 	"reports": ["agent_report", "intercept", "anonymous"],
 	"notes": ["vgu_note", "personnel_file"],
@@ -18,7 +18,7 @@ static func in_folder(folder: String, d: Dictionary, s: Dictionary) -> bool:
 			return true
 		"new":
 			return not s.read_cables.has(d.cable_id)
-		"decisions":
+		"decisions", "tasks":
 			return false
 	return FOLDER_KINDS.get(folder, []).has(d.kind)
 
@@ -47,6 +47,8 @@ static func build() -> Control:
 		var n: int = all_docs.filter(func(d): return in_folder(f, d, s) and not s.read_cables.has(d.cable_id)).size()
 		if f in ["all", "new", "decisions"]:
 			n += Decisions.arrived(s, Game.content).filter(func(x): return not s.decisions.has(x.decision_id)).size()
+		if f in ["all", "new", "tasks"]:
+			n += CentreTasks.open_tasks(s, Game.content).size()
 		var on: bool = f == folder
 		var label := T.t("inbox.folder." + f) + (" · %d" % n if n > 0 else "")
 		var tb := Style.button(label, "inbox-folder-" + f, Style.INK if on else Style.PAPER, Style.PAPER if on else Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.5), 13)
@@ -58,6 +60,10 @@ static func build() -> Control:
 	scroll.set_meta("scroll_key", "inbox-list-" + folder)
 	scroll.position = Vector2(28, 160)
 	scroll.size = Vector2(440, 576)
+	# Список начинается под вкладками, сколько бы строк они ни заняли.
+	tabs.resized.connect(func():
+		scroll.position.y = tabs.position.y + tabs.size.y + 10
+		scroll.size.y = 736 - scroll.position.y)
 	var list := Style.vbox(8)
 	list.name = "inbox-list"
 	list.custom_minimum_size.x = 420
@@ -80,6 +86,29 @@ static func build() -> Control:
 		pb.add_child(pv)
 		pb.custom_minimum_size = Vector2(420, 64)
 		list.add_child(pb)
+	# Задания Центра — самыми первыми: открытые со сроком отмечены красным.
+	if folder in ["all", "new", "tasks"]:
+		for t in Game.content.get("tasks", []):
+			var tst = s.get("tasks", {}).get(t.task_id)
+			if tst == null or (folder == "new" and tst.status != "open"):
+				continue
+			var open_t: bool = tst.status == "open"
+			var tb := Button.new()
+			tb.name = "task-item-" + t.task_id
+			tb.focus_mode = Control.FOCUS_NONE
+			var tsb := Style.box(Color(Style.OCHRE, 0.3 if t.task_id == Game.inbox_selected else 0.14), Style.OCHRE if open_t else Color(0, 0, 0, 0), 0, 0, 10)
+			tsb.border_width_left = 4
+			for stn in ["normal", "hover", "pressed"]:
+				tb.add_theme_stylebox_override(stn, tsb)
+			tb.pressed.connect(Game.select_document.bind(t.task_id))
+			var tv := Style.vbox(2)
+			tv.position = Vector2(14, 8)
+			tv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			tv.add_child(Style.label(T.t("task.due", {"week": tst.due}) if open_t else T.t("task.status." + tst.status, {"n": tst.get("wrong", 0)}), Style.form(), 13, Color(Style.PAPER, 0.75)))
+			tv.add_child(Style.para(T.loc(t.title), 390, Style.form(open_t), 17, Style.PAPER))
+			tb.add_child(tv)
+			tb.custom_minimum_size = Vector2(420, 64)
+			list.add_child(tb)
 	# Решения резидента — первыми: ждущие решения отмечены красным.
 	for dec in (Decisions.arrived(s, Game.content) if show_decisions else []):
 		var waiting: bool = not s.decisions.has(dec.decision_id)
@@ -146,7 +175,10 @@ static func build() -> Control:
 	center.custom_minimum_size = Vector2(990, 0)
 	var cur_doc := Campaign.cable_by_id(Game.content, Game.inbox_selected)
 	var cur_dec := Decisions.by_id(Game.content, Game.inbox_selected)
-	if Game.inbox_selected == PackageView.ITEM and s.get("package") != null:
+	var cur_task := CentreTasks.by_id(Game.content, Game.inbox_selected)
+	if not cur_task.is_empty() and s.get("tasks", {}).has(cur_task.task_id):
+		center.add_child(TaskView.build(cur_task))
+	elif Game.inbox_selected == PackageView.ITEM and s.get("package") != null:
 		center.add_child(PackageView.build())
 	elif not cur_dec.is_empty() and Decisions.arrived(s, Game.content).has(cur_dec):
 		center.add_child(DecisionView.build(cur_dec))

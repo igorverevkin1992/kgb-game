@@ -365,6 +365,32 @@ static func _build() -> void:
 		}),
 	})
 
+	# Задание Центра: приходит в неделю week фазы act, срок — due_weeks; вопросы с вариантами.
+	_cache["centre_task"] = Schema.obj({
+		"task_id": Schema.s("^task_[a-z0-9_]+$", "id задания вида task_…"),
+		"act": act,
+		"week": Schema.i(1, 80),
+		"due_weeks": Schema.i(1, 8),
+		"title": text,
+		"text": text,
+		"requires_recruited": Schema.opt(Schema.s(), ""),
+		"requires_flags": Schema.opt(Schema.arr(flag), []),
+		# Документы, которые надо прочитать перед ответом (сведения для проверки — в них).
+		"needs_cables": Schema.opt(Schema.arr(Schema.s()), []),
+		"questions": Schema.arr(Schema.obj({
+			"q_id": Schema.s("^[a-z0-9_]+$"),
+			"prompt": text,
+			# auto: "axis:<цель>" — мотив по досье, "stability:<цель>" — устойчивость агента.
+			"auto": Schema.opt(Schema.s("^(axis|stability):tar_[a-z0-9_]+$", "axis:tar_… или stability:tar_…"), ""),
+			"options": Schema.opt(Schema.arr(Schema.obj({
+				"id": Schema.s("^[a-z0-9_]+$"),
+				"label": text,
+				"correct": Schema.opt({"type": "bool"}, false),
+				"effects": Schema.opt(fx_dec, null),
+			})), []),
+		}), 1),
+	})
+
 	# Обучение: шаг наставника — текст, подсвеченный предмет (имя узла) и условие закрытия.
 	_cache["tutorial_step"] = Schema.obj({
 		"step_id": Schema.s("^tut_[a-z0-9_]+$", "id шага вида tut_…"),
@@ -474,6 +500,11 @@ static func _build() -> void:
 			"loyalty_per_1000_extra": Schema.n(0, 10), "escrow_min_loyalty": scale, "reports_min_loyalty": scale,
 			"coerced_loyalty_penalty": Schema.i(0, 100), "loyalty_coerced_week": Schema.i(0, 100),
 		}),
+		# Задания Центра: Доверие за верный ответ, штрафы за ошибку и просрочку.
+		"tasks": Schema.opt(Schema.obj({
+			"done_trust": delta, "wrong_trust": delta, "wrong_pressure": delta,
+			"overdue_trust": delta, "overdue_pressure": delta,
+		}), {"done_trust": 3, "wrong_trust": 1, "wrong_pressure": 3, "overdue_trust": 3, "overdue_pressure": 5}),
 		# Контроль объёма текста (шаг 16): потолок слов, целевой минимум и доля текста одной ветки.
 		"text_budget": Schema.obj({
 			"max_words": Schema.i(1000, 500000), "target_min_words": Schema.i(0, 500000), "branch_share_max": Schema.n(0, 1),

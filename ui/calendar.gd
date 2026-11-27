@@ -34,6 +34,13 @@ static func build() -> Control:
 		ph.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		ph.custom_minimum_size.x = 136
 		v.add_child(ph)
+	# Открытые задания Центра со сроком — на листе календаря.
+	for t in CentreTasks.open_tasks(s, Game.content):
+		var tl := Style.label(T.t("calendar.task", {"week": s.tasks[t.task_id].due}), Style.form(true), 12, Style.STAMP_RED, false)
+		tl.name = "calendar-task"
+		tl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		tl.custom_minimum_size.x = 136
+		v.add_child(tl)
 	if Campaign.is_demo(s):
 		var dm := Style.label(T.t("calendar.demo"), Style.form(true), 12, Style.STAMP_RED, false)
 		dm.name = "calendar-demo"

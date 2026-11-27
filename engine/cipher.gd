@@ -175,6 +175,17 @@ static func report_effects(s: Dictionary, content: Dictionary, report: String) -
 			out.trust = ct.report_silence
 			out.lie = failures
 			out.lie_chance = b.lies.uncover_chance_silence if failures else 0.0
+	# Задания Центра, срок которых истекает этим воскресеньем без ответа, — те же числа, что
+	# применит движок (никаких скрытых последствий у доклада).
+	out.report_trust = out.trust
+	out.report_pressure = out.pressure
+	out.overdue_tasks = 0
+	for id in s.get("tasks", {}):
+		var st: Dictionary = s.tasks[id]
+		if st.status == "open" and int(s.week) >= int(st.due):
+			out.overdue_tasks += 1
+			out.trust -= int(b.tasks.overdue_trust)
+			out.pressure += int(b.tasks.overdue_pressure)
 	var every := int(b.lies.check_every_weeks)
 	out.check_week = int(ceil(float(s.week) / every)) * every
 	return out

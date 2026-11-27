@@ -31,6 +31,7 @@ static func check(content: Dictionary, file_of: Dictionary, opts := {}) -> Array
 	_achievements(ctx)
 	_age16(ctx)
 	_archive(ctx)
+	_tasks(ctx)
 	_act2(ctx)
 	_act3(ctx)
 	_act4(ctx)
@@ -603,6 +604,44 @@ static func _collect_ru(v: Variant, id: String, where: String, out: Array) -> vo
 
 
 ## 16. Архив: записи открываются по событиям, которые движок испускает.
+## Задания Центра: ссылки на агентов и документы, неделя внутри фазы, один верный ответ.
+static func _tasks(ctx: Dictionary) -> void:
+	var c: Dictionary = ctx.content
+	var targets := {}
+	for t in c.targets:
+		targets[t.target_id] = true
+	var cables := {}
+	for cab in c.cables:
+		cables[cab.cable_id] = cab
+	for t in c.get("tasks", []):
+		var id: String = t.task_id
+		for a in c.campaign.acts:
+			if int(a.act) == int(t.act) and (int(t.week) < int(a.weeks.from) or int(t.week) > int(a.weeks.to)):
+				_push(ctx, "error", "tasks", "Неделя задания %d вне фазы операции %d" % [t.week, t.act], "%s.week" % id, id)
+		var ag: String = t.get("requires_recruited", "")
+		if ag != "" and not targets.has(ag):
+			_push(ctx, "error", "tasks", "Задание ждёт несуществующего агента «%s»" % ag, "%s.requires_recruited" % id, id)
+		for cid in t.get("needs_cables", []):
+			if not cables.has(cid):
+				_push(ctx, "error", "tasks", "Задание ссылается на несуществующий документ «%s»" % cid, "%s.needs_cables" % id, id)
+			elif int(cables[cid].act) > int(t.act) or (int(cables[cid].act) == int(t.act) and int(cables[cid].week) > int(t.week)):
+				_push(ctx, "error", "tasks", "Документ «%s» приходит позже задания" % cid, "%s.needs_cables" % id, id)
+		for q in t.questions:
+			var auto: String = q.get("auto", "")
+			if auto != "":
+				var tid := auto.get_slice(":", 1)
+				if not targets.has(tid):
+					_push(ctx, "error", "tasks", "Вопрос о несуществующем кандидате «%s»" % tid, "%s.%s.auto" % [id, q.q_id], id)
+				if auto.begins_with("stability:") and ag != tid:
+					_push(ctx, "error", "tasks", "Устойчивость агента спрашивают только при requires_recruited = «%s»" % tid, "%s.%s.auto" % [id, q.q_id], id)
+				continue
+			if q.options.size() < 2:
+				_push(ctx, "error", "tasks", "У вопроса меньше двух вариантов", "%s.%s.options" % [id, q.q_id], id)
+			var right: int = q.options.filter(func(o): return o.get("correct", false)).size()
+			if right > 1:
+				_push(ctx, "error", "tasks", "У вопроса больше одного верного ответа", "%s.%s.options" % [id, q.q_id], id)
+
+
 static func _archive(ctx: Dictionary) -> void:
 	for a in ctx.content.archive:
 		for part in String(a.unlock).split("+"):
@@ -688,6 +727,11 @@ static func _act3(ctx: Dictionary) -> void:
 			flags_known["contact_" + o.contact_target_id] = true
 		if String(o.get("success_flag", "")) != "":
 			flags_known[o.success_flag] = true
+	for t in c.get("tasks", []):
+		for q in t.questions:
+			for o in q.get("options", []):
+				if o.has("effects") and String(o.effects.get("flag_set", "")) != "":
+					flags_known[o.effects.flag_set] = true
 	for dd in c.dialogs:
 		for key in ["success", "failure"]:
 			var fx = dd.get(key)

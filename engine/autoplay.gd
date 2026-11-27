@@ -90,6 +90,7 @@ static func _desk(ctx: Dictionary) -> void:
 		_do(ctx, {"type": "verify_cable", "cable_id": cab.cable_id, "decision": "query" if cab.forged and _careful(ctx) else "accept"})
 	for d in Decisions.pending(ctx.s, c):
 		_do(ctx, {"type": "decide", "decision_id": d.decision_id, "option_id": _decision_choice(ctx, d)})
+	_tasks(ctx)
 	for t in c.targets:
 		_board(ctx, t)
 	_package(ctx)
@@ -99,6 +100,20 @@ static func _desk(ctx: Dictionary) -> void:
 		for id in Finance.agents(ctx.s):
 			if int(ctx.s.agents[id].lifestyle) >= int(c.balance.thresholds.warning):
 				_do(ctx, {"type": "restrain_agent", "target_id": id})
+
+
+## Задания Центра: отвечать по делу и по документам; из предложений — самое осторожное
+## (второй вариант: «сохранить объём»). Беспечный резидент задания не открывает.
+static func _tasks(ctx: Dictionary) -> void:
+	if ctx.st == "hasty":
+		return
+	for t in CentreTasks.open_tasks(ctx.s, ctx.c):
+		var answers := {}
+		for q in t.questions:
+			var right := CentreTasks.correct(ctx.s, ctx.c, q)
+			var opts: Array = CentreTasks.options(ctx.s, ctx.c, q)
+			answers[q.q_id] = right if right != "" else opts[mini(1, opts.size() - 1)].id
+		_do(ctx, {"type": "answer_task", "task_id": t.task_id, "answers": answers})
 
 
 static func _decision_choice(ctx: Dictionary, d: Dictionary) -> String:

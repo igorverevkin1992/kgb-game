@@ -6,7 +6,7 @@ class_name WordCount
 
 ## Разделы контента в отчёте — в порядке показа.
 const GROUPS := ["cables", "clues", "dialogs", "targets", "ops", "decisions", "list", "polygraph",
-	"archive", "campaign", "requests", "achievements", "operatives", "map", "cues", "tutorial", "help", "ui"]
+	"archive", "campaign", "requests", "achievements", "operatives", "map", "cues", "tasks", "tutorial", "help", "ui"]
 
 static var _re: RegEx
 

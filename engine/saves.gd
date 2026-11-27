@@ -129,6 +129,9 @@ static func _state_spec() -> Dictionary:
 		"planned_ops": strs,
 		"routes": {"type": "dict", "of": Schema.obj({"stops": strs, "observations": Schema.arr(strs), "operative": Schema.opt(Schema.s(), "op_resident_player")})},
 		"decisions": Schema.opt({"type": "dict", "of": Schema.s()}, {}),
+		"tasks": Schema.opt({"type": "dict", "of": Schema.obj({"status": Schema.e(["open", "done", "partial", "failed", "withdrawn"]),
+			"week": Schema.i(0), "due": Schema.i(0), "wrong": Schema.opt(Schema.i(0), 0), "answered_week": Schema.opt(Schema.i(0), 0),
+			"answers": Schema.opt({"type": "dict", "of": Schema.s()}, {})})}, {}),
 		"personal_ops": Schema.opt(Schema.i(0), 0),
 		"handled": Schema.opt({"type": "dict", "of": Schema.e(["agreed", "broken_off"])}, {}),
 		"polygraph": Schema.opt(Schema.nullable(Schema.obj({

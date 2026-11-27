@@ -414,6 +414,8 @@ static func _summary(s: Dictionary, report: String, w: float) -> Control:
 	var v := Style.vbox(4)
 	v.add_child(Style.label(T.t("cipher.kind." + report).to_upper(), Style.form(true), 18, Style.STAMP_RED if report != "truth" else Style.INK))
 	v.add_child(Style.para(T.t("cipher.effects", {"trust": _signed(fx.trust), "pressure": _signed(fx.pressure)}), w, Style.mono(), 14, Style.INK))
+	if int(fx.get("overdue_tasks", 0)) > 0:
+		v.add_child(Style.para(T.t("cipher.overdueTasks", {"n": fx.overdue_tasks}), w, Style.mono(), 13, Style.STAMP_RED))
 	if fx.lie:
 		v.add_child(Style.para(T.t("cipher.lieRisk", {
 			"week": fx.check_week, "pct": int(round(fx.lie_chance * 100)),
