@@ -130,6 +130,11 @@ static func _state_spec() -> Dictionary:
 		"routes": {"type": "dict", "of": Schema.obj({"stops": strs, "observations": Schema.arr(strs), "operative": Schema.opt(Schema.s(), "op_resident_player")})},
 		"decisions": Schema.opt({"type": "dict", "of": Schema.s()}, {}),
 		"personal_ops": Schema.opt(Schema.i(0), 0),
+		"package": Schema.opt(Schema.nullable(Schema.obj({
+			"source": Schema.e(["drop", "handover"]), "week": Schema.i(1), "dangle": {"type": "bool"},
+			"archive": Schema.e(["", "ok", "mismatch"]), "centre": Schema.e(["", "ok", "mismatch"]),
+			"accepted": {"type": "bool"}, "rejected": {"type": "bool"},
+		})), null),
 		"op_results": {"type": "dict", "of": Schema.e(["clean", "tail_missed", "aborted"])},
 		"site_visits": {"type": "dict", "of": Schema.i(0)},
 		"week_failures": Schema.i(0), "week_field_activity": {"type": "bool"},
@@ -148,7 +153,7 @@ static func _state_spec() -> Dictionary:
 			"coerced": Schema.opt({"type": "bool"}, false),
 		})},
 		"payments": Schema.arr(Schema.obj({
-			"target_id": Schema.s(), "week": Schema.i(1), "amount": Schema.i(1), "instrument": Schema.e(["cash", "escrow"]),
+			"target_id": Schema.s(), "week": Schema.i(1), "amount": Schema.i(1), "instrument": Schema.e(Finance.INSTRUMENTS),
 			"ctr": {"type": "bool"}, "structuring": {"type": "bool"}, "treasury": Schema.i(0), "lifestyle": Schema.i(0),
 			"loyalty": Schema.i(), "completes_promise": {"type": "bool"},
 		})),

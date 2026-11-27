@@ -19,6 +19,8 @@ class_name Campaign
 ##   {type: "plan_op", …, operative: "op_…"} — поручить выход подчинённому (resolve_op решает сам)
 ##   {type: "decide", decision_id, option_id} — решение резидента
 ##   {type: "verify_cable", cable_id, decision: "accept"|"query"} — сверка директивы (шифроузел)
+##   {type: "check_package", channel: "archive"} · {type: "accept_package"} · {type: "reject_package"}
+##     — пробный пакет «крота» и проверка на подставу (Dangle)
 ##   {type: "submit_report", report: "truth"|"embellished"|"silence"} — быстрое донесение, или
 ##   {type: "submit_report", choices: {fact_key: "as_is"|"embellish"|"omit"}, request: "req_…"|""}
 ##     — шифрограмма из фактов недели (Cipher.week_facts); вид донесения определяет Cipher.classify
@@ -72,6 +74,7 @@ static func new_campaign(content: Dictionary) -> Dictionary:
 		"payments": [],
 		"decisions": {},
 		"personal_ops": 0,
+		"package": null,
 		"rng": b.start.seed,
 		"ending": null,
 		"log": [],
@@ -159,7 +162,7 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 				# Подчинённый решает сам: заметил наружку — ушёл на бытовое прикрытие.
 				decision = "continue"
 				var op_d := op_by_id(content, action.op_id)
-				if tail_present(s, op_d):
+				if tail_present(s, op_d, content):
 					var p := Delegation.notice_chance(content, who, s.routes[action.op_id].stops)
 					var noticed := _roll(ctx) < p
 					_emit(ctx, {"type": "operative_report", "op_id": action.op_id, "operative": who, "noticed": noticed})
@@ -305,6 +308,35 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			if o.is_empty():
 				return _reject(state, "Выберите один из вариантов")
 			_decide(ctx, d, o)
+
+		"check_package":
+			if not Dangle.open(s):
+				return _reject(state, "Пробного пакета нет или решение по нему уже принято")
+			if action.get("channel", "") != "archive":
+				return _reject(state, "Сверка с картотекой — здесь; запрос в Центр — с ночной шифрограммой")
+			if s.package.archive != "":
+				return _reject(state, "С картотекой пакет уже сверен")
+			if not Dangle.archive_available(s, content):
+				return _reject(state, "Сверить не с кем: нужен агент с доступом к картотеке ЦРУ")
+			s.package.archive = Dangle.check_result(s)
+			_emit(ctx, {"type": "package_checked", "channel": "archive", "result": s.package.archive})
+
+		"accept_package":
+			if not Dangle.open(s):
+				return _reject(state, "Пробного пакета нет или решение по нему уже принято")
+			s.package.accepted = true
+			_set_flag(ctx, Dangle.ACCEPTED_FLAG)
+			if s.package.dangle:
+				_set_flag(ctx, Dangle.DANGLE_FLAG)
+			_emit(ctx, {"type": "package_accepted", "checked": Dangle.count(s, content, "ok")})
+			_check_goal(ctx)
+
+		"reject_package":
+			if not Dangle.can_reject(s, content):
+				return _reject(state, "Другого канала передачи нет: пакет можно только принять")
+			s.package.rejected = true
+			_set_flag(ctx, Dangle.REJECTED_FLAG)
+			_emit(ctx, {"type": "package_rejected"})
 
 		"verify_cable":
 			var cable := cable_by_id(content, action.cable_id)
@@ -472,7 +504,7 @@ static func _build_observations(ctx: Dictionary, op: Dictionary, stops: Array) -
 		var tmp = noise[i]
 		noise[i] = noise[j]
 		noise[j] = tmp
-	var tail = op.sdr.repeating_cue if tail_present(ctx.s, op) else null
+	var tail = op.sdr.repeating_cue if tail_present(ctx.s, op, ctx.content) else null
 	var tail_stops: Array = []
 	if tail != null:
 		var districts := {}
@@ -501,7 +533,7 @@ static func _resolve_op(ctx: Dictionary, op: Dictionary, decision: String) -> vo
 	var s: Dictionary = ctx.s
 	var content: Dictionary = ctx.content
 	var b: Dictionary = content.balance.sog_heat
-	var tail := tail_present(s, op)
+	var tail := tail_present(s, op, content)
 	var route_stops: Array = []
 	if s.routes.has(op.op_id):
 		for id in s.routes[op.op_id].stops:
@@ -543,6 +575,10 @@ static func _resolve_op(ctx: Dictionary, op: Dictionary, decision: String) -> vo
 	if contact != "" and outcome == "clean" and s.targets.has(contact) and not s.targets[contact].recruited and not s.targets[contact].lost:
 		_emit(ctx, {"type": "contact_established", "target_id": contact, "op_id": op.op_id})
 		_recruit(ctx, contact)
+	# Пробный пакет «крота»: из тайника или личной передачей.
+	if Dangle.package_ops(content).has(op.op_id):
+		s.package = Dangle.received(content, s, op.op_id, outcome)
+		_emit(ctx, {"type": "package_received", "source": s.package.source})
 	for clue in content.clues:
 		if clue.source.channel == "field" and clue.source.from == op.op_id:
 			_give_clue(ctx, clue.clue_id)
@@ -580,6 +616,8 @@ static func _check_goal(ctx: Dictionary) -> void:
 	var s: Dictionary = ctx.s
 	var def := current_act_def(s, ctx.content)
 	if def.is_empty() or s.goal_reached:
+		return
+	if not def.goal.get("clues_all", []).all(func(c): return s.clues.has(c)):
 		return
 	for id in def.goal.recruit_any_of:
 		if s.targets.has(id) and s.targets[id].recruited and not s.targets[id].lost \
@@ -673,6 +711,12 @@ static func _decide(ctx: Dictionary, d: Dictionary, o: Dictionary) -> void:
 		_set_flag(ctx, fx.flag_set)
 	if fx.operative_out != "":
 		_set_flag(ctx, "out_" + fx.operative_out)
+	var lt: String = fx.get("loyalty_target", "")
+	if lt != "" and int(fx.get("loyalty", 0)) != 0 and s.agents.has(lt):
+		var ag: Dictionary = s.agents[lt]
+		var from: int = ag.loyalty
+		ag.loyalty = Util.clamp100(from + int(fx.loyalty))
+		_emit(ctx, {"type": "loyalty_changed", "target_id": lt, "from": from, "to": ag.loyalty, "reason": "decision"})
 
 
 ## Директива сверена: принять к исполнению или запросить подтверждение у Центра.
@@ -704,6 +748,9 @@ static func _request(ctx: Dictionary, request_id: String) -> void:
 	_add_risk(ctx, "moscow_pressure", fx.moscow_pressure, "request")
 	if granted:
 		_change_fund(ctx, int(fx.get("fund_usd", 0)), "request", request_id)
+	if r.get("package_check", false) and Dangle.centre_waiting(s):
+		s.package.centre = Dangle.check_result(s)
+		_emit(ctx, {"type": "package_checked", "channel": "centre", "result": s.package.centre})
 
 
 ## Ночь: донесение, сверка лжи, пересчёт рисков, концовки и переход к следующей неделе.
@@ -760,9 +807,11 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 		s.act = nxt.act
 		s.week = maxi(s.week + 1, nxt.weeks.from)  # сюжетный скачок во времени между актами
 		s.goal_reached = false
+		_change_fund(ctx, int(nxt.get("fund_usd", 0)), "allocation", "act_%d" % nxt.act)
 	else:
 		s.week += 1
-		if s.week > 30:
+		# Задача фазы сорвана окончательно: Центр отзывает резидента.
+		if s.week > Cipher.act_deadline(s, content) + int(b.moscow_pressure.get("recall_after_overdue_weeks", 8)):
 			_end(ctx, "recalled")
 			return
 	_start_morning(ctx)
@@ -830,14 +879,24 @@ static func available_ops(s: Dictionary, content: Dictionary) -> Array:
 		return op.act <= s.act and op.week <= s.week and r != "clean" and r != "tail_missed" \
 			and not s.planned_ops.has(op.op_id) \
 			and op.requires_targets_unlocked.all(func(t): return s.targets.has(t) and s.targets[t].unlocked) \
+			and op.get("requires_recruited", []).all(func(t): return s.targets.has(t) and s.targets[t].recruited and not s.targets[t].lost) \
+			and op.get("requires_flags", []).all(func(f): return s.flags.has(f)) \
+			and op.get("requires_decisions", []).all(func(d): return s.decisions.has(d)) \
 			and (op.get("contact_target_id", "") == "" or (s.targets.has(op.contact_target_id) and analysis_state(s, op.contact_target_id).approved \
 				and not s.targets[op.contact_target_id].recruited)))
 
 
 ## Есть ли хвост на маршруте. Вовремя свернув на бытовую легенду, игрок «спасает операцию»:
 ## повторный выход после отказа проходит чисто (GDD, Блок 3).
-static func tail_present(s: Dictionary, op: Dictionary) -> bool:
-	return op.sdr.surveillance_present and s.op_results.get(op.op_id) != "aborted"
+## «Слепое окно»: агент с графиками наружки знает пересменку бригад — на таком выходе хвоста нет.
+static func tail_present(s: Dictionary, op: Dictionary, content := {}) -> bool:
+	if not op.sdr.surveillance_present or s.op_results.get(op.op_id) == "aborted":
+		return false
+	return not blind_window(s, op, content)
+
+
+static func blind_window(s: Dictionary, op: Dictionary, content: Dictionary) -> bool:
+	return not content.is_empty() and op.sdr.get("blind_window", false) and Finance.perk_active(s, content, "sog_schedule")
 
 
 ## Что игрок знает о мотиве цели по своей доске: unknown → hypothesis (1–2 приколотые улики)
@@ -926,7 +985,7 @@ static func week_date(content: Dictionary, act: int, week: int) -> Dictionary:
 		if a.act == act:
 			var parts: PackedStringArray = String(a.start_date).split("-")
 			var unix := Time.get_unix_time_from_datetime_dict({"year": int(parts[0]), "month": int(parts[1]), "day": int(parts[2]), "hour": 12})
-			unix += (week - int(a.weeks.from)) * 7 * 86400
+			unix += (week - int(a.weeks.from)) * int(a.get("days_per_week", 7)) * 86400
 			var d := Time.get_datetime_dict_from_unix_time(unix)
 			return {"year": d.year, "month": d.month, "day": d.day}
 	return {}

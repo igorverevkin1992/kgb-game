@@ -13,7 +13,7 @@ static func get_spec(name: String) -> Dictionary:
 static func _build() -> void:
 	var text := {"type": "text"}
 	var act := Schema.i(1, 4)
-	var week := Schema.i(1, 30)
+	var week := Schema.i(1, 60)
 	var scale := Schema.i(0, 100)
 	var flag := Schema.s("^[a-z0-9_]+$", "флаг: латиница в нижнем регистре, цифры и «_»")
 	var tag := Schema.s("^[a-z0-9_]+$", "примета: латиница в нижнем регистре, цифры и «_»")
@@ -42,8 +42,9 @@ static func _build() -> void:
 			"cover": text,
 			"key_axes": Schema.arr(axis, 1),
 		}),
-		# Что даёт агент после вербовки: sog_schedule — графики наружки ФБР на карте.
-		"perks": Schema.opt(Schema.arr(Schema.e(["sog_schedule"])), []),
+		# Что даёт агент после вербовки: sog_schedule — графики наружки ФБР на карте (и «слепое окно»
+		# на выходах с sdr.blind_window), legend — легендированный перевод через третью страну.
+		"perks": Schema.opt(Schema.arr(Schema.e(["sog_schedule", "legend"])), []),
 		# Правильное заключение по досье (доска мотивов): ведущий мотив, доступ, подсказка-намёк.
 		# Канал подхода сверяется с approach.flag_mode.
 		"analysis": Schema.obj({
@@ -99,6 +100,8 @@ static func _build() -> void:
 	_cache["dialog"] = Schema.obj({
 		"dialog_id": Schema.id("dlg"),
 		"target_id": Schema.id("tar"),
+		# Встреча назначается выходом на карте: беседа доступна после этого мероприятия.
+		"requires_op": Schema.opt(Schema.s(), ""),
 		"title": text,
 		"setting": text,
 		"offer_rapport": Schema.i(1, 100),
@@ -153,11 +156,13 @@ static func _build() -> void:
 		"flag_set": Schema.opt(Schema.s(), ""), "operative_out": Schema.opt(Schema.s(), ""),
 		# Каждую ночь до конца кампании (оперативная игра с дезинформацией).
 		"weekly_sog_heat": Schema.opt(delta, 0),
+		# Лояльность агента (loyalty_target) после решения.
+		"loyalty": Schema.opt(delta, 0), "loyalty_target": Schema.opt(Schema.s(), ""),
 	})
 	_cache["decision"] = Schema.obj({
 		"decision_id": Schema.s("^dec_[a-z0-9_]+$", "id решения: dec_ и латиница"),
 		"act": act,
-		"trigger": Schema.obj({"week": Schema.opt(Schema.i(0, 30), 0), "clue_id": Schema.opt(Schema.s(), ""), "flag": Schema.opt(Schema.s(), "")}),
+		"trigger": Schema.obj({"week": Schema.opt(Schema.i(0, 60), 0), "clue_id": Schema.opt(Schema.s(), ""), "flag": Schema.opt(Schema.s(), "")}),
 		"sender": text,
 		"title": text,
 		"text": text,
@@ -176,6 +181,8 @@ static func _build() -> void:
 		"title": text,
 		"phrase": text,
 		"min_trust": scale,
+		# Запрос на сверку пробного пакета по учётам Центра: доступен, пока пакет ждёт проверки.
+		"package_check": Schema.opt({"type": "bool"}, false),
 		"granted": Schema.obj({
 			"fund_usd": Schema.opt(Schema.i(0, 1000000), 0),
 			"centre_trust": Schema.opt(delta, 0),
@@ -196,6 +203,13 @@ static func _build() -> void:
 		"title": text,
 		"operative_id": Schema.opt(Schema.s("^op_[a-z0-9_]+$", "id оперработника"), "op_resident_player"),
 		"requires_targets_unlocked": Schema.opt(Schema.arr(Schema.id("tar")), []),
+		# Выход доступен, когда агенты завербованы, флаги поставлены и решения приняты.
+		"requires_recruited": Schema.opt(Schema.arr(Schema.id("tar")), []),
+		"requires_flags": Schema.opt(Schema.arr(flag), []),
+		"requires_decisions": Schema.opt(Schema.arr(Schema.s()), []),
+		# Ключевое мероприятие сюжета: после отмены его можно повторить, валидатор не ищет
+		# обходной путь на случай его «срыва».
+		"essential": Schema.opt({"type": "bool"}, false),
 		"location": Schema.obj({
 			"site_id": Schema.id("site"),
 			"codename": Schema.opt(Schema.s()),
@@ -211,6 +225,8 @@ static func _build() -> void:
 			# Приём наружки: relay — эстафета машин (повторяется человек), clothes — смена одежды,
 			# aircraft — наблюдение с самолёта.
 			"technique": Schema.opt(Schema.e(["", "relay", "clothes", "aircraft"]), ""),
+			# «Слепое окно»: агент с графиками наружки (perk sog_schedule) — хвоста нет.
+			"blind_window": Schema.opt({"type": "bool"}, false),
 		}),
 		# Тайник: связь с бесконтактным агентом. Чистая закладка устанавливает контакт (вербовка).
 		"contact_target_id": Schema.opt(Schema.s(), ""),
@@ -258,7 +274,25 @@ static func _build() -> void:
 				"recruit_any_of": Schema.arr(Schema.id("tar"), 1),
 				# Задача выполнена, только когда завербованному агенту выплачено обещанное.
 				"settle_promise": Schema.opt({"type": "bool"}, false),
+				# …и добыты все эти сведения (например, «Список»).
+				"clues_all": Schema.opt(Schema.arr(Schema.id("clue")), []),
 			}),
+			# Валютные средства, которые Центр переводит резидентуре в начале фазы.
+			"fund_usd": Schema.opt(Schema.i(0, 1000000), 0),
+			# Сколько дней в одном ходе-«неделе» (четвёртая фаза идёт по две недели за ход).
+			"days_per_week": Schema.opt(Schema.i(1, 31), 7),
+			# Пробный пакет «крота» и его проверка на подставу (третья фаза).
+			"package": Schema.opt(Schema.obj({
+				"agent": Schema.id("tar"),
+				"title": text,
+				"text": text,
+				"drop_op": Schema.id("op"),
+				"handover_op": Schema.id("op"),
+				"archive_agent": Schema.id("tar"),
+				"request_id": Schema.id("req"),
+				# Ошибки подхода (флаги), при которых пакет из тайника окажется подставой ФБР.
+				"mistake_flags": Schema.opt(Schema.arr(flag), []),
+			})),
 			# Вводная и итог фазы — показываются при смене фаз операции.
 			"intro": Schema.opt(text),
 			"outro": Schema.opt(text),
@@ -279,7 +313,7 @@ static func _build() -> void:
 			"quiet_week": delta, "failed_recruitment": delta,
 		}),
 		"moscow_pressure": Schema.obj({
-			"grace_weeks": Schema.i(0), "per_week_without_goal": delta, "per_week_overdue": delta, "act_goal_reached": delta,
+			"grace_weeks": Schema.i(0), "recall_after_overdue_weeks": Schema.opt(Schema.i(1, 30), 8), "per_week_without_goal": delta, "per_week_overdue": delta, "act_goal_reached": delta,
 			"report_truth_with_failures": delta, "report_embellished": delta, "lie_uncovered": delta,
 		}),
 		"centre_trust": Schema.obj({

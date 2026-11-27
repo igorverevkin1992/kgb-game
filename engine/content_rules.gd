@@ -32,6 +32,7 @@ static func check(content: Dictionary, file_of: Dictionary, opts := {}) -> Array
 	_age16(ctx)
 	_archive(ctx)
 	_act2(ctx)
+	_act3(ctx)
 	return ctx.issues
 
 
@@ -140,7 +141,7 @@ static func _reachability(ctx: Dictionary) -> void:
 		var goal: Array = act.goal.recruit_any_of
 		var where := "acts[%d].goal" % i
 		var full := ContentSim.run(c, {"max_act": act.act})
-		if not goal.any(func(id): return full.recruited.has(id)):
+		if not ContentSim.goal_met(act, full):
 			_push(ctx, "error", "softlock", "Тупик: цель акта %d (%s) недостижима даже при идеальной игре" % [act.act, " или ".join(goal)], where, "", "campaign.json")
 			continue
 		var failures: Array = []
@@ -148,11 +149,12 @@ static func _reachability(ctx: Dictionary) -> void:
 			if t.act <= act.act and not (goal.size() == 1 and goal[0] == t.target_id):
 				failures.append({"label": "не удастся завербовать «%s»" % t.target_id, "targets": [t.target_id], "ops": []})
 		for o in c.ops:
-			if o.act <= act.act:
+			# Ключевое мероприятие (essential) после отмены повторяется — «сорваться» навсегда не может.
+			if o.act <= act.act and not o.get("essential", false):
 				failures.append({"label": "сорвётся операция «%s»" % o.op_id, "targets": [], "ops": [o.op_id]})
 		for f in failures:
 			var res := ContentSim.run(c, {"max_act": act.act, "failed_targets": f.targets, "failed_ops": f.ops})
-			if not goal.any(func(id): return not f.targets.has(id) and res.recruited.has(id)):
+			if not ContentSim.goal_met(act, res, f.targets):
 				_push(ctx, "error", "robustness", "Тупик: если %s, цель акта %d становится недостижимой" % [f.label, act.act], where, "", "campaign.json")
 	var all := ContentSim.run(c)
 	for clue in c.clues:
@@ -419,13 +421,16 @@ static func _dialogs(ctx: Dictionary) -> void:
 			_push(ctx, "warning", "dialog", "Беседу можно выиграть без козырей из досье — доска мотивов на встрече не нужна", id, id)
 
 
-## 13. Финансы: обещанное агенту можно выплатить из стартового спецфонда.
+## 13. Финансы: обещанное агенту можно выплатить из стартового спецфонда и переводов Центра.
 static func _finance(ctx: Dictionary) -> void:
 	var c: Dictionary = ctx.content
-	var fund := int(c.balance.start.fund_usd)
 	for a in c.campaign.acts:
 		if not a.goal.settle_promise:
 			continue
+		var fund := int(c.balance.start.fund_usd)
+		for x in c.campaign.acts:
+			if int(x.act) <= int(a.act):
+				fund += int(x.get("fund_usd", 0))
 		for id in a.goal.recruit_any_of:
 			var t := Campaign.target_by_id(c, id)
 			if t.is_empty():
@@ -433,7 +438,7 @@ static func _finance(ctx: Dictionary) -> void:
 			if t.get("finance") == null:
 				_push(ctx, "warning", "finance", "Цель акта %d без блока finance: обещания нет, задача засчитается сразу после вербовки" % a.act, "finance", id)
 			elif int(t.finance.promised_usd) > fund:
-				_push(ctx, "error", "finance", "Обещано %d долларов, а в стартовом спецфонде %d — задачу акта не выполнить" % [t.finance.promised_usd, fund], "finance.promised_usd", id)
+				_push(ctx, "error", "finance", "Обещано %d долларов, а в спецфонде с переводами Центра всего %d — задачу акта не выполнить" % [t.finance.promised_usd, fund], "finance.promised_usd", id)
 
 
 ## 14. Достижения висят на событиях, которые движок действительно испускает.
@@ -567,3 +572,61 @@ static func _act2(ctx: Dictionary) -> void:
 	for cue in c.cues:
 		if not cue.variants.is_empty() and cue.kind != "tail":
 			_push(ctx, "warning", "technique", "Варианты описания нужны только приметам хвоста (смена одежды)", cue.tag, "", "map/cues.json")
+
+
+## 18. Третья фаза: пробный пакет, «слепое окно», условия выходов и бесед.
+static func _act3(ctx: Dictionary) -> void:
+	var c: Dictionary = ctx.content
+	var op_ids := _ids(c.ops, "op_id")
+	var target_ids := _ids(c.targets, "target_id")
+	var dec_ids := _ids(c.decisions, "decision_id")
+	var flags_known := {Dangle.ACCEPTED_FLAG: true, Dangle.REJECTED_FLAG: true, Dangle.DANGLE_FLAG: true}
+	for d in c.decisions:
+		for o in d.options:
+			if o.effects.get("flag_set", "") != "":
+				flags_known[o.effects.flag_set] = true
+	for o in c.ops:
+		var cons = o.sdr.get("ignore_consequence")
+		if cons != null and cons.get("flag_set", "") != "":
+			flags_known[cons.flag_set] = true
+	var pkg := Dangle.config(c)
+	if not pkg.is_empty():
+		for key in ["drop_op", "handover_op"]:
+			if not op_ids.has(pkg[key]):
+				_push(ctx, "error", "package", "Пробный пакет: нет мероприятия «%s»" % pkg[key], "package.%s" % key, "", "campaign.json")
+		for key in ["agent", "archive_agent"]:
+			if not target_ids.has(pkg[key]):
+				_push(ctx, "error", "package", "Пробный пакет: нет кандидата «%s»" % pkg[key], "package.%s" % key, "", "campaign.json")
+		var req := Cipher.request_by_id(c, pkg.request_id)
+		if req.is_empty() or not req.get("package_check", false):
+			_push(ctx, "error", "package", "Пробный пакет: запрос «%s» должен существовать и иметь package_check: true" % pkg.request_id, "package.request_id", "", "campaign.json")
+		elif int(req.min_trust) > 0:
+			_push(ctx, "warning", "package", "Сверку пакета Центр может не одобрить (min_trust > 0) — канал проверки пропадёт", "package.request_id", "", "campaign.json")
+		var ho := Campaign.op_by_id(c, pkg.handover_op)
+		if not ho.is_empty() and not ho.get("requires_flags", []).has(Dangle.REJECTED_FLAG):
+			_push(ctx, "error", "package", "Личная передача должна требовать флаг «%s» (отклонённый пакет)" % Dangle.REJECTED_FLAG, "%s.requires_flags" % pkg.handover_op, pkg.handover_op)
+	var has_schedule: bool = c.targets.any(func(t): return t.get("perks", []).has("sog_schedule"))
+	for o in c.ops:
+		var id: String = o.op_id
+		if o.sdr.get("blind_window", false) and not has_schedule:
+			_push(ctx, "warning", "blind-window", "«Слепое окно» не откроется: ни у одного кандидата нет perk sog_schedule", "%s.sdr.blind_window" % id, id)
+		for t in o.get("requires_recruited", []):
+			if not target_ids.has(t):
+				_push(ctx, "error", "refs", "Выход ждёт вербовки несуществующего кандидата «%s»" % t, "%s.requires_recruited" % id, id)
+		for f in o.get("requires_flags", []):
+			if not flags_known.has(f):
+				_push(ctx, "error", "refs", "Выход ждёт флаг «%s», который ничто не ставит" % f, "%s.requires_flags" % id, id)
+		for d in o.get("requires_decisions", []):
+			if not dec_ids.has(d):
+				_push(ctx, "error", "refs", "Выход ждёт несуществующее решение «%s»" % d, "%s.requires_decisions" % id, id)
+	for d in c.dialogs:
+		var need: String = d.get("requires_op", "")
+		if need != "" and not op_ids.has(need):
+			_push(ctx, "error", "dialog", "Встреча назначается несуществующим выходом «%s»" % need, "%s.requires_op" % d.dialog_id, d.dialog_id)
+	for d in c.decisions:
+		if d.trigger.flag != "" and not flags_known.has(d.trigger.flag):
+			_push(ctx, "error", "decisions", "Решение ждёт флаг «%s», который ничто не ставит" % d.trigger.flag, "%s.trigger.flag" % d.decision_id, d.decision_id)
+		for o in d.options:
+			var lt: String = o.effects.get("loyalty_target", "")
+			if lt != "" and not target_ids.has(lt):
+				_push(ctx, "error", "decisions", "Вариант меняет лояльность несуществующего агента «%s»" % lt, "%s.options" % d.decision_id, d.decision_id)

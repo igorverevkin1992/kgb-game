@@ -50,6 +50,9 @@ static func meet_error(s: Dictionary, content: Dictionary, target_id: String) ->
 		if content.ops.any(func(o): return o.get("contact_target_id", "") == target_id):
 			return "Связь — только бесконтактная, через тайник: выход на карте"
 		return "Для этого кандидата нет беседы"
+	var need_op: String = dialog_for(content, target_id).get("requires_op", "")
+	if need_op != "" and not ["clean", "tail_missed"].has(s.op_results.get(need_op, "")):
+		return "Встреча назначается выходом в город: «%s» на карте" % Campaign.op_by_id(content, need_op).get("title", {}).get("ru", need_op)
 	if s.meeting != null:
 		return "Встреча уже идёт"
 	if s.phase != "evening":

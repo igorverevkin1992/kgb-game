@@ -190,8 +190,12 @@ static func request_by_id(content: Dictionary, id: String) -> Dictionary:
 
 
 ## Запросы, которые можно приложить к шифрограмме сейчас: свой акт, ещё не отправлялся.
+## Сверка пробного пакета по учётам Центра — пока пакет ждёт ответа (Dangle).
 static func available_requests(s: Dictionary, content: Dictionary) -> Array:
-	return content.requests.filter(func(r): return r.act == s.act and not s.requests.any(func(x): return x.request_id == r.request_id))
+	return content.requests.filter(func(r):
+		if r.get("package_check", false):
+			return Dangle.centre_waiting(s)
+		return r.act == s.act and not s.requests.any(func(x): return x.request_id == r.request_id))
 
 
 ## Будет ли запрос одобрен при текущем Доверии Центра.

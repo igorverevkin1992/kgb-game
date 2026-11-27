@@ -6,6 +6,9 @@ class_name Finance
 ##    само становится уликой. Наличные заметны в образе жизни агента.
 ##  · Эскроу-счёт в Москве: следа в США нет, но агент не может тратить деньги сразу — лояльность
 ##    растёт меньше, и инструмент доступен только при высокой лояльности.
+##  · Легендированный перевод через третью страну («наследство семьи»): нужен агент с банковским
+##    контуром (perk legend). Отчёта 4789 нет, деньги тратятся сразу, но образ жизни растёт
+##    вполовину меньше — богатство объяснено легендой.
 ## `plan()` считает транш заранее (части, отчёты 4789, след, образ жизни, лояльность); движок
 ## применяет ровно эти числа — предпросмотр в журнале совпадает с итогом.
 ##
@@ -13,7 +16,7 @@ class_name Finance
 ## Части в пути (state.payments): {target_id, week, amount, instrument, ctr, structuring,
 ##   treasury, lifestyle, loyalty, completes_promise}.
 
-const INSTRUMENTS := ["cash", "escrow"]
+const INSTRUMENTS := ["cash", "escrow", "legend"]
 const DEFAULT_SALARY := 30000
 
 
@@ -75,8 +78,10 @@ static func plan(s: Dictionary, content: Dictionary, target_id: String, amount: 
 		out.error = "Сумма должна быть больше нуля"
 	elif amount > int(s.fund_usd):
 		out.error = "В валютных средствах только %d долларов" % s.fund_usd
-	elif parts < 1 or parts > int(b.max_parts) or (instrument == "escrow" and parts != 1):
-		out.error = "Депонирование — одним переводом; наличные — от 1 до %d частей" % b.max_parts
+	elif parts < 1 or parts > int(b.max_parts) or (instrument != "cash" and parts != 1):
+		out.error = "Депонирование и перевод — одной суммой; наличные — от 1 до %d частей" % b.max_parts
+	elif instrument == "legend" and not legend_available(s, content):
+		out.error = "Легендированный перевод — только через агента с банковским контуром"
 	elif instrument == "escrow" and int(ag.loyalty) < int(b.escrow_min_loyalty):
 		out.error = "На депонирование агент согласится только при лояльности от %d%%" % b.escrow_min_loyalty
 	if out.error != "":
@@ -89,6 +94,8 @@ static func plan(s: Dictionary, content: Dictionary, target_id: String, amount: 
 		var part := base + (amount - base * parts if i == 0 else 0)
 		var p := {"target_id": target_id, "week": int(s.week) + i, "amount": part, "instrument": instrument,
 			"ctr": false, "structuring": false, "treasury": 0, "lifestyle": 0, "loyalty": 0, "completes_promise": false}
+		if instrument == "legend":
+			p.lifestyle = int(round(part * 100.0 / salary(content, target_id) * float(b.lifestyle_factor) * 0.5))
 		if instrument == "cash":
 			p.lifestyle = int(round(part * 100.0 / salary(content, target_id) * float(b.lifestyle_factor)))
 			if part > int(b.ctr_threshold_usd):
@@ -103,10 +110,10 @@ static func plan(s: Dictionary, content: Dictionary, target_id: String, amount: 
 		if left_before > 0 and not promise_done and paid_so_far >= left_before:
 			promise_done = true
 			p.completes_promise = true
-			p.loyalty += int(b.loyalty_promise_cash if instrument == "cash" else b.loyalty_promise_escrow)
+			p.loyalty += int(b.loyalty_promise_escrow if instrument == "escrow" else b.loyalty_promise_cash)
 		var extra := paid_so_far - maxi(before, left_before)
 		if extra > 0:
-			p.loyalty += int(floor(extra / 1000.0 * float(b.loyalty_per_1000_extra) * (1.0 if instrument == "cash" else 0.5)))
+			p.loyalty += int(floor(extra / 1000.0 * float(b.loyalty_per_1000_extra) * (0.5 if instrument == "escrow" else 1.0)))
 		out.parts.append(p)
 		out.total.treasury += p.treasury
 		out.total.lifestyle += p.lifestyle
@@ -119,3 +126,22 @@ static func plan(s: Dictionary, content: Dictionary, target_id: String, amount: 
 ## Агенты, которым можно платить (завербованы и не потеряны).
 static func agents(s: Dictionary) -> Array:
 	return s.agents.keys().filter(func(id): return s.targets.has(id) and not s.targets[id].lost)
+
+
+## Есть ли завербованный и лояльный агент с банковским контуром (легенда богатства).
+static func legend_available(s: Dictionary, content: Dictionary) -> bool:
+	return perk_active(s, content, "legend")
+
+
+## Даёт ли кто-то из лояльных агентов эту возможность (графики наружки, легенда…).
+static func perk_active(s: Dictionary, content: Dictionary, perk: String) -> bool:
+	for t in content.targets:
+		if not t.get("perks", []).has(perk):
+			continue
+		var ts = s.targets.get(t.target_id)
+		if ts == null or not ts.recruited or ts.lost:
+			continue
+		if s.agents.has(t.target_id) and int(s.agents[t.target_id].loyalty) < int(content.balance.finance.reports_min_loyalty):
+			continue
+		return true
+	return false

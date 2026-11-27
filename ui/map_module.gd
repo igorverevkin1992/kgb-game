@@ -224,7 +224,7 @@ static func _schedule_note(op: Dictionary) -> String:
 			src = T.loc(t.name)
 	if src == "":
 		return ""
-	return T.t("sdr.schedule.tail" if Campaign.tail_present(s, op) else "sdr.schedule.clean", {"name": src})
+	return T.t("sdr.schedule.tail" if Campaign.tail_present(s, op, Game.content) else "sdr.schedule.clean", {"name": src})
 
 
 ## Кто идёт: резидент сам (проверочный маршрут вручную) или подчинённый (с видимой вероятностью).
