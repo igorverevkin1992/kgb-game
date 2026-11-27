@@ -8,7 +8,8 @@ const EVENTS := ["target_unlocked", "target_recruited", "target_lost", "op_resol
 	"directive_verified", "promise_kept", "analysis_approved", "meeting_ended", "lie_uncovered",
 	"game_over", "request_answered", "ctr_filed", "clue_found", "agent_broke",
 	"decision_made", "contact_established", "operative_report",
-	"package_received", "package_checked", "package_accepted", "package_rejected"]
+	"package_received", "package_checked", "package_accepted", "package_rejected",
+	"list_arrested", "list_game", "list_cascade", "list_fake_revealed", "list_window_closed", "quota_contested"]
 
 
 static func unlocked_by(content: Dictionary, events: Array) -> Array:

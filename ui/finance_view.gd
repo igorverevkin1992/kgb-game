@@ -73,6 +73,10 @@ static func _reason(e: Dictionary) -> String:
 			return T.t("finance.reason.tranche", {"name": T.loc(Campaign.target_by_id(c, ref).get("name", {"ru": ref}))})
 		"request":
 			return T.t("finance.reason.request", {"name": T.loc(Cipher.request_by_id(c, ref).get("title", {"ru": ref}))})
+		"allocation":
+			return T.t("finance.reason.allocation")
+		"decision":
+			return T.t("finance.reason.decision", {"name": T.loc(Decisions.by_id(c, ref).get("title", {"ru": ref}))})
 	return T.t("finance.reason.other")
 
 
@@ -152,6 +156,14 @@ static func _agent_card(s: Dictionary, id: String) -> Control:
 	v.add_child(_scale("scale-loyalty-" + id, T.t("finance.loyalty"), int(ag.loyalty), T.t("finance.loyaltyMarks", {"r": b.reports_min_loyalty, "e": b.escrow_min_loyalty}), Color("#4f7a3e")))
 	v.add_child(_scale("scale-trace-" + id, T.t("finance.trace"), int(ag.trace), T.t("finance.traceNote"), Color("#8e2b22")))
 	v.add_child(_scale("scale-lifestyle-" + id, T.t("finance.lifestyle"), int(ag.lifestyle), T.t("finance.lifestyleNote", {"n": th, "t": b.lifestyle_danger_treasury, "d": b.lifestyle_decay}), Color("#b07a2a")))
+	var spend := int(Finance.profile(c, id).get("spending_per_week", 0))
+	if spend > 0:
+		v.add_child(Style.para(T.t("finance.spending", {"n": spend}), RIGHT_W - 36, Style.mono(), 13, Color(Style.INK, 0.8)))
+	if int(ag.lifestyle) > 0 and int(ag.get("restrained_week", 0)) != int(s.week) and not s.targets[id].lost:
+		var lb: Dictionary = c.balance.list
+		var rb := Style.paper_button(T.t("finance.restrain", {"d1": lb.restrain_lifestyle, "d2": lb.restrain_loyalty}), "restrain-" + id)
+		rb.pressed.connect(Game.dispatch.bind({"type": "restrain_agent", "target_id": id}))
+		v.add_child(rb)
 	p.add_child(v)
 	return p
 

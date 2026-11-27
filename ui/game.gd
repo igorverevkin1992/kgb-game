@@ -57,6 +57,9 @@ var meeting_trump := ""
 var finance_agent := ""
 ## «Архив 1985»: открытая запись.
 var archive_selected := ""
+## Пульт обстановки: выбранное дело «Списка» и вкладка (картотека / полиграф).
+var card_selected := ""
+var console_tab := "list"
 ## Документальный эпилог после финала: открытый лист (-1 — закрыт).
 var epilogue_page := -1
 ## Карточка смены фаз операции: номер завершённой фазы (0 — не показывать).
@@ -408,6 +411,18 @@ func set_epilogue_page(i: int) -> void:
 	changed.emit()
 
 
+func select_card(card_id: String) -> void:
+	card_selected = card_id
+	sfx("paper")
+	changed.emit()
+
+
+func set_console_tab(tab: String) -> void:
+	console_tab = tab
+	sfx("click")
+	changed.emit()
+
+
 func select_archive(entry_id: String) -> void:
 	archive_selected = entry_id
 	sfx("paper")
@@ -553,6 +568,8 @@ func _clear_ui() -> void:
 	finance_agent = ""
 	finance_forms = {}
 	archive_selected = ""
+	card_selected = ""
+	console_tab = "list"
 	epilogue_page = -1
 
 

@@ -165,6 +165,20 @@ static func _event_text(e: Dictionary) -> String:
 			return T.t("event.fund_changed", {"from": Fmt.usd(e.from), "to": Fmt.usd(e.to)})
 		"package_received", "package_accepted", "package_rejected":
 			return T.t("event." + e.type)
+		"list_arrested", "list_game", "list_fake_arrested", "list_fake_revealed":
+			return T.t("event." + e.type, {"name": T.loc(ArrestWindow.card(c, e.card_id).get("name", {"ru": e.card_id}))})
+		"list_planned":
+			return T.t("event.list_planned", {"name": T.loc(ArrestWindow.card(c, e.card_id).get("name", {"ru": e.card_id})), "action": T.t("counterintel.action." + e.action).to_lower()})
+		"list_cascade":
+			return T.t("event.list_cascade")
+		"quota_checked":
+			return T.t("event.quota_met" if e.met else "event.quota_failed", {"week": e.by_week, "done": e.get("done", 0), "need": e.get("need", 0)})
+		"quota_contested":
+			return T.t("event.quota_contested_yes" if e.granted else "event.quota_contested_no", {"week": e.by_week})
+		"list_window_closed":
+			return T.t("event.list_window_closed", {"n": e.realized})
+		"agent_restrained":
+			return T.t("event.agent_restrained", {"name": _tname(e.target_id)})
 		"package_checked":
 			return T.t("event.package_checked." + e.result, {"channel": T.t("package.channel." + e.channel)})
 	return ""

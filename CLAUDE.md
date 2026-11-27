@@ -150,6 +150,11 @@ tools/telemetry-report.sh [папка] # сводка журналов плей�
   условия выходов `requires_recruited/flags/decisions`, `essential`; беседа с `requires_op`;
   задача акта `goal.clues_all`, перевод Центра `fund_usd`, `days_per_week`; инструмент `legend`
   (perk `legend`, Мендоса). UI — `package_view.gd` (лоток почты, элемент `pkg`).
+- Четвёртая фаза (шаг 13): `engine/arrest_window.gd` — «Окно арестов» (`state.list`, дела в
+  `content/list/`, блок `arrest_window` акта, баланс `balance.list`; действия `list_action`,
+  `contest_quota`, `restrain_agent`; ночь — `Campaign._list_night`); траты агента
+  `finance.spending_per_week`; задача акта `goal.flags_all`. UI — `counterintel_view.gd`
+  (пульт обстановки, клавиша 6; `Game.card_selected`, `Game.console_tab`).
 
 ## Договорённости
 - Пользователь немного программировал. Объясняй ключевые решения коротко и по-русски.

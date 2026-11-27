@@ -185,5 +185,40 @@
     "match": {
       "clue_id": "clue_caldwell_list"
     }
+  },
+  {
+    "id": "ACH_NATURAL_FAILURE",
+    "title": {
+      "ru": "Естественный провал"
+    },
+    "description": {
+      "ru": "Реализовать дело из «Списка» так, чтобы арест не указал на «крота»."
+    },
+    "event": "list_arrested",
+    "match": {
+      "natural": true
+    }
+  },
+  {
+    "id": "ACH_OPERATIONAL_GAME",
+    "title": {
+      "ru": "Оперативная игра"
+    },
+    "description": {
+      "ru": "Перевести агента противника в оперативную игру вместо ареста."
+    },
+    "event": "list_game",
+    "match": {}
+  },
+  {
+    "id": "ACH_DOUBLE_CHECK",
+    "title": {
+      "ru": "Не всё, что блестит"
+    },
+    "description": {
+      "ru": "Выявить дезинформацию ЦРУ в «Списке» до ареста."
+    },
+    "event": "list_fake_revealed",
+    "match": {}
   }
 ]

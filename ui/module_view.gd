@@ -53,7 +53,7 @@ static func _content(view: String) -> Control:
 		"archive":
 			return ArchiveView.build()
 		_:
-			return Shells.counterintel()
+			return CounterintelView.build()
 
 
 ## Заголовок модуля: название слева, подпись справа.
