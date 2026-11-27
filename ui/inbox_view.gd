@@ -2,23 +2,67 @@ class_name InboxView
 ## Лоток входящих: утренняя почта резидента. Открытый документ отмечается прочитанным.
 
 
+## Ящики входящих: id → виды документов (пусто — особое правило в in_folder).
+const FOLDERS := ["all", "new", "decisions", "reports", "notes", "press", "letters"]
+const FOLDER_KINDS := {
+	"reports": ["agent_report", "intercept", "anonymous"],
+	"notes": ["vgu_note", "personnel_file"],
+	"press": ["press_clipping"],
+	"letters": ["letter"],
+}
+
+
+static func in_folder(folder: String, d: Dictionary, s: Dictionary) -> bool:
+	match folder:
+		"all":
+			return true
+		"new":
+			return not s.read_cables.has(d.cable_id)
+		"decisions":
+			return false
+	return FOLDER_KINDS.get(folder, []).has(d.kind)
+
+
 static func build() -> Control:
 	var s: Dictionary = Game.state
 	var root := Control.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(ModuleView.header(T.t("inbox.name"), T.t("inbox.hint")))
 
-	var docs: Array = s.delivered_cables.map(func(id): return Campaign.cable_by_id(Game.content, id)).filter(func(c): return not c.is_empty() and c.kind != "directive")
-	docs.reverse()  # свежие сверху
+	var all_docs: Array = s.delivered_cables.map(func(id): return Campaign.cable_by_id(Game.content, id)).filter(func(c): return not c.is_empty() and c.kind != "directive")
+	all_docs.reverse()  # свежие сверху
+	var folder: String = Game.inbox_folder
+	var docs: Array = all_docs.filter(func(d): return in_folder(folder, d, s))
+	var show_decisions := folder in ["all", "new", "decisions"]
+
+	# Ящики по темам: число — непрочитанные (и решения, которые ждут ответа).
+	var tabs := HFlowContainer.new()
+	tabs.name = "inbox-folders"
+	tabs.position = Vector2(28, 76)
+	tabs.size = Vector2(440, 0)
+	tabs.custom_minimum_size.x = 440
+	tabs.add_theme_constant_override("h_separation", 6)
+	tabs.add_theme_constant_override("v_separation", 6)
+	for f in FOLDERS:
+		var n: int = all_docs.filter(func(d): return in_folder(f, d, s) and not s.read_cables.has(d.cable_id)).size()
+		if f in ["all", "new", "decisions"]:
+			n += Decisions.arrived(s, Game.content).filter(func(x): return not s.decisions.has(x.decision_id)).size()
+		var on: bool = f == folder
+		var label := T.t("inbox.folder." + f) + (" · %d" % n if n > 0 else "")
+		var tb := Style.button(label, "inbox-folder-" + f, Style.INK if on else Style.PAPER, Style.PAPER if on else Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.5), 13)
+		tb.pressed.connect(Game.set_inbox_folder.bind(f))
+		tabs.add_child(tb)
+	root.add_child(tabs)
 
 	var scroll := ScrollContainer.new()
-	scroll.position = Vector2(28, 76)
-	scroll.size = Vector2(440, 660)
+	scroll.set_meta("scroll_key", "inbox-list-" + folder)
+	scroll.position = Vector2(28, 160)
+	scroll.size = Vector2(440, 576)
 	var list := Style.vbox(8)
 	list.name = "inbox-list"
 	list.custom_minimum_size.x = 420
 	# Пробный пакет «крота» — самым первым, пока ждёт решения.
-	if s.get("package") != null:
+	if s.get("package") != null and show_decisions and (folder != "new" or Dangle.open(s)):
 		var open := Dangle.open(s)
 		var pb := Button.new()
 		pb.name = "package-item"
@@ -37,8 +81,10 @@ static func build() -> Control:
 		pb.custom_minimum_size = Vector2(420, 64)
 		list.add_child(pb)
 	# Решения резидента — первыми: ждущие решения отмечены красным.
-	for dec in Decisions.arrived(s, Game.content):
+	for dec in (Decisions.arrived(s, Game.content) if show_decisions else []):
 		var waiting: bool = not s.decisions.has(dec.decision_id)
+		if folder == "new" and not waiting:
+			continue
 		var on: bool = dec.decision_id == Game.inbox_selected
 		var db := Button.new()
 		db.name = "decision-item-" + dec.decision_id
@@ -93,6 +139,7 @@ static func build() -> Control:
 	root.add_child(scroll)
 
 	var reader := ScrollContainer.new()
+	reader.set_meta("scroll_key", "inbox-reader-" + Game.inbox_selected)  # новый документ — сверху
 	reader.position = Vector2(500, 76)
 	reader.size = Vector2(1010, 660)
 	var center := CenterContainer.new()

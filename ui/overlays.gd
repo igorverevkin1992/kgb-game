@@ -217,9 +217,16 @@ static func service() -> Control:
 		_saves_tab(v)
 	else:
 		_settings_tab(v)
+	var row := Style.hbox(12)
 	var close := Style.paper_button("%s  [Esc]" % T.t("desk.back"), "service-close")
 	close.pressed.connect(Game.close)
-	v.add_child(close)
+	row.add_child(close)
+	# Выход: игра и так сохранена после последнего действия — об этом сказано рядом.
+	var quit := Style.paper_button(T.t("service.quit"), "service-quit")
+	quit.pressed.connect(Game.quit_game)
+	row.add_child(quit)
+	row.add_child(Style.para(T.t("service.quitHint"), 360, Style.mono(), 12, Color(Style.INK, 0.6)))
+	v.add_child(row)
 	return o[0]
 
 

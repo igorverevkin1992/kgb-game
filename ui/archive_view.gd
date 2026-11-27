@@ -77,6 +77,7 @@ static func build() -> Control:
 	# Длинный лист прокручивается.
 	var rs := ScrollContainer.new()
 	rs.name = "archive-scroll"
+	rs.set_meta("scroll_key", "archive-reader-" + str(cur.get("id", "")))  # новый лист — сверху
 	rs.position = Vector2(RIGHT_X, TOP)
 	rs.size = Vector2(RIGHT_W + 16, H)
 	rs.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED

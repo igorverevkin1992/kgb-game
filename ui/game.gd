@@ -35,8 +35,9 @@ var service_open := false
 var last_events: Array = []
 var last_error := ""
 var saved_at := 0
-## Открытый документ в лотке входящих.
+## Открытый документ в лотке входящих и выбранный ящик (InboxView.FOLDERS).
 var inbox_selected := ""
+var inbox_folder := "all"
 ## Доска мотивов: выбранная улика из стопки, открытое заключение и его черновик.
 var board_selected := ""
 var board_analysis := ""
@@ -207,6 +208,11 @@ func new_game(ironman := false) -> void:
 	changed.emit()
 
 
+func set_inbox_folder(f: String) -> void:
+	inbox_folder = f
+	changed.emit()
+
+
 ## Сохранение демоверсии в полной игре: следующая фаза операции.
 func continue_full() -> void:
 	var prev := state
@@ -283,6 +289,17 @@ func close() -> void:
 func toggle_analyst() -> void:
 	analyst_open = not analyst_open
 	changed.emit()
+
+
+## Служебная папка сразу на вкладке сохранений (кнопка «Сохранить игру» на календаре).
+func open_saves() -> void:
+	Overlays.service_tab = "saves"
+	open_service()
+
+
+## Выход из игры: последнее действие уже записано в автосейв.
+func quit_game() -> void:
+	get_tree().quit()
 
 
 func open_service() -> void:
@@ -583,6 +600,7 @@ func _clear_ui() -> void:
 	service_open = false
 	last_error = ""
 	inbox_selected = ""
+	inbox_folder = "all"
 	board_selected = ""
 	board_analysis = ""
 	board_form = {}

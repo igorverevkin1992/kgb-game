@@ -11,6 +11,7 @@ func _ready() -> void:
 
 
 func _render() -> void:
+	var scrolls := _scroll_positions()
 	for c in get_children():
 		remove_child(c)
 		c.queue_free()
@@ -34,6 +35,41 @@ func _render() -> void:
 		add_child(_notice())
 	if Game.settings.get("crt", true):
 		add_child(_crt())
+	# Списки не прыгают наверх после каждого действия: прокрутка восстанавливается, когда
+	# контейнеры разложат содержимое (отложенный вызов идёт после их раскладки).
+	if not scrolls.is_empty():
+		_restore_scrolls.call_deferred(scrolls)
+
+
+## Позиции прокрутки всех списков на экране: {ключ: [по вертикали, по горизонтали]}.
+func _scroll_positions() -> Dictionary:
+	var out := {}
+	for sc in find_children("*", "ScrollContainer", true, false):
+		if sc.is_queued_for_deletion():
+			continue
+		out[_scroll_key(sc)] = [sc.scroll_vertical, sc.scroll_horizontal]
+	return out
+
+
+func _restore_scrolls(saved: Dictionary) -> void:
+	for sc in find_children("*", "ScrollContainer", true, false):
+		var k := _scroll_key(sc)
+		if k != "" and saved.has(k):
+			sc.scroll_vertical = saved[k][0]
+			sc.scroll_horizontal = saved[k][1]
+
+
+## Ключ списка — путь от главной сцены: имена узлов, а у безымянных — тип и номер. Список,
+## который при смене выбора должен начинаться сверху (текст документа), задаёт свой ключ
+## через meta "scroll_key"; пустой ключ — список прокручивает себя сам (стенограмма).
+func _scroll_key(n: Node) -> String:
+	if n.has_meta("scroll_key"):
+		return String(n.get_meta("scroll_key"))
+	var parts: Array = []
+	while n != null and n != self:
+		parts.push_front(n.get_class() + str(n.get_index()) if String(n.name).begins_with("@") else String(n.name))
+		n = n.get_parent()
+	return "/".join(parts)
 
 
 ## Короткое уведомление вверху по центру; само бледнеет.

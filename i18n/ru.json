@@ -303,7 +303,7 @@
   "dialog.offerAt": "предложение от {n}%",
   "dialog.breakAt": "срыв при {n}%",
   "dialog.trumps": "Сведения из дела — выберите и ответьте тоном:",
-  "dialog.trumpReady": "сработает при контакте от {n}%",
+  "dialog.trumpReady": "при контакте от {n}%",
   "dialog.toneHint": "Ответить тоном:",
   "dialog.toneWithTrump": "Предъявить сведения — каким тоном:",
   "dialog.tone.empathy": "Участие",
@@ -674,5 +674,17 @@
   "ending.wishlist": "Добавить полную игру в список желаемого",
   "ending.continue_full": "Продолжить операцию: третья фаза",
   "calendar.demo": "Демоверсия",
-  "ending.demo_stamp": "Продолжение следует"
+  "ending.demo_stamp": "Продолжение следует",
+  "service.quit": "Выйти из игры",
+  "service.quitHint": "Игра сохраняется сама после каждого действия — можно выходить в любой момент.",
+  "calendar.save": "Сохранить игру",
+  "calendar.saveHint": "Игра сохраняется сама после каждого действия. Здесь — ручные слоты и контрольные точки.",
+  "inbox.folder.all": "Все",
+  "inbox.folder.new": "Новые",
+  "inbox.folder.decisions": "Решения",
+  "inbox.folder.reports": "Рапорты и перехват",
+  "inbox.folder.notes": "Справки и ориентировки",
+  "inbox.folder.press": "Печать",
+  "inbox.folder.letters": "Письма",
+  "inbox.emptyFolder": "В этом ящике пока пусто."
 }

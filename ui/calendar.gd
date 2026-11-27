@@ -3,12 +3,16 @@ class_name Calendar
 ## «как есть» одной кнопкой или шифрограмма на «Фиалке».
 
 
+## Ширина колонки кнопок справа от листа календаря.
+const COL_W := 250.0
+
+
 static func build() -> Control:
 	var s: Dictionary = Game.state
 	var root := Control.new()
 	root.name = "calendar"
-	root.position = Vector2(1190, 330)
-	root.size = Vector2(380, 230)
+	root.position = Vector2(1150, 330)
+	root.size = Vector2(430, 260)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# Отрывной лист.
@@ -42,8 +46,8 @@ static func build() -> Control:
 	# Управление.
 	var c := Style.vbox(6)
 	c.position = Vector2(172, 0)
-	c.custom_minimum_size = Vector2(208, 0)
-	c.add_child(Style.para(T.t("phase.%s.hint" % s.phase), 208, Style.mono(), 12, Color(Style.PAPER, 0.75)))
+	c.custom_minimum_size = Vector2(COL_W, 0)
+	c.add_child(Style.para(T.t("phase.%s.hint" % s.phase), COL_W, Style.mono(), 12, Color(Style.PAPER, 0.75)))
 	if s.phase == "night":
 		# Быстрое донесение «как есть» или шифрограмма на «Фиалке» (приукрасить, умолчать, запрос).
 		var tb := Style.button(T.t("report.truth"), "report-truth", Style.PAPER, Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.55), 13)
@@ -62,6 +66,15 @@ static func build() -> Control:
 	var ab := Style.button(T.t("analyst.open"), "analyst-toggle", Color(Style.PAPER, 0.85), Color(0, 0, 0, 0.15), Color(Style.PAPER, 0.35), 13)
 	ab.pressed.connect(Game.toggle_analyst)
 	c.add_child(ab)
+	var sv := Style.button(T.t("calendar.save"), "save-game", Color(Style.PAPER, 0.85), Color(0, 0, 0, 0.15), Color(Style.PAPER, 0.35), 13)
+	sv.tooltip_text = T.t("calendar.saveHint")
+	sv.pressed.connect(Game.open_saves)
+	c.add_child(sv)
+	# Кнопки не шире колонки: длинная надпись переносится, а не уходит за край экрана.
+	for b in c.get_children():
+		if b is Button:
+			b.custom_minimum_size.x = COL_W
+			b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	if Game.saved_at > 0:
 		var saved := Style.label(T.t("saves.saved").to_upper(), Style.form(true), 12, Color("#a9c89c"), false)
 		saved.name = "save-indicator"
@@ -71,7 +84,7 @@ static func build() -> Control:
 		tw.tween_interval(1.6)
 		tw.tween_property(saved, "modulate:a", 0.35, 0.8)
 	if Game.last_error != "":
-		var err := Style.para(Game.last_error, 208, Style.mono(), 12, Color("#e2826f"))
+		var err := Style.para(Game.last_error, COL_W, Style.mono(), 12, Color("#e2826f"))
 		err.name = "engine-error"
 		c.add_child(err)
 	root.add_child(c)

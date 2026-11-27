@@ -25,7 +25,16 @@ static func build() -> Control:
 	root.add_child(ModuleView.header(T.t("module.dialog.name"), note))
 	root.add_child(_left(s))
 	if s.meeting != null:
-		root.add_child(_meeting(s))
+		# Встреча целиком в прокрутке: при любом числе сведений кнопки тонов достижимы.
+		var ms := ScrollContainer.new()
+		ms.name = "meeting-scroll"
+		ms.position = Vector2(RIGHT_X, TOP)
+		ms.size = Vector2(RIGHT_W + 16, H)
+		ms.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		var mv := _meeting(s)
+		mv.position = Vector2.ZERO
+		ms.add_child(mv)
+		root.add_child(ms)
 	elif Game.tape_selected >= 0 and Game.tape_selected < s.tapes.size():
 		root.add_child(_review(s, s.tapes[Game.tape_selected]))
 	else:
@@ -93,10 +102,13 @@ static func _meeting(s: Dictionary) -> Control:
 		var stakes := Style.para(_stakes(d), RIGHT_W, Style.mono(), 12, Color(Style.PAPER, 0.75))
 		stakes.name = "meeting-stakes"
 		v.add_child(stakes)
-	v.add_child(_transcript(d, m.lines, 250 if Meeting.is_agreement(d) else 270, -1))
-
 	var topics := Meeting.topics_left(d, m)
 	var trumps := Meeting.available_trumps(s, c, m)
+	# Много сведений из дела — стенограмма короче, чтобы тоны и кнопки остались на экране.
+	var shown_trumps: int = trumps.size() if topics else 0
+	var base_h := 250 if Meeting.is_agreement(d) else 270
+	v.add_child(_transcript(d, m.lines, maxi(150, base_h - maxi(0, shown_trumps - 2) * 22), -1))
+
 	if topics and not trumps.is_empty():
 		v.add_child(Style.label(T.t("dialog.trumps"), Style.form(true), 14, Color(Style.PAPER, 0.85)))
 		var row := HFlowContainer.new()
@@ -113,6 +125,7 @@ static func _meeting(s: Dictionary) -> Control:
 			b.pressed.connect(Game.select_trump.bind(tr.clue_id))
 			row.add_child(b)
 		row.custom_minimum_size.x = RIGHT_W
+		row.size.x = RIGHT_W
 		v.add_child(row)
 	if topics and not Meeting.is_agreement(d):
 		var mb: Dictionary = c.balance
@@ -164,6 +177,7 @@ static func _bar(id: String, title: String, value: int, mark: int, mark_text: St
 static func _transcript(d: Dictionary, lines: Array, height: float, cursor: int) -> Control:
 	var scroll := ScrollContainer.new()
 	scroll.name = "transcript"
+	scroll.set_meta("scroll_key", "")  # прокручивает себя сам — к последней реплике
 	scroll.custom_minimum_size = Vector2(RIGHT_W, height)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var p := Style.panel(TAPE_BG, 18)
