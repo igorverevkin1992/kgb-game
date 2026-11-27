@@ -633,5 +633,21 @@
   "ending.poly.fail": "признаки обмана",
   "ending.poly.none": "не проводился",
   "ending.check.yes": "выполнено — ",
-  "ending.check.no": "не выполнено — "
+  "ending.check.no": "не выполнено — ",
+  "dialog.agree": "Договориться (контакт от {n}%)",
+  "dialog.outcome.agreed": "договорились",
+  "dialog.outcome.broken_off": "встреча сорвалась",
+  "dialog.end.agreed": "Договорённость достигнута. Запись остановлена.",
+  "dialog.end.broken_off": "Агент свернул встречу. Связь сохранена, но доверие подорвано.",
+  "dialog.handlingCount": "Встречи на связи: проведено {n} из {of}",
+  "dialog.handlingMeet": "Встреча на связи: «{title}»",
+  "dialog.stakes": "Договориться можно при контакте от {n}% — {ok}. Сорвётся — лояльность {fail}. Личная встреча: наружка +{sog}.",
+  "dialog.stake.loyalty": "лояльность {n}",
+  "dialog.stake.lifestyle": "образ жизни {n}",
+  "dialog.stake.reports": "донесений сразу: {n}",
+  "dialog.stake.polygraph": "пунктов подготовки к полиграфу +{n}",
+  "dialog.stake.sog": "наружка {n}",
+  "dialog.stake.mole": "охота на «крота» {n}",
+  "event.meeting_agreed": "Встреча на связи с «{name}»: договорились",
+  "event.meeting_broken_off": "Встреча на связи с «{name}» сорвалась"
 }

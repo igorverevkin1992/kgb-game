@@ -130,6 +130,7 @@ static func _state_spec() -> Dictionary:
 		"routes": {"type": "dict", "of": Schema.obj({"stops": strs, "observations": Schema.arr(strs), "operative": Schema.opt(Schema.s(), "op_resident_player")})},
 		"decisions": Schema.opt({"type": "dict", "of": Schema.s()}, {}),
 		"personal_ops": Schema.opt(Schema.i(0), 0),
+		"handled": Schema.opt({"type": "dict", "of": Schema.e(["agreed", "broken_off"])}, {}),
 		"polygraph": Schema.opt(Schema.nullable(Schema.obj({
 			"exam_id": Schema.s(), "notified_week": Schema.i(1), "source": {"type": "bool"}, "slots": Schema.i(0),
 			"prep": strs, "exam": Schema.nullable({"type": "dict", "of": {"type": "any"}}),
@@ -169,7 +170,7 @@ static func _state_spec() -> Dictionary:
 		})),
 		"tapes": Schema.arr(Schema.obj({
 			"target_id": Schema.s(), "dialog_id": Schema.s(), "week": Schema.i(1),
-			"outcome": Schema.e(["recruited", "failed", "aborted"]), "lines": Schema.arr({"type": "dict", "of": {"type": "any"}}),
+			"outcome": Schema.e(["recruited", "failed", "aborted", "agreed", "broken_off"]), "lines": Schema.arr({"type": "dict", "of": {"type": "any"}}),
 		})),
 		"ending": Schema.nullable(Schema.e(Archive.ENDINGS)),
 		"log": Schema.arr({"type": "dict", "of": {"type": "any"}}),

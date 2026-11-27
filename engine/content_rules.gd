@@ -433,8 +433,11 @@ static func _dialogs(ctx: Dictionary) -> void:
 		if t.is_empty():
 			_push(ctx, "error", "dialog", "Беседа с несуществующей целью «%s»" % d.target_id, "%s.target_id" % id, id)
 			continue
+		if Meeting.is_handling(d):
+			_handling(ctx, d, t)
+			continue
 		if seen.has(d.target_id):
-			_push(ctx, "error", "dialog", "У цели «%s» уже есть беседа «%s»: нужна одна" % [d.target_id, seen[d.target_id]], "%s.target_id" % id, id)
+			_push(ctx, "error", "dialog", "У цели «%s» уже есть вербовочная беседа «%s»: нужна одна" % [d.target_id, seen[d.target_id]], "%s.target_id" % id, id)
 		seen[d.target_id] = id
 		var relevant: Array = []
 		for i in d.trumps.size():
@@ -453,6 +456,33 @@ static func _dialogs(ctx: Dictionary) -> void:
 			_push(ctx, "error", "dialog", "Беседу невозможно выиграть даже идеальной игрой: Раппорт не доходит до %d%% раньше, чем Тревога до %d%%" % [d.offer_rapport, d.max_anxiety], id, id)
 		elif Meeting.winnable(d, r0, a0, []):
 			_push(ctx, "warning", "dialog", "Беседу можно выиграть без козырей из досье — доска мотивов на встрече не нужна", id, id)
+
+
+## Встреча на связи: агент с личным контактом, порядок без повторов, выигрываемость при средней
+## лояльности (HANDLING_CHECK_LOYALTY), донесения — от этого агента, условия существуют.
+const HANDLING_CHECK_LOYALTY := 50
+
+
+static func _handling(ctx: Dictionary, d: Dictionary, t: Dictionary) -> void:
+	var c: Dictionary = ctx.content
+	var id: String = d.dialog_id
+	if t.approach.flag_mode == "contactless":
+		_push(ctx, "error", "dialog", "С «%s» связь только бесконтактная — встреча на связи невозможна" % t.target_id, "%s.target_id" % id, id)
+	var same: Array = Meeting.handling_dialogs(c, d.target_id).filter(func(x): return int(x.order) == int(d.order))
+	if same.size() > 1:
+		_push(ctx, "error", "dialog", "У агента «%s» две встречи с номером %d" % [d.target_id, d.order], "%s.order" % id, id)
+	if d.get("success") == null:
+		_push(ctx, "error", "dialog", "У встречи на связи нет итога success", id, id)
+	else:
+		for cid in d.success.get("clue_ids", []):
+			var cl := Campaign.clue_by_id(c, cid)
+			if cl.is_empty() or cl.source.channel != "agent" or cl.source.from != d.target_id:
+				_push(ctx, "error", "dialog", "На встрече агент может передать только своё донесение (улику с канала agent от «%s»), а «%s» — не такое" % [d.target_id, cid], "%s.success.clue_ids" % id, id)
+	var trumps: Array = d.trumps.map(func(x): return x.clue_id)
+	if int(d.start_anxiety) >= int(d.max_anxiety):
+		_push(ctx, "error", "dialog", "Стартовая настороженность не ниже предела беседы", "%s.start_anxiety" % id, id)
+	elif not Meeting.winnable(d, HANDLING_CHECK_LOYALTY, int(d.start_anxiety), trumps):
+		_push(ctx, "error", "dialog", "Встречу на связи не выиграть при лояльности агента %d%%" % HANDLING_CHECK_LOYALTY, id, id)
 
 
 ## 13. Финансы: обещанное агенту можно выплатить из стартового спецфонда и переводов Центра.

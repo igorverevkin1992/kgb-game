@@ -176,6 +176,20 @@ static func _resolve_ops(ctx: Dictionary) -> void:
 # ——— Встречи ———
 
 static func _meetings(ctx: Dictionary) -> void:
+	# Встречи на связи с агентами (осторожная игра их не пропускает).
+	if _careful(ctx):
+		for t in ctx.c.targets:
+			var nh := Meeting.next_handling(ctx.s, ctx.c, t.target_id)
+			if nh.is_empty() or Meeting.handling_error(ctx.s, ctx.c, nh.dialog_id) != "":
+				continue
+			_do(ctx, {"type": "start_meeting", "dialog_id": nh.dialog_id})
+			var hm: Dictionary = ctx.s.meeting
+			for mv in meeting_path(nh, int(hm.rapport), int(hm.anxiety), []):
+				if ctx.s.meeting == null:
+					break
+				_do(ctx, {"type": "meeting_turn", "tone": mv[0], "clue_id": mv[1]})
+			if ctx.s.meeting != null and not _do(ctx, {"type": "meeting_offer"}):
+				_do(ctx, {"type": "meeting_abort"})
 	for t in ctx.c.targets:
 		if Meeting.meet_error(ctx.s, ctx.c, t.target_id) != "":
 			continue

@@ -104,6 +104,28 @@ static func _build() -> void:
 		"target_id": Schema.id("tar"),
 		# Встреча назначается выходом на карте: беседа доступна после этого мероприятия.
 		"requires_op": Schema.opt(Schema.s(), ""),
+		# recruitment — вербовочная беседа (одна на кандидата); handling — встреча на связи с уже
+		# завербованным агентом (вторая, третья… — по порядку order).
+		"kind": Schema.opt(Schema.e(["recruitment", "handling"]), "recruitment"),
+		"order": Schema.opt(Schema.i(1, 9), 1),
+		# Условия встречи на связи: не раньше фазы, флаги, вызов «крота» на полиграф.
+		"requires": Schema.opt(Schema.obj({
+			"act": Schema.opt(Schema.i(1, 4), 1),
+			"flags": Schema.opt(Schema.arr(flag), []),
+			"polygraph": Schema.opt({"type": "bool"}, false),
+		}), {"act": 1, "flags": [], "polygraph": false}),
+		# Настороженность агента в начале встречи на связи (контакт — его лояльность).
+		"start_anxiety": Schema.opt(scale, 20),
+		# Итог встречи на связи: договорились / сорвалось.
+		"success": Schema.opt(Schema.obj({
+			"text": text,
+			"loyalty": Schema.opt(delta, 0), "lifestyle": Schema.opt(delta, 0),
+			"sog_heat": Schema.opt(delta, 0), "mole_hunt": Schema.opt(delta, 0), "centre_trust": Schema.opt(delta, 0),
+			"clue_ids": Schema.opt(Schema.arr(Schema.id("clue")), []),
+			"flag_set": Schema.opt(Schema.s(), ""),
+			"polygraph_slots": Schema.opt(Schema.i(0, 3), 0),
+		})),
+		"failure": Schema.opt(Schema.obj({"text": text, "loyalty": Schema.opt(delta, 0)})),
 		"title": text,
 		"setting": text,
 		"offer_rapport": Schema.i(1, 100),
@@ -403,7 +425,9 @@ static func _build() -> void:
 		"lies": Schema.obj({"check_every_weeks": Schema.i(1), "uncover_chance_embellished": chance, "uncover_chance_silence": chance}),
 		"treasury": Schema.obj({"audit_mole_hunt_multiplier": Schema.n(1, 5)}),
 		"thresholds": Schema.obj({"warning": scale, "danger": scale}),
-		"meeting": Schema.obj({"anxiety_cooldown": Schema.i(0, 100), "coercion_threshold": Schema.i(1, 20)}),
+		"meeting": Schema.obj({"anxiety_cooldown": Schema.i(0, 100), "coercion_threshold": Schema.i(1, 20),
+			# Личная встреча на связи заметна для наружки ФБР (при любом исходе).
+			"handling_sog_heat": Schema.opt(Schema.i(0, 50), 2)}),
 		"delegation": Schema.obj({"unlock_after_personal_ops": Schema.i(0, 20), "few_districts_penalty": Schema.n(0, 1)}),
 		"finance": Schema.obj({
 			"ctr_threshold_usd": Schema.i(1), "ctr_treasury": delta, "structuring_treasury": delta,

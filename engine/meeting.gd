@@ -18,11 +18,60 @@ class_name Meeting
 const TONES := ["empathy", "pragmatic", "pressure", "ego"]
 
 
+## Вербовочная беседа кандидата (одна).
 static func dialog_for(content: Dictionary, target_id: String) -> Dictionary:
 	for d in content.dialogs:
-		if d.target_id == target_id:
+		if d.target_id == target_id and d.get("kind", "recruitment") == "recruitment":
 			return d
 	return {}
+
+
+static func is_handling(d: Dictionary) -> bool:
+	return d.get("kind", "recruitment") == "handling"
+
+
+## Встречи на связи с агентом по порядку.
+static func handling_dialogs(content: Dictionary, target_id: String) -> Array:
+	var out: Array = content.dialogs.filter(func(d): return d.target_id == target_id and is_handling(d))
+	out.sort_custom(func(a, b): return int(a.order) < int(b.order))
+	return out
+
+
+## Ближайшая непроведённая встреча на связи или {}.
+static func next_handling(s: Dictionary, content: Dictionary, target_id: String) -> Dictionary:
+	for d in handling_dialogs(content, target_id):
+		if not s.get("handled", {}).has(d.dialog_id):
+			return d
+	return {}
+
+
+## Почему нельзя провести встречу на связи ("" — можно).
+static func handling_error(s: Dictionary, content: Dictionary, dialog_id: String) -> String:
+	var d := dialog_by_id(content, dialog_id)
+	if d.is_empty() or not is_handling(d):
+		return "Такой встречи нет"
+	var ts = s.targets.get(d.target_id)
+	if ts == null or not ts.recruited or ts.lost:
+		return "Встречи на связи — только с завербованным агентом"
+	if next_handling(s, content, d.target_id).get("dialog_id", "") != dialog_id:
+		return "Эта встреча уже проведена или ещё не по порядку"
+	var req: Dictionary = d.get("requires", {})
+	if int(s.act) < int(req.get("act", 1)):
+		return "Встреча — %s" % Fmt.op_phase_in(int(req.get("act", 1)))
+	for f in req.get("flags", []):
+		if not s.flags.has(f):
+			return "Повода для встречи пока нет"
+	if req.get("polygraph", false) and s.get("polygraph") == null:
+		return "Встреча — когда «Кроноса» вызовут на полиграф"
+	if req.get("polygraph", false) and s.polygraph.result != "":
+		return "Проверка уже позади"
+	if s.meeting != null:
+		return "Встреча уже идёт"
+	if s.phase != "evening":
+		return "Встречи назначают на вечер"
+	if s.tapes.any(func(t): return t.target_id == d.target_id and t.week == s.week):
+		return "С этим агентом вы уже встречались на этой неделе"
+	return ""
 
 
 static func dialog_by_id(content: Dictionary, id: String) -> Dictionary:
@@ -64,12 +113,18 @@ static func meet_error(s: Dictionary, content: Dictionary, target_id: String) ->
 	return ""
 
 
-static func start(s: Dictionary, content: Dictionary, target_id: String) -> Dictionary:
+static func start(s: Dictionary, content: Dictionary, target_id: String, dialog_id := "") -> Dictionary:
 	var ts: Dictionary = s.targets[target_id]
-	var d := dialog_for(content, target_id)
+	var d := dialog_for(content, target_id) if dialog_id == "" else dialog_by_id(content, dialog_id)
+	var r := int(ts.rapport)
+	var a := int(ts.paranoia)
+	# Встреча на связи: контакт — лояльность агента, настороженность — своя у встречи.
+	if is_handling(d):
+		r = int(s.agents.get(target_id, {}).get("loyalty", r))
+		a = int(d.start_anxiety)
 	return {
 		"target_id": target_id, "dialog_id": d.dialog_id, "beat": 0,
-		"rapport": int(ts.rapport), "anxiety": int(ts.paranoia), "used": [], "coercion": 0,
+		"rapport": r, "anxiety": a, "used": [], "coercion": 0,
 		"lines": [{"kind": "setting"}, {"kind": "prompt", "beat": 0}],
 	}
 

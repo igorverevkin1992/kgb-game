@@ -88,7 +88,11 @@ static func _meeting(s: Dictionary) -> Control:
 	bars.add_child(_bar("meeting-rapport", T.t("dialog.rapport"), m.rapport, int(d.offer_rapport), T.t("dialog.offerAt", {"n": d.offer_rapport}), Color("#7fae6e")))
 	bars.add_child(_bar("meeting-anxiety", T.t("dialog.anxiety"), m.anxiety, Meeting.max_anxiety(d), T.t("dialog.breakAt", {"n": Meeting.max_anxiety(d)}), Color("#d0614c")))
 	v.add_child(bars)
-	v.add_child(_transcript(d, m.lines, 270, -1))
+	if Meeting.is_handling(d):
+		var stakes := Style.para(_stakes(d), RIGHT_W, Style.mono(), 12, Color(Style.PAPER, 0.75))
+		stakes.name = "meeting-stakes"
+		v.add_child(stakes)
+	v.add_child(_transcript(d, m.lines, 250 if Meeting.is_handling(d) else 270, -1))
 
 	var topics := Meeting.topics_left(d, m)
 	var trumps := Meeting.available_trumps(s, c, m)
@@ -109,7 +113,7 @@ static func _meeting(s: Dictionary) -> Control:
 			row.add_child(b)
 		row.custom_minimum_size.x = RIGHT_W
 		v.add_child(row)
-	if topics:
+	if topics and not Meeting.is_handling(d):
 		var mb: Dictionary = c.balance
 		var co := Style.para(T.t("dialog.coercion", {"n": int(m.get("coercion", 0)), "max": mb.meeting.coercion_threshold,
 			"p": mb.finance.coerced_loyalty_penalty, "w": mb.finance.loyalty_coerced_week}), RIGHT_W, Style.mono(), 12,
@@ -117,6 +121,7 @@ static func _meeting(s: Dictionary) -> Control:
 		co.name = "meeting-coercion"
 		co.set_meta("value", int(m.get("coercion", 0)))
 		v.add_child(co)
+	if topics:
 		v.add_child(Style.label(T.t("dialog.toneHint") if Game.meeting_trump == "" else T.t("dialog.toneWithTrump"), Style.form(true), 14, Color(Style.PAPER, 0.85)))
 		var tones := Style.hbox(8)
 		for tone in Meeting.TONES:
@@ -128,7 +133,8 @@ static func _meeting(s: Dictionary) -> Control:
 		v.add_child(Style.para(T.t("dialog.noTopics"), RIGHT_W, Style.mono(), 14, Color(Style.PAPER, 0.8)))
 
 	var acts := Style.hbox(10)
-	var offer := Style.button(T.t("dialog.offer", {"n": d.offer_rapport}), "meeting-offer", Style.PAPER, Color("#3d5a32"), Color(Style.PAPER, 0.6), 15)
+	var handling := Meeting.is_handling(d)
+	var offer := Style.button(T.t("dialog.agree" if handling else "dialog.offer", {"n": d.offer_rapport}), "meeting-offer", Style.PAPER, Color("#3d5a32"), Color(Style.PAPER, 0.6), 15)
 	offer.disabled = not Meeting.can_offer(d, m)
 	offer.pressed.connect(Game.dispatch.bind({"type": "meeting_offer"}))
 	acts.add_child(offer)
@@ -324,6 +330,8 @@ static func _candidates(s: Dictionary) -> Control:
 		info.add_child(Style.label(status, Style.mono(), 13, Color(Style.PAPER, 0.75)))
 		info.custom_minimum_size.x = 560
 		row.add_child(info)
+		if ts.recruited and not ts.lost:
+			row.add_child(_handling_slot(s, c, t))
 		if not ts.recruited and not ts.lost:
 			var err := Meeting.meet_error(s, c, t.target_id)
 			if err == "":
@@ -341,6 +349,52 @@ static func _candidates(s: Dictionary) -> Control:
 
 static func _signed(n: int) -> String:
 	return ("+%d" % n) if n > 0 else str(n)
+
+
+## Встреча на связи с агентом: ближайшая по порядку — кнопка или причина, почему нельзя.
+static func _handling_slot(s: Dictionary, c: Dictionary, t: Dictionary) -> Control:
+	var box := Style.vbox(4)
+	box.custom_minimum_size.x = 400
+	var all := Meeting.handling_dialogs(c, t.target_id)
+	if all.is_empty():
+		return box
+	var done: int = all.filter(func(d): return s.get("handled", {}).has(d.dialog_id)).size()
+	box.add_child(Style.label(T.t("dialog.handlingCount", {"n": done, "of": all.size()}), Style.form(), 13, Color(Style.PAPER, 0.75)))
+	var nxt := Meeting.next_handling(s, c, t.target_id)
+	if nxt.is_empty():
+		return box
+	var err := Meeting.handling_error(s, c, nxt.dialog_id)
+	if err == "":
+		var b := Style.button(T.t("dialog.handlingMeet", {"title": T.loc(nxt.title)}), "handle-" + nxt.dialog_id, Style.PAPER, Color("#3d5a32"), Color(Style.PAPER, 0.6), 14)
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		b.custom_minimum_size.x = 400
+		b.pressed.connect(Game.start_meeting.bind(t.target_id, nxt.dialog_id))
+		box.add_child(b)
+		box.add_child(Style.para(_stakes(nxt), 400, Style.mono(), 12, Color(Style.PAPER, 0.7)))
+	else:
+		box.add_child(Style.para("%s: %s" % [T.loc(nxt.title), err], 400, Style.mono(), 12, Color("#e2a27f")))
+	return box
+
+
+## Ставки встречи на связи: что даст договорённость и что будет при срыве.
+static func _stakes(d: Dictionary) -> String:
+	var parts: Array = []
+	var ok: Dictionary = d.get("success", {})
+	if int(ok.get("loyalty", 0)) != 0:
+		parts.append(T.t("dialog.stake.loyalty", {"n": _signed(int(ok.loyalty))}))
+	if int(ok.get("lifestyle", 0)) != 0:
+		parts.append(T.t("dialog.stake.lifestyle", {"n": _signed(int(ok.lifestyle))}))
+	if not ok.get("clue_ids", []).is_empty():
+		parts.append(T.t("dialog.stake.reports", {"n": ok.clue_ids.size()}))
+	if int(ok.get("polygraph_slots", 0)) > 0:
+		parts.append(T.t("dialog.stake.polygraph", {"n": ok.polygraph_slots}))
+	if int(ok.get("sog_heat", 0)) != 0:
+		parts.append(T.t("dialog.stake.sog", {"n": _signed(int(ok.sog_heat))}))
+	if int(ok.get("mole_hunt", 0)) != 0:
+		parts.append(T.t("dialog.stake.mole", {"n": _signed(int(ok.mole_hunt))}))
+	var fail = d.get("failure")
+	return T.t("dialog.stakes", {"ok": ", ".join(parts), "fail": _signed(int(fail.loyalty)) if fail != null else "0",
+		"sog": Game.content.balance.meeting.get("handling_sog_heat", 2), "n": d.offer_rapport})
 
 
 ## Полоса индикатора с отметкой порога.

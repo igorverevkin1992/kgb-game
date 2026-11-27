@@ -168,6 +168,10 @@ tools/balance.sh             # балансный прогон: автоигро
 - Объём (шаг 16): `engine/word_count.gd` (слова по разделам контента и `ru.json`, текст веток
   решений); правила `_volume` (потолок `balance.text_budget`) и `_diamonds` (ветки сходятся:
   `ContentSim` с `choices`).
+- Встречи на связи: беседы `kind: "handling"` (`order`, `requires`, `start_anxiety`, `success`,
+  `failure`) — с уже завербованным агентом; `start_meeting {dialog_id}`, `Meeting.next_handling`,
+  `handling_error`; итог `agreed`/`broken_off` в `state.handled`, `Campaign._finish_handling`;
+  наружка за личную встречу — `balance.meeting.handling_sog_heat`. UI — блок у агента на магнитофоне.
 
 ## Договорённости
 - Пользователь немного программировал. Объясняй ключевые решения коротко и по-русски.

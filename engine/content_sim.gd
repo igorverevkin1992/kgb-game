@@ -26,7 +26,11 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 	# Беседа: оговорки слышны на встрече с установленной целью; без беседы цель не завербовать.
 	var dialog_target := {}
 	var dialog_op := {}
+	var handling_target := {}
 	for d in content.get("dialogs", []):
+		if Meeting.is_handling(d):
+			handling_target[d.dialog_id] = d.target_id  # встреча на связи — только с агентом
+			continue
 		dialog_target[d.dialog_id] = d.target_id
 		dialog_op[d.target_id] = d.get("requires_op", "")
 	var st := {"clues": {}, "unlocked": {}, "recruited": {}, "ops": {}, "flags": {}, "decisions": {}}
@@ -72,7 +76,8 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 			var ok: bool = (src.channel == "document" and cables.has(src.from)) \
 				or (src.channel == "field" and st.ops.has(src.from)) \
 				or (src.channel == "agent" and st.recruited.has(src.from) and int(clue.get("act", 1)) <= max_act) \
-				or (src.channel == "meeting" and st.unlocked.has(dialog_target.get(src.from, "")))
+				or (src.channel == "meeting" and st.unlocked.has(dialog_target.get(src.from, ""))) \
+				or (src.channel == "meeting" and st.recruited.has(handling_target.get(src.from, "")))
 			if ok:
 				st.clues[clue.clue_id] = true
 				changed = true

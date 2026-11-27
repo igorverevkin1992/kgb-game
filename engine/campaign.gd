@@ -80,6 +80,7 @@ static func new_campaign(content: Dictionary) -> Dictionary:
 		"decisions": {},
 		"personal_ops": 0,
 		"package": null,
+		"handled": {},
 		"list": null,
 		"polygraph": null,
 		"rng": b.start.seed,
@@ -255,11 +256,16 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			_emit(ctx, {"type": "hint_used", "target_id": action.target_id, "level": an.hint_level})
 
 		"start_meeting":
-			var err := Meeting.meet_error(s, content, action.get("target_id", ""))
+			var did: String = action.get("dialog_id", "")
+			var tid: String = action.get("target_id", "")
+			if did != "":
+				var hd := Meeting.dialog_by_id(content, did)
+				tid = hd.get("target_id", tid)
+			var err := Meeting.meet_error(s, content, tid) if did == "" else Meeting.handling_error(s, content, did)
 			if err != "":
 				return _reject(state, err)
-			s.meeting = Meeting.start(s, content, action.target_id)
-			_emit(ctx, {"type": "meeting_started", "target_id": action.target_id})
+			s.meeting = Meeting.start(s, content, tid, did)
+			_emit(ctx, {"type": "meeting_started", "target_id": tid, "dialog_id": s.meeting.dialog_id})
 
 		"meeting_turn":
 			if s.meeting == null:
@@ -283,12 +289,13 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			if not Meeting.can_offer(d, s.meeting):
 				return _reject(state, "Рано: контакт ниже %d%%" % d.offer_rapport)
 			var target := target_by_id(content, s.meeting.target_id)
-			var missing: Array = target.approach.key_axes.filter(func(a): return not s.targets[target.target_id].discovered_axes.has(a))
+			var handling := Meeting.is_handling(d)
+			var missing: Array = [] if handling else target.approach.key_axes.filter(func(a): return not s.targets[target.target_id].discovered_axes.has(a))
 			if not missing.is_empty():
 				return _reject(state, "Не вскрыты ведущие мотивы: %s" % ", ".join(missing.map(func(a): return AXIS_NAME_RU[a])))
 			s.meeting.lines.append({"kind": "my_offer"})
 			s.meeting.lines.append({"kind": "reply_offer"})
-			_finish_meeting(ctx, "recruited")
+			_finish_meeting(ctx, "agreed" if handling else "recruited")
 
 		"meeting_abort":
 			if s.meeting == null:
@@ -702,9 +709,17 @@ static func _finish_meeting(ctx: Dictionary, outcome: String) -> void:
 	var s: Dictionary = ctx.s
 	var m: Dictionary = s.meeting
 	var ts: Dictionary = s.targets[m.target_id]
+	var d := Meeting.dialog_by_id(ctx.content, m.dialog_id)
+	var handling := Meeting.is_handling(d)
+	if handling and outcome == "failed":
+		outcome = "broken_off"  # агент не потерян: встреча сорвалась, лояльность падает
 	m.lines.append({"kind": "end", "outcome": outcome})
 	s.tapes.append({"target_id": m.target_id, "dialog_id": m.dialog_id, "week": s.week, "outcome": outcome, "lines": m.lines})
 	s.meeting = null
+	if handling:
+		_emit(ctx, {"type": "meeting_ended", "target_id": m.target_id, "outcome": outcome, "dialog_id": d.dialog_id})
+		_finish_handling(ctx, d, outcome)
+		return
 	ts.rapport = m.rapport
 	ts.paranoia = maxi(0, m.anxiety - int(ctx.content.balance.meeting.anxiety_cooldown))
 	_emit(ctx, {"type": "meeting_ended", "target_id": m.target_id, "outcome": outcome})
@@ -713,6 +728,40 @@ static func _finish_meeting(ctx: Dictionary, outcome: String) -> void:
 			_recruit(ctx, m.target_id, int(m.get("coercion", 0)) >= int(ctx.content.balance.meeting.coercion_threshold))
 		"failed":
 			_lose(ctx, m.target_id)
+
+
+## Итог встречи на связи: договорились — последствия success; сорвалось — failure; прервали —
+## встречу можно повторить в другой день. Личная встреча греет наружку при любом исходе.
+static func _finish_handling(ctx: Dictionary, d: Dictionary, outcome: String) -> void:
+	var s: Dictionary = ctx.s
+	var id: String = d.target_id
+	_add_risk(ctx, "sog_heat", int(ctx.content.balance.meeting.get("handling_sog_heat", 2)), "agent_meeting")
+	if outcome == "aborted":
+		return
+	if not s.has("handled"):
+		s.handled = {}
+	s.handled[d.dialog_id] = outcome
+	var fx = d.get("success") if outcome == "agreed" else d.get("failure")
+	if fx == null:
+		return
+	var ag = s.agents.get(id)
+	if ag != null and int(fx.get("loyalty", 0)) != 0:
+		var from: int = ag.loyalty
+		ag.loyalty = Util.clamp100(from + int(fx.loyalty))
+		_emit(ctx, {"type": "loyalty_changed", "target_id": id, "from": from, "to": ag.loyalty, "reason": "agent_meeting"})
+	if outcome != "agreed":
+		return
+	if ag != null and int(fx.get("lifestyle", 0)) != 0:
+		ag.lifestyle = Util.clamp100(int(ag.lifestyle) + int(fx.lifestyle))
+	for r in ["sog_heat", "mole_hunt"]:
+		_add_risk(ctx, r, int(fx.get(r, 0)), "agent_meeting")
+	_add_trust(ctx, int(fx.get("centre_trust", 0)), "agent_meeting")
+	for c in fx.get("clue_ids", []):
+		_give_clue(ctx, c)
+	if String(fx.get("flag_set", "")) != "":
+		_set_flag(ctx, fx.flag_set)
+	if int(fx.get("polygraph_slots", 0)) > 0 and s.get("polygraph") != null:
+		s.polygraph.slots = int(s.polygraph.slots) + int(fx.polygraph_slots)
 
 
 ## coerced — завербован принуждением: агент неустойчив (ниже лояльность, она падает каждую неделю).

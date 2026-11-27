@@ -431,11 +431,14 @@ func select_archive(entry_id: String) -> void:
 
 # ——— Беседа ———
 
-func start_meeting(target_id: String) -> void:
+func start_meeting(target_id: String, dialog_id := "") -> void:
 	meeting_trump = ""
 	tape_selected = -1
 	view = "dialog"
-	dispatch({"type": "start_meeting", "target_id": target_id})
+	var a := {"type": "start_meeting", "target_id": target_id}
+	if dialog_id != "":
+		a.dialog_id = dialog_id
+	dispatch(a)
 
 
 func select_trump(clue_id: String) -> void:
