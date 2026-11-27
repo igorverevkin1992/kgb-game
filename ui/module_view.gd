@@ -68,6 +68,12 @@ static func header(title: String, note: String) -> Control:
 	var n := Style.label(note, Style.form(), 15, Color(Style.PAPER, 0.7))
 	n.size_flags_vertical = Control.SIZE_SHRINK_END
 	h.add_child(n)
+	# «Памятка» — как работать с модулем (та же карточка, что при первом открытии).
+	if not Tutorial.help_for(Game.content, Game.view).is_empty():
+		var hb := Style.button(T.t("help.button"), "help-button", Style.PAPER, Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.5), 13)
+		hb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		hb.pressed.connect(Game.show_help.bind(Game.view))
+		h.add_child(hb)
 	return h
 
 

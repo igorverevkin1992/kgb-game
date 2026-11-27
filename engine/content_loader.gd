@@ -24,6 +24,8 @@ const FOLDERS := {
 	"operatives": {"spec": "operative", "id": "operative_id", "list": true, "kind": "Оперработник"},
 	"decisions": {"spec": "decision", "id": "decision_id", "list": false, "kind": "Решение резидента"},
 	"list": {"spec": "list_card", "id": "card_id", "list": true, "kind": "Дело из «Списка»"},
+	"tutorial": {"spec": "tutorial_step", "id": "step_id", "list": true, "kind": "Шаг обучения"},
+	"help": {"spec": "help", "id": "view", "list": true, "kind": "Памятка модуля"},
 }
 
 static var _cached := {}
@@ -88,7 +90,7 @@ static func game_content() -> Dictionary:
 static func parse(entries: Array) -> Dictionary:
 	var issues: Array = []
 	var file_of := {}
-	var content := {"targets": [], "clues": [], "cables": [], "ops": [], "polygraph": [], "requests": [], "dialogs": [], "achievements": [], "archive": [], "operatives": [], "decisions": [], "list": []}
+	var content := {"targets": [], "clues": [], "cables": [], "ops": [], "polygraph": [], "requests": [], "dialogs": [], "achievements": [], "archive": [], "operatives": [], "decisions": [], "list": [], "tutorial": [], "help": []}
 	var singles := {}
 
 	var register := func(id: String, kind: String, path: String) -> void:
@@ -104,7 +106,7 @@ static func parse(entries: Array) -> Dictionary:
 			continue
 		var folder: String = path.get_slice("/", 0) if path.contains("/") else ""
 		if not FOLDERS.has(folder):
-			issues.append({"level": "error", "rule": "layout", "file": path, "message": "Файл лежит вне известных папок. Допустимо: campaign.json, balance.json, map/sites.json, map/cues.json, targets/, clues/, cables/, ops/, polygraph/, requests/, dialogs/, achievements/, archive/, operatives/, decisions/, list/"})
+			issues.append({"level": "error", "rule": "layout", "file": path, "message": "Файл лежит вне известных папок. Допустимо: campaign.json, balance.json, map/sites.json, map/cues.json, targets/, clues/, cables/, ops/, polygraph/, requests/, dialogs/, achievements/, archive/, operatives/, decisions/, list/, tutorial/, help/"})
 			continue
 		var f: Dictionary = FOLDERS[folder]
 		var spec := ContentSchemas.get_spec(f.spec)

@@ -14,9 +14,10 @@ var state: Dictionary = {}
 var storage = null
 ## Отладка: стол как в акте N (на сам движок не влияет).
 var debug_act := 0
-const DEFAULT_SETTINGS := {"text_scale": 1.0, "instant_text": false, "crt": true, "vol_master": 80, "vol_sfx": 80, "vol_ambient": 50, "telemetry": true}
+const DEFAULT_SETTINGS := {"text_scale": 1.0, "instant_text": false, "crt": true, "vol_master": 80, "vol_sfx": 80, "vol_ambient": 50, "telemetry": true,
+	"tutorial": true, "tutorial_ack": [], "help_seen": []}
 const VOLUME_STEPS := [0, 25, 50, 80, 100]
-var settings := DEFAULT_SETTINGS.duplicate()
+var settings := DEFAULT_SETTINGS.duplicate(true)
 ## Звук стола (нет в консольных инструментах).
 var sound: SoundBank = null
 ## Сборка демоверсии (экспорт «Windows Demo» с признаком demo); тесты задают сами.
@@ -27,6 +28,10 @@ var telemetry: Telemetry = null
 ## Короткое уведомление поверх стола (например, «отметка записана»): текст и момент показа.
 var notice := ""
 var notice_at := 0
+
+## Обучение: записка наставника свёрнута; открытая памятка модуля ("" — нет).
+var tutorial_folded := false
+var help_open := ""
 
 ## Открытый модуль/лоток или "" — виден весь стол.
 var view := ""
@@ -131,8 +136,9 @@ func reset_for_test(new_state: Dictionary = {}, mem_storage = null) -> void:
 	Saves.persist(storage, null, state, content)
 	debug_act = 0
 	demo_build = false
-	settings = DEFAULT_SETTINGS.duplicate()
+	settings = DEFAULT_SETTINGS.duplicate(true)
 	settings.instant_text = true
+	settings.tutorial = false  # старые сценарии без обучения; сценарии обучения включают его сами
 	settings.telemetry = false  # тесты не пишут журнал плейтеста
 	if telemetry != null:
 		telemetry.enabled = false
@@ -269,6 +275,8 @@ func open(v: String) -> void:
 	if is_unlocked(v):
 		if v != view:
 			sfx(OPEN_SOUNDS.get(v, "click"))
+			if settings.get("tutorial", true) and not settings.get("help_seen", []).has(v) and not Tutorial.help_for(content, v).is_empty():
+				help_open = v
 			if telemetry != null:
 				telemetry.view_opened(state, v)
 		view = v
@@ -289,6 +297,39 @@ func close() -> void:
 func toggle_analyst() -> void:
 	analyst_open = not analyst_open
 	changed.emit()
+
+
+## Текущий шаг обучения ({} — нет: выключено, пройдено или игра окончена).
+func tutorial_step() -> Dictionary:
+	if not settings.get("tutorial", true):
+		return {}
+	return Tutorial.current(content, state, view, settings.get("tutorial_ack", []))
+
+
+func ack_tutorial(step_id: String) -> void:
+	var acked: Array = settings.get("tutorial_ack", []).duplicate()
+	if not acked.has(step_id):
+		acked.append(step_id)
+	set_setting("tutorial_ack", acked)
+
+
+func toggle_tutorial_fold() -> void:
+	tutorial_folded = not tutorial_folded
+	changed.emit()
+
+
+## Памятка модуля: сама — при первом открытии (если обучение включено), потом — по кнопке.
+func show_help(v: String) -> void:
+	help_open = v
+	changed.emit()
+
+
+func close_help() -> void:
+	var seen: Array = settings.get("help_seen", []).duplicate()
+	if help_open != "" and not seen.has(help_open):
+		seen.append(help_open)
+	help_open = ""
+	set_setting("help_seen", seen)
 
 
 ## Служебная папка сразу на вкладке сохранений (кнопка «Сохранить игру» на календаре).
@@ -621,6 +662,8 @@ func _clear_ui() -> void:
 	console_tab = "list"
 	epilogue_page = -1
 	phase_card = 0
+	help_open = ""
+	tutorial_folded = false
 
 
 func _load_settings() -> void:
@@ -632,6 +675,10 @@ func _load_settings() -> void:
 		settings.instant_text = r.data.get("instant_text", false) == true
 		settings.crt = r.data.get("crt", true) == true
 		settings.telemetry = r.data.get("telemetry", true) == true
+		settings.tutorial = r.data.get("tutorial", true) == true
+		for k in ["tutorial_ack", "help_seen"]:
+			var list = r.data.get(k, [])
+			settings[k] = (list as Array).filter(func(x): return typeof(x) == TYPE_STRING) if typeof(list) == TYPE_ARRAY else []
 		for k in ["vol_master", "vol_sfx", "vol_ambient"]:
 			var v = r.data.get(k, DEFAULT_SETTINGS[k])
 			if typeof(v) in [TYPE_INT, TYPE_FLOAT]:

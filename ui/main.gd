@@ -31,6 +31,16 @@ func _render() -> void:
 		add_child(EpilogueView.build())
 	elif Game.state.ending != null and not Game.service_open and Game.view != "archive":
 		add_child(Overlays.ending())
+	# Обучение: памятка модуля поверх всего, иначе — записка наставника и подсветка.
+	var overlay_open: bool = Game.service_open or Game.analyst_open or Game.phase_card > 0 or Game.epilogue_page >= 0 or Game.state.ending != null
+	if Game.help_open != "":
+		add_child(TutorialView.help_card(Game.help_open))
+	elif not overlay_open:
+		var step := Game.tutorial_step()
+		if not step.is_empty():
+			add_child(TutorialView.note(step))
+			if step.highlight != "":
+				_highlight.call_deferred(step.highlight)
 	if Game.notice != "" and Time.get_ticks_msec() - Game.notice_at < 2500:
 		add_child(_notice())
 	if Game.settings.get("crt", true):
@@ -39,6 +49,17 @@ func _render() -> void:
 	# контейнеры разложат содержимое (отложенный вызов идёт после их раскладки).
 	if not scrolls.is_empty():
 		_restore_scrolls.call_deferred(scrolls)
+
+
+## Подсветка после раскладки: рамка поверх найденного узла, если он виден.
+func _highlight(name: String) -> void:
+	var n := find_child(name, true, false)
+	if n is Control and n.is_visible_in_tree() and not n.is_queued_for_deletion():
+		var hl := TutorialView.highlight(n)
+		add_child(hl)
+		var crt := get_node_or_null("crt")
+		if crt != null:
+			move_child(hl, crt.get_index())
 
 
 ## Позиции прокрутки всех списков на экране: {ключ: [по вертикали, по горизонтали]}.

@@ -365,6 +365,20 @@ static func _build() -> void:
 		}),
 	})
 
+	# Обучение: шаг наставника — текст, подсвеченный предмет (имя узла) и условие закрытия.
+	_cache["tutorial_step"] = Schema.obj({
+		"step_id": Schema.s("^tut_[a-z0-9_]+$", "id шага вида tut_…"),
+		"text": text,
+		"highlight": Schema.opt(Schema.s(), ""),
+		"done": Schema.e(Tutorial.CONDITIONS),
+	})
+	# Памятка модуля: показывается при первом открытии и по кнопке «Памятка».
+	_cache["help"] = Schema.obj({
+		"view": Schema.e(["map", "mice", "cipher", "finance", "dialog", "counterintel", "inbox", "archive", "evidence"]),
+		"title": text,
+		"text": text,
+	})
+
 	_cache["campaign"] = Schema.obj({
 		"acts": Schema.arr(Schema.obj({
 			"act": act,

@@ -686,5 +686,17 @@
   "inbox.folder.notes": "Справки и ориентировки",
   "inbox.folder.press": "Печать",
   "inbox.folder.letters": "Письма",
-  "inbox.emptyFolder": "В этом ящике пока пусто."
+  "inbox.emptyFolder": "В этом ящике пока пусто.",
+  "tutorial.head": "Записка заместителя резидента · {n} из {of}",
+  "tutorial.fold": "Свернуть",
+  "tutorial.unfold": "Развернуть",
+  "tutorial.ack": "Понятно",
+  "tutorial.skip": "Пропустить шаг",
+  "tutorial.off": "Выключить обучение",
+  "help.head": "Памятка резидента",
+  "help.ok": "Понятно",
+  "help.button": "Памятка",
+  "settings.tutorial": "Обучение и памятки",
+  "settings.tutorialReset": "Начать обучение заново",
+  "settings.tutorialHint": "Записки заместителя резидента ведут по первой неделе, а памятка открывается при первом входе в каждый модуль. Памятку всегда можно открыть кнопкой в заголовке модуля."
 }
