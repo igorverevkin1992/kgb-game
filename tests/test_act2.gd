@@ -112,3 +112,21 @@ func test_validator_technique_needs_memo() -> void:
 		if x.cable_id == "cable_a2_w8_aircraft":
 			x.week = 9
 	has_issue(H.errors(e), "technique", "наблюдение с воздуха")
+
+
+## Сюжетные линии агента: вербовка ставит флаг recruited_<id>, документы линии приходят по нему.
+func test_recruited_flag_gates_line() -> void:
+	var s := _act2()
+	ok(s.flags.has("recruited_" + C), "флаг вербовки Кэллоуэя")
+	ok(not s.flags.has("recruited_tar_vargas_ellen"), "Варгас не завербована — флага нет")
+	s = H.play(self, s, H.quiet_week() + H.quiet_week() + H.quiet_week() + H.quiet_week()).state
+	ok(not s.delivered_cables.has("cable_au_w10_audit"), "слух о ревизии — только если Варгас работает на резидентуру")
+
+
+## Чистый выход с success_flag ставит флаг линии.
+func test_success_flag() -> void:
+	var op: Dictionary = {}
+	for o in H.content().ops:
+		if o.op_id == "op_a2_illegal_drop":
+			op = o
+	eq(String(op.get("success_flag", "")), "illegal_supplied")

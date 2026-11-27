@@ -681,6 +681,8 @@ static func _act3(ctx: Dictionary) -> void:
 		var cons = o.sdr.get("ignore_consequence")
 		if cons != null and cons.get("flag_set", "") != "":
 			flags_known[cons.flag_set] = true
+	for t in c.targets:
+		flags_known["recruited_" + t.target_id] = true
 	for o in c.ops:
 		if o.get("contact_target_id", "") != "":
 			flags_known["contact_" + o.contact_target_id] = true

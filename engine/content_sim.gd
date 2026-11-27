@@ -122,6 +122,7 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 					known = false
 			if known:
 				st.recruited[t.target_id] = true
+				st.flags["recruited_" + t.target_id] = true
 				changed = true
 	return st
 

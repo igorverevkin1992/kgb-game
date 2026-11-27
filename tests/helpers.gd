@@ -180,7 +180,7 @@ static func act4_state(agents: Array = ["tar_caldwell_arthur"], flags: Array = [
 ## Решения, которые тесты принимают сами (их не трогаем).
 const TESTED_DECISIONS := ["dec_a2_monopoly", "dec_a2_colleague", "dec_a3_defector"]
 ## Вариант, тише всего влияющий на числа старых сценариев (по умолчанию — первый).
-const QUIET_OPTION := {"dec_wi_gate": "turn_away", "dec_a1_journalist": "decline"}
+const QUIET_OPTION := {"dec_wi_gate": "turn_away", "dec_a1_journalist": "decline", "dec_ap_bug": "keep"}
 
 
 static func auto_decide(s: Dictionary) -> Dictionary:

@@ -179,7 +179,8 @@ tools/balance.sh             # балансный прогон: автоигро
   outro}]` — `Campaign.act_text`. Пятая фаза «Рим»: варианты по `polygraph_passed` /
   `polygraph_inconclusive` / `polygraph_failed` / `kronos_absent`; встречи на связи с одним
   `order` и разными флагами — варианты; `Endings.notes` — строки итога пятой фазы. Флаг
-  `contact_<target_id>` — связь с бесконтактным агентом установлена. Условие открытия листа
+  `contact_<target_id>` — связь с бесконтактным агентом установлена, `recruited_<target_id>` — кандидат
+  завербован (линии агентов), `op.success_flag` — флаг чистого выхода. Условие открытия листа
   архива — части через «+» (`ending:…`, `flag:…`, событие): хроники судеб `arc_fate_*`.
 
 ## Договорённости

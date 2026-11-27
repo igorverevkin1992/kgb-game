@@ -785,6 +785,7 @@ static func _recruit(ctx: Dictionary, target_id: String, coerced := false) -> vo
 	var s: Dictionary = ctx.s
 	s.targets[target_id].recruited = true
 	s.agents[target_id] = Finance.new_agent(s, ctx.content, target_id, coerced)
+	_set_flag(ctx, "recruited_" + target_id)  # для документов и разговоров линии агента
 	_emit(ctx, {"type": "target_recruited", "target_id": target_id, "coerced": coerced})
 	_check_goal(ctx)
 

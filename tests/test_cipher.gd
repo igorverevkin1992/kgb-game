@@ -16,9 +16,9 @@ func _read(s: Dictionary, id: String) -> Dictionary:
 
 ## Ночь 3-й недели: один выезд свёрнут на маршруте (сбой недели), второй проведён.
 func _night_with_abort() -> Dictionary:
-	return H.play(self, H.fresh(), H.quiet_week() + H.quiet_week() + [H.NEXT,
+	return H.auto_decide(H.play(self, H.fresh(), H.quiet_week() + H.quiet_week() + [H.NEXT,
 		H.plan("op_a1_recon_first_virginia"), H.plan("op_a1_recon_potomac_cellar"), H.NEXT,
-		H.resolve("op_a1_recon_first_virginia", "abort"), H.resolve("op_a1_recon_potomac_cellar"), H.NEXT]).state
+		H.resolve("op_a1_recon_first_virginia", "abort"), H.resolve("op_a1_recon_potomac_cellar"), H.NEXT]).state)
 
 
 func test_key_notebook() -> void:
