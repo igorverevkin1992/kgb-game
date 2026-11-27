@@ -414,6 +414,10 @@ static func _build() -> void:
 			"loyalty_per_1000_extra": Schema.n(0, 10), "escrow_min_loyalty": scale, "reports_min_loyalty": scale,
 			"coerced_loyalty_penalty": Schema.i(0, 100), "loyalty_coerced_week": Schema.i(0, 100),
 		}),
+		# Контроль объёма текста (шаг 16): потолок слов, целевой минимум и доля текста одной ветки.
+		"text_budget": Schema.obj({
+			"max_words": Schema.i(1000, 500000), "target_min_words": Schema.i(0, 500000), "branch_share_max": Schema.n(0, 1),
+		}),
 		# Пороги четырёх концовок кампании.
 		"endings": Schema.obj({
 			"triumph_realized": Schema.i(0, 18), "triumph_mole_hunt_below": scale, "control_below": scale,

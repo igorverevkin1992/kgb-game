@@ -34,6 +34,8 @@ static func check(content: Dictionary, file_of: Dictionary, opts := {}) -> Array
 	_act2(ctx)
 	_act3(ctx)
 	_act4(ctx)
+	_volume(ctx, opts.get("ui", {}))
+	_diamonds(ctx)
 	return ctx.issues
 
 
@@ -697,3 +699,30 @@ static func _act4(ctx: Dictionary) -> void:
 	var howard: int = cards.filter(func(x): return x.howard).size()
 	if howard * 2 >= cards.size() and cards.size() > 0:
 		_push(ctx, "warning", "list", "Флаг «Ховард» у %d из %d дел: перебежчик объясняет слишком многое — выбор теряет смысл" % [howard, cards.size()], "", "", "list/")
+
+
+## 20. Объём текста: потолок слов на всю игру и доля текста одной ветки решения.
+static func _volume(ctx: Dictionary, ui: Dictionary) -> void:
+	var c: Dictionary = ctx.content
+	var b: Dictionary = c.balance.text_budget
+	var r := WordCount.report(c, ui)
+	if int(r.total) > int(b.max_words):
+		_push(ctx, "error", "volume", "В игре %d слов — больше потолка %d. Сократите тексты или поднимите text_budget.max_words" % [r.total, b.max_words], "text_budget.max_words", "", "balance.json")
+	for br in WordCount.branches(c):
+		var share := float(br.words) / maxf(1.0, float(r.total))
+		if share > float(b.branch_share_max):
+			_push(ctx, "warning", "volume", "Вариант «%s» открывает %d слов (%d%% игры) — ветка слишком толстая, её увидит не каждый" % [br.option_id, br.words, int(share * 100)], "%s.options" % br.decision_id, br.decision_id)
+
+
+## 21. Бриллиантовое ветвление: при любом варианте решения задачи следующих фаз достижимы —
+## ветки расходятся и сходятся обратно.
+static func _diamonds(ctx: Dictionary) -> void:
+	var c: Dictionary = ctx.content
+	for d in c.decisions:
+		for o in d.options:
+			for act in c.campaign.acts:
+				if int(act.act) < int(d.act):
+					continue
+				var st := ContentSim.run(c, {"max_act": int(act.act), "choices": {d.decision_id: o.option_id}})
+				if not ContentSim.goal_met(act, st):
+					_push(ctx, "error", "diamond", "Ветка не сходится: при варианте «%s» задача фазы %d недостижима" % [o.option_id, act.act], "%s.options" % d.decision_id, d.decision_id)

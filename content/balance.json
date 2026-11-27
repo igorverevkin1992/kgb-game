@@ -117,5 +117,10 @@
     "triumph_mole_hunt_below": 65,
     "control_below": 75,
     "double_bottom_trust_below": 20
+  },
+  "text_budget": {
+    "max_words": 60000,
+    "target_min_words": 45000,
+    "branch_share_max": 0.1
   }
 }

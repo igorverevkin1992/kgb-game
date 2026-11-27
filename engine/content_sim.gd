@@ -3,7 +3,8 @@ class_name ContentSim
 ## Улики открывают цели, завербованные цели дают новые улики, выходы ставят флаги, решения
 ## принимаются любым вариантом, пробный пакет можно и принять, и отклонить. Если цель акта
 ## недостижима даже для идеального игрока — это тупик (софтлок).
-##   opts: max_act, failed_targets (Array), failed_ops (Array)
+##   opts: max_act, failed_targets (Array), failed_ops (Array),
+##         choices ({decision_id: option_id} — в этих решениях игрок выбрал только этот вариант)
 ## Результат: {clues, unlocked, recruited, ops, flags, decisions} — словари-множества.
 
 
@@ -11,6 +12,7 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 	var max_act: int = opts.get("max_act", 4)
 	var failed_targets: Array = opts.get("failed_targets", [])
 	var failed_ops: Array = opts.get("failed_ops", [])
+	var choices: Dictionary = opts.get("choices", {})
 
 	var cables := {}
 	for c in content.cables:
@@ -58,6 +60,8 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 			if (tr.clue_id == "" or st.clues.has(tr.clue_id)) and (tr.flag == "" or st.flags.has(tr.flag)):
 				st.decisions[d.decision_id] = true
 				for o in d.options:
+					if choices.has(d.decision_id) and choices[d.decision_id] != o.option_id:
+						continue
 					if o.effects.get("flag_set", "") != "":
 						st.flags[o.effects.flag_set] = true
 				changed = true

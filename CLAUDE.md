@@ -20,7 +20,7 @@ macOS и Linux не делаем. Движок: **Godot 4.7 (GDScript, ренд�
 Любой запуск Godot — только с `timeout`: скрипт с ошибкой компиляции может повиснуть.
 
 ```
-tools/validate.sh            # проверка контента (--dir=путь, --en — напомнить о переводе)
+tools/validate.sh            # проверка контента (--dir=путь, --en — напомнить о переводе, --words — объём текста)
 tools/test.sh [фильтр]       # unit-тесты движка (tests/test_*.gd), headless
 tools/ui-test.sh [фильтр]    # сценарии интерфейса под Xvfb + OpenGL, скриншоты в build/screens/
 tools/export.sh windows|web|all   # build/windows/GodShpionov.exe (+ Steam), build/web/
@@ -165,6 +165,9 @@ tools/balance.sh             # балансный прогон: автоигро
   итогового экрана; `ending:campaign_complete` в архиве — любая из четырёх. Эпилог концовки —
   листы `arc_end_<концовка>`. Балансный прогон — `engine/autoplay.gd` (стратегии careful, rush,
   hasty), `tools/balance.sh`, тест `tests/test_balance.gd`.
+- Объём (шаг 16): `engine/word_count.gd` (слова по разделам контента и `ru.json`, текст веток
+  решений); правила `_volume` (потолок `balance.text_budget`) и `_diamonds` (ветки сходятся:
+  `ContentSim` с `choices`).
 
 ## Договорённости
 - Пользователь немного программировал. Объясняй ключевые решения коротко и по-русски.
