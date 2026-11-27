@@ -190,6 +190,18 @@ tools/trailer.sh             # черновой трейлер (Movie Maker + ff
   завербован (линии агентов), `op.success_flag` — флаг чистого выхода. Условие открытия листа
   архива — части через «+» (`ending:…`, `flag:…`, событие): хроники судеб `arc_fate_*`.
 
+- Отзыв плейтеста №1: время недели — дни (`Campaign.PHASE_RU`: понедельник, среда, пятница,
+  воскресенье; `PHASE_DAY`, `phase_date`); `main.gd` сохраняет прокрутку списков между перестройками
+  (`scroll_key` в meta — свой ключ, "" — не трогать). Обучение — `engine/tutorial.gd` (условия
+  шагов), `content/tutorial/`, `content/help/`, `ui/tutorial_view.gd`; прогресс — в настройках
+  (`tutorial`, `tutorial_ack`, `help_seen`), в тестах обучение выключено (`reset_for_test`).
+  Задания Центра — `engine/centre_tasks.gd`, `content/tasks/`, `state.tasks`, действие
+  `answer_task`, срок — `_tasks_night` (входит в предпросмотр доклада `Cipher.report_effects`:
+  `report_trust` — только доклад), `ui/task_view.gd`, ящик «Задания»; `H.fresh()` снимает задания
+  с контроля, `H.with_tasks()` — с заданиями. Вещдоки — `engine/evidence.gd`, `content/evidence/`,
+  `state.evidence`, действие `inspect_detail`, `ui/evidence_view.gd` (сейф на стене, клавиша 9).
+  Новые поля состояния — `Schema.opt` с умолчанием в `saves.gd`: старые сохранения грузятся без переноса.
+
 ## Договорённости
 - Пользователь немного программировал. Объясняй ключевые решения коротко и по-русски.
   Код пишешь ты, а тексты, баланс и решения по дизайну — за пользователем.

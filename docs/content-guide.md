@@ -486,3 +486,30 @@ tools/validate.sh
 `i18n/ru.json`: если меняешь `last_act`, поправь и его. Сохранение демоверсии полная игра
 продолжает со следующей фазы.
 
+## Обучение и памятки
+
+- `content/tutorial/steps.json` — записки заместителя резидента по первой неделе. Поля: `step_id`
+  (`tut_…`), `text`, `highlight` (имя предмета на экране, например `desk-object-inbox` или
+  `advance-phase` — его обведёт красная рамка), `done` — условие, при котором шаг закроется сам:
+  `opened_inbox`, `took_clue`, `verified_directive`, `reached_day`, `planned_op`, `reached_evening`,
+  `resolved_op`, `pinned_clue`, `sent_report`, `approved_analysis`, `met_candidate`, `paid_agent` или
+  `ack` (кнопка «Понятно»). Шаги идут по порядку файла.
+- `content/help/modules.json` — памятки модулей (`view`: map, mice, cipher, finance, dialog,
+  counterintel, inbox, archive, evidence): открываются при первом входе в модуль и по кнопке «Памятка».
+
+## Задания Центра
+
+`content/tasks/*.json` — задание приходит в понедельник недели `week` фазы `act`, срок — `due_weeks`
+недель (до воскресенья). `requires_recruited` — только если агент завербован; `needs_cables` —
+документы, которые надо прочитать перед ответом. Вопросы: `options` с `correct: true` у верного;
+у предложений верного нет — у вариантов `effects` (как у решений). `auto: "axis:<цель>"` — мотив
+проверяется по досье, `auto: "stability:<цель>"` — устойчивость по шкале лояльности агента.
+Числа Доверия и давления — `balance.json` → `tasks`. Задания прошлой фазы снимаются без штрафа.
+
+## Вещественные доказательства (сейф, клавиша 9)
+
+`content/evidence/<id>.json` — предмет приходит в фазу `act` с недели `week` (и после
+`requires_flags`). `sides` — стороны (лицо, оборот) с текстом и деталями. У детали `note` —
+что видит резидент, когда её осмотрел; у верной (`correct: true`) — `clue_id` (сведения на доску)
+и/или `flag_set` (продвигает линию: документы, решения, разговоры по этому флагу).
+
