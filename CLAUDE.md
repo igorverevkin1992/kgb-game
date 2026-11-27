@@ -1,7 +1,7 @@
 # «Год шпионов» — заметки для Claude
 
 Диегетический UI-симулятор резидента ПГУ КГБ в Вашингтоне 1984–1986. Однопользовательская
-кампания на 7–10 часов, 4 акта. Платформа: **только Windows x64** (Steam + VK Play),
+кампания на 7–10 часов, 5 фаз (четыре по концепту и пятая — «Рим», с развилкой по итогам). Платформа: **только Windows x64** (Steam + VK Play),
 macOS и Linux не делаем. Движок: **Godot 4.7 (GDScript, рендерер Compatibility)** — по
 рекомендации концепта и исследования жанра.
 
@@ -172,6 +172,14 @@ tools/balance.sh             # балансный прогон: автоигро
   `failure`) — с уже завербованным агентом; `start_meeting {dialog_id}`, `Meeting.next_handling`,
   `handling_error`; итог `agreed`/`broken_off` в `state.handled`, `Campaign._finish_handling`;
   наружка за личную встречу — `balance.meeting.handling_sog_heat`. UI — блок у агента на магнитофоне.
+- Сюжетные линии: документы по условию `cable.requires_flags` (приходят утром после флага);
+  разговоры не с кандидатами `kind: "conversation"` (`person`, `requires {act, week, flags}`,
+  `start_rapport`, итоги с `flag_set`, рисками, Доверием), список — на магнитофоне;
+  `Meeting.conversations`, `person_name`. Варианты фазы `variants [{flags_all, title, intro,
+  outro}]` — `Campaign.act_text`. Пятая фаза «Рим»: варианты по `polygraph_passed` /
+  `polygraph_inconclusive` / `polygraph_failed` / `kronos_absent`; встречи на связи с одним
+  `order` и разными флагами — варианты; `Endings.notes` — строки итога пятой фазы. Флаг
+  `contact_<target_id>` — связь с бесконтактным агентом установлена.
 
 ## Договорённости
 - Пользователь немного программировал. Объясняй ключевые решения коротко и по-русски.

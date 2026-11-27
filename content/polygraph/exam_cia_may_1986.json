@@ -94,6 +94,39 @@
   ],
   "question_sequence": [
     {
+      "q_id": "q_00_neutral",
+      "category": "neutral",
+      "text": {
+        "ru": "Вам удобно? Перед началом — пара слов о процедуре: отвечайте только «да» или «нет»."
+      },
+      "choices": [
+        {
+          "choice_id": "settle",
+          "label": {
+            "ru": "«Удобно. Давайте начнём»."
+          },
+          "effects": {
+            "rapport": 2,
+            "skepticism": 0,
+            "control_peak": 0,
+            "relevant_peak": 0
+          }
+        },
+        {
+          "choice_id": "fishing",
+          "label": {
+            "ru": "«Удобно. Говорят, вы ловите форель на Шенандоа?»"
+          },
+          "effects": {
+            "rapport": 6,
+            "skepticism": 2,
+            "control_peak": 0,
+            "relevant_peak": 0
+          }
+        }
+      ]
+    },
+    {
       "q_id": "q_01_neutral",
       "category": "neutral",
       "text": {

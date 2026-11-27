@@ -19,7 +19,7 @@ func scene_handling_meeting() -> void:
 	Game.reset_for_test(_evening())
 	await frames(3)
 	await key(KEY_5)
-	has_text("candidate-" + V, "Встречи на связи: проведено 0 из 4")
+	has_text("candidate-" + V, "Встречи на связи: проведено 0 из 5")
 	has_text("candidate-" + V, "донесений сразу: 1")
 	await press("handle-dlg_h_vargas_1")
 	ok(exists("meeting"), "встреча идёт")

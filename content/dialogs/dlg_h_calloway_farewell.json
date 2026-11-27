@@ -2,7 +2,7 @@
   "dialog_id": "dlg_h_calloway_farewell",
   "target_id": "tar_calloway_martin",
   "kind": "handling",
-  "order": 3,
+  "order": 4,
   "requires": {
     "act": 5
   },

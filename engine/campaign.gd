@@ -702,6 +702,7 @@ static func _resolve_op(ctx: Dictionary, op: Dictionary, decision: String) -> vo
 	var contact: String = op.get("contact_target_id", "")
 	if contact != "" and outcome == "clean" and s.targets.has(contact) and not s.targets[contact].recruited and not s.targets[contact].lost:
 		_emit(ctx, {"type": "contact_established", "target_id": contact, "op_id": op.op_id})
+		_set_flag(ctx, "contact_" + contact)  # для документов линии бесконтактного агента
 		_recruit(ctx, contact)
 	# Пробный пакет «крота»: из тайника или личной передачей.
 	if Dangle.package_ops(content).has(op.op_id):

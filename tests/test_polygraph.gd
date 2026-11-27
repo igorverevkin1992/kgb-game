@@ -55,7 +55,7 @@ func test_rehearsal_then_pass() -> void:
 	s = H.play(self, s, [{"type": "polygraph_prep", "prep_id": "prep_sleep_order"}, {"type": "polygraph_prep", "prep_id": "prep_ban_pills"},
 		{"type": "polygraph_prep", "prep_id": "prep_strategy_friendly"}, {"type": "polygraph_prep", "prep_id": "prep_legend"}]).state
 	var mh: int = s.risks.mole_hunt
-	var ideal := _answers(["joke", "plain", "limited_hangout", "calm_no", "apples", "legend_no", "defector"])
+	var ideal := _answers(["fishing", "joke", "plain", "limited_hangout", "calm_no", "apples", "legend_no", "defector"])
 	var r: Dictionary = H.play(self, s, [{"type": "polygraph_start", "rehearsal": true}] + ideal).state
 	eq([r.polygraph.exam.verdict, r.polygraph.result, r.risks.mole_hunt], ["pass", "", mh], "репетиция без последствий")
 	ok(not r.polygraph.exam.lines.any(func(l): return l.spike), "после подготовки пиков на значимых нет")
@@ -74,7 +74,7 @@ func test_rehearsal_then_pass() -> void:
 func test_spike_needs_rationalization() -> void:
 	var s := _at(45, [CAL])
 	s.agents[CAL].lifestyle = 90
-	s = H.play(self, s, [{"type": "polygraph_start", "rehearsal": false}] + _answers(["plain", "plain", "rigid_denial", "angry_no"])).state
+	s = H.play(self, s, [{"type": "polygraph_start", "rehearsal": false}] + _answers(["settle", "plain", "plain", "rigid_denial", "angry_no"])).state
 	ok(s.polygraph.exam.pending, "пик на значимом вопросе")
 	has_text(_do(s, {"type": "polygraph_answer", "choice_id": "apples"}).error, "объясните волнение")
 	s = H.play(self, s, [{"type": "polygraph_rationalize", "option_id": "silence"}] + _answers(["never", "calm_no"])).state

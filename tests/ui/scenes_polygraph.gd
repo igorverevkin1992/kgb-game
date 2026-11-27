@@ -24,6 +24,7 @@ func scene_prep_and_rehearsal() -> void:
 	has_text("polygraph-summary", "устойчивость 15")
 	ok(not exists("polygraph-begin"), "проверка — на следующей неделе")
 	await press("polygraph-rehearse")
+	await press("answer-fishing")
 	await press("answer-joke")
 	await press("answer-plain")
 	await press("answer-limited_hangout")
@@ -41,7 +42,7 @@ func scene_spike_and_verdict() -> void:
 	await press("console-tab-polygraph")
 	has_text("polygraph-examiner", "неизвестен")
 	await press("polygraph-begin")
-	for id in ["joke", "plain", "limited_hangout", "angry_no"]:
+	for id in ["settle", "joke", "plain", "limited_hangout", "angry_no"]:
 		await press("answer-" + id)
 	has_text("polygraph-question", "объяснить волнение")
 	await shot("polygraph-spike")

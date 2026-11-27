@@ -51,11 +51,14 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 		for op in ops:
 			if st.ops.has(op.op_id):
 				continue
+			# Тайник для бесконтактного агента ставит флаг «контакт установлен».
 			if op.requires_targets_unlocked.all(func(t): return st.unlocked.has(t)) \
 					and op.get("requires_recruited", []).all(func(t): return st.recruited.has(t)) \
 					and op.get("requires_flags", []).all(func(f): return st.flags.has(f)) \
 					and op.get("requires_decisions", []).all(func(d): return st.decisions.has(d)):
 				st.ops[op.op_id] = true
+				if op.get("contact_target_id", "") != "":
+					st.flags["contact_" + op.contact_target_id] = true
 				if package_ops.has(op.op_id):
 					st.flags[Dangle.ACCEPTED_FLAG] = true
 					st.flags[Dangle.REJECTED_FLAG] = true

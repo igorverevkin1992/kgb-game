@@ -58,6 +58,7 @@ func scene_vargas_full_branch_closes_act() -> void:
 	has_text("promise-" + V, "в пути: " + Fmt.usd(5700))
 	await key(KEY_ESCAPE)
 	await press("advance-phase")
+	Game.state = H.auto_decide(Game.state)  # решения недели (приём, журналист) — не предмет этого сценария
 	await press("report-truth")
 	# Утро 4-й недели: вторая часть дошла, обещание выполнено — задача акта.
 	ok(Game.state.goal_reached, "обещание выполнено")
@@ -67,6 +68,7 @@ func scene_vargas_full_branch_closes_act() -> void:
 	await key(KEY_ESCAPE)
 	for i in 3:
 		await press("advance-phase")
+	Game.state = H.auto_decide(Game.state)  # решения недели (приём, журналист) — не предмет этого сценария
 	await press("report-truth")
 	ok(exists("phase-card"), "первая фаза операции пройдена")
 	has_text("phase-card", "ПЕРВАЯ ФАЗА ОПЕРАЦИИ ЗАВЕРШЕНА")
