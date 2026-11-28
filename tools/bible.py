@@ -149,7 +149,7 @@ for c in sorted(items('cables'), key=lambda x: (x['act'], x['week'], x['cable_id
     w(f"- {kinds.get(c['kind'], c['kind'])}, {L(c['sender'])}: «{L(c['subject'])}»{flags}{rep}")
 w('')
 
-w('### А.9. Решения резидента')
+w('### А.9. Решения героя («для себя»)')
 w('')
 for d in sorted(items('decisions'), key=lambda x: (x['act'], x['trigger'].get('week', 0))):
     t = d['trigger']
