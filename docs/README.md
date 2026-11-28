@@ -1,6 +1,7 @@
 # Документация проекта
 
 - [plan.md](plan.md): утверждённый пошаговый план разработки (шаги 0–19).
+- [game-bible.md](game-bible.md): библия игры — эпоха, персонажи, места, хронология, сюжетные линии, механики, концовки; указатели собираются из контента (`python3 tools/bible.py`).
 - [concept/concept-bible.pdf](concept/concept-bible.pdf): оригинал концепта.
 - [concept/concept-bible.txt](concept/concept-bible.txt): текстовая версия для поиска и ссылок.
 - [content-guide.md](content-guide.md): как править игровой контент и что проверяет валидатор.
