@@ -122,3 +122,19 @@ func scene_evidence_safe() -> void:
 	await press("evidence-detail-cal_rent")
 	ok(Game.state.clues.has("clue_calloway_rent_call"), "верная деталь — сведения на доску")
 	await shot("evidence")
+
+
+func scene_letter_reply() -> void:
+	var s := H.run(H.fresh(), QUIET)
+	Game.reset_for_test(s)
+	await frames()
+	await key(KEY_7)
+	await press("inbox-folder-letters")
+	await press("inbox-item-cable_a1_w2_letter_home")
+	ok(exists("letter-reply"), "под письмом — ответ домой")
+	eq(node("family-scale").get_meta("value"), 60)
+	await shot("letter-reply")
+	await press("reply-warm")
+	eq(int(Game.state.family), 67)
+	ok(exists("letter-replied"), "ответ отправлен")
+	has_text("letter-replied", "диппочтой")

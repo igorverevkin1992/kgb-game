@@ -61,6 +61,8 @@ static func effects_text(fx: Dictionary) -> String:
 			parts.append("%s %s" % [T.t("risk." + r), _signed(int(fx[r]))])
 	if int(fx.get("centre_trust", 0)) != 0:
 		parts.append(T.t("cipher.fx.trust", {"d": _signed(int(fx.centre_trust))}))
+	if int(fx.get("family", 0)) != 0:
+		parts.append(T.t("family.fxShort", {"d": _signed(int(fx.family))}))
 	if int(fx.get("fund_usd", 0)) != 0:
 		parts.append(T.t("cipher.fx.fund", {"usd": Fmt.usd(int(fx.fund_usd))}))
 	if int(fx.get("weekly_sog_heat", 0)) != 0:

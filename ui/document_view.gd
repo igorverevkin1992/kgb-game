@@ -166,7 +166,48 @@ static func _letter(cable: Dictionary) -> Control:
 	p.move_child(lines, 0)
 	p.add_child(v)
 	p.rotation_degrees = 0.6
-	return _wrap(p, cable)
+	if cable.get("reply") == null:
+		return _wrap(p, cable)
+	# Ответ домой: под письмом — варианты с последствиями для «Отношений с семьёй».
+	var col := Style.vbox(14)
+	col.add_child(_wrap(p, cable))
+	col.add_child(reply_block(cable))
+	return col
+
+
+## Блок ответа на письмо семьи: шкала отношений, срок, варианты или отправленный ответ.
+static func reply_block(cable: Dictionary) -> Control:
+	var s: Dictionary = Game.state
+	var c: Dictionary = Game.content
+	var box := Style.panel(Color(0, 0, 0, 0.22), 18, Color(Style.PAPER, 0.35), 1)
+	box.name = "letter-reply"
+	var v := Style.vbox(8)
+	v.custom_minimum_size.x = 640
+	var fam := int(s.get("family", Family.cfg(c).start))
+	var head := Style.label(T.t("family.scale", {"n": fam}), Style.form(true), 16, Style.PAPER_LIGHT, false)
+	head.name = "family-scale"
+	head.set_meta("value", fam)
+	v.add_child(head)
+	var done: String = s.get("replies", {}).get(cable.cable_id, "")
+	if done == "":
+		v.add_child(Style.para(T.t("family.due", {"week": Family.due_week(c, cable), "n": absi(int(Family.cfg(c).no_reply))}), 640, Style.mono(), 13, Color(Style.PAPER, 0.75)))
+		for o in cable.reply.options:
+			var fx := T.t("family.fx", {"d": ("+%d" % int(o.family)) if int(o.family) > 0 else str(int(o.family))})
+			if int(o.get("centre_trust", 0)) != 0:
+				fx += T.t("family.fxTrust", {"d": int(o.centre_trust)})
+			var b := Style.button("%s — %s" % [T.loc(o.label), fx], "reply-" + o.option_id, Style.PAPER, Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.5), 14)
+			b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			b.custom_minimum_size.x = 640
+			b.pressed.connect(Game.dispatch.bind({"type": "reply_letter", "cable_id": cable.cable_id, "option_id": o.option_id}))
+			v.add_child(b)
+	else:
+		var o := Family.option(cable, done)
+		var text := T.t("family.sent", {"text": T.loc(o.label)}) if not o.is_empty() else T.t("family." + done)
+		var sent := Style.para(text, 640, Style.serif(false, true), 15, Color("#f0d9a0"))
+		sent.name = "letter-replied"
+		v.add_child(sent)
+	box.add_child(v)
+	return box
 
 
 ## Линейки тетрадного листа и красное поле.

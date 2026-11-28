@@ -222,12 +222,14 @@
       "ru": "Наташа повесила трубку счастливой. В Москве уже покупают билеты на дачу."
     },
     "moscow_pressure": -2,
-    "flag_set": "natasha_called"
+    "flag_set": "natasha_called",
+    "family": 6
   },
   "failure": {
     "text": {
       "ru": "Связь оборвалась на полуслове. Перезвонить в этот вечер не удалось."
     },
-    "loyalty": 0
+    "loyalty": 0,
+    "family": -5
   }
 }

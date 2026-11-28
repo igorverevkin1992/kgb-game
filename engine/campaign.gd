@@ -87,6 +87,8 @@ static func new_campaign(content: Dictionary) -> Dictionary:
 		"decisions": {},
 		"tasks": {},
 		"evidence": {},
+		"family": int(b.family.start),
+		"replies": {},
 		"personal_ops": 0,
 		"package": null,
 		"handled": {},
@@ -338,6 +340,19 @@ static func dispatch(state: Dictionary, content: Dictionary, action: Dictionary)
 			if o.is_empty():
 				return _reject(state, "Выберите один из вариантов")
 			_decide(ctx, d, o)
+
+		"reply_letter":
+			var lid: String = action.get("cable_id", "")
+			var lerr := Family.reply_error(s, content, lid, action.get("option_id", ""))
+			if lerr != "":
+				return _reject(state, lerr)
+			var lo := Family.option(cable_by_id(content, lid), action.option_id)
+			if not s.has("replies"):
+				s.replies = {}
+			s.replies[lid] = lo.option_id
+			_emit(ctx, {"type": "letter_replied", "cable_id": lid, "option_id": lo.option_id})
+			_add_family(ctx, int(lo.family), "reply")
+			_add_trust(ctx, int(lo.centre_trust), "letter")
 
 		"inspect_detail":
 			var iid: String = action.get("item_id", "")
@@ -792,6 +807,7 @@ static func _finish_handling(ctx: Dictionary, d: Dictionary, outcome: String) ->
 	for r in ["sog_heat", "mole_hunt", "moscow_pressure"]:
 		_add_risk(ctx, r, int(fx.get(r, 0)), "agent_meeting")
 	_add_trust(ctx, int(fx.get("centre_trust", 0)), "agent_meeting")
+	_add_family(ctx, int(fx.get("family", 0)), "conversation")
 	_change_fund(ctx, int(fx.get("fund_usd", 0)), "decision", d.dialog_id)
 	if String(fx.get("flag_set", "")) != "":
 		_set_flag(ctx, fx.flag_set)
@@ -923,6 +939,7 @@ static func _decide(ctx: Dictionary, d: Dictionary, o: Dictionary) -> void:
 		_set_flag(ctx, fx.flag_set)
 	if fx.operative_out != "":
 		_set_flag(ctx, "out_" + fx.operative_out)
+	_add_family(ctx, int(fx.get("family", 0)), "decision")
 	var lt: String = fx.get("loyalty_target", "")
 	if lt != "" and int(fx.get("loyalty", 0)) != 0 and s.agents.has(lt):
 		var ag: Dictionary = s.agents[lt]
@@ -996,6 +1013,9 @@ static func _end_week(ctx: Dictionary, report: String, request := "") -> void:
 
 	_list_night(ctx)
 	_tasks_night(ctx)
+	if not s.has("replies"):
+		s.replies = {}
+	_family_night(ctx)
 	if s.flags.has(ArrestWindow.ANLACE_FLAG):
 		_add_risk(ctx, "sog_heat", int(b.list.anlace_weekly_sog), "anlace")
 	var act := current_act_def(s, content)
@@ -1073,6 +1093,28 @@ static func continue_full(state: Dictionary, content: Dictionary) -> Dictionary:
 	_enter_act(ctx, nxt)
 	_start_morning(ctx)
 	return {"state": s, "events": ctx.events, "error": ""}
+
+
+## «Отношения с семьёй»: ниже порога — кризис (флаг для решения «Письмо, которого боялся»).
+static func _add_family(ctx: Dictionary, d: int, reason: String) -> void:
+	if d == 0:
+		return
+	var s: Dictionary = ctx.s
+	var from := int(s.get("family", Family.cfg(ctx.content).start))
+	s.family = Util.clamp100(from + d)
+	_emit(ctx, {"type": "family_changed", "from": from, "to": s.family, "reason": reason})
+	if int(s.family) < int(Family.cfg(ctx.content).crisis_below):
+		_set_flag(ctx, Family.CRISIS_FLAG)
+
+
+## Воскресенье: письма без ответа после срока — семья решает, что ответа не будет.
+static func _family_night(ctx: Dictionary) -> void:
+	var s: Dictionary = ctx.s
+	for cab in Family.waiting(s, ctx.content):
+		if int(s.week) >= Family.due_week(ctx.content, cab):
+			s.replies[cab.cable_id] = "none"
+			_emit(ctx, {"type": "letter_unanswered", "cable_id": cab.cable_id})
+			_add_family(ctx, int(Family.cfg(ctx.content).no_reply), "no_reply")
 
 
 ## Осмотр детали вещдока: верная — сведения на доску и флаг линии, неверная — пометка.
@@ -1256,6 +1298,9 @@ static func _finish_polygraph(ctx: Dictionary) -> void:
 
 
 static func _end(ctx: Dictionary, ending: String) -> void:
+	# Финал кампании: как сложилось с семьёй — хроника возвращения домой и строка итога.
+	if Endings.is_final(ending):
+		_set_flag(ctx, Family.final_flag(ctx.s, ctx.content))
 	ctx.s.ending = ending
 	_emit(ctx, {"type": "game_over", "ending": ending})
 

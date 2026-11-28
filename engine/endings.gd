@@ -38,13 +38,15 @@ static func checklist(s: Dictionary, content: Dictionary) -> Array:
 		{"id": "sog_heat", "ok": int(s.risks.sog_heat) < int(b.control_below), "value": int(s.risks.sog_heat), "need": int(b.control_below)},
 		{"id": "treasury", "ok": int(s.risks.treasury) < int(b.control_below), "value": int(s.risks.treasury), "need": int(b.control_below)},
 		{"id": "no_cascade", "ok": not s.flags.has(ArrestWindow.CASCADE_FLAG), "value": 0, "need": 0},
+		# Триумф не «чистый», если дома резидента уже не ждут.
+		{"id": "family", "ok": int(s.get("family", 60)) >= int(Family.cfg(content).lost_below), "value": int(s.get("family", 60)), "need": int(Family.cfg(content).lost_below)},
 	]
 
 
 ## Как закончилась пятая фаза — короткие строки для итогового экрана (по флагам).
 const NOTES := ["kronos_evacuated", "kronos_taken", "kronos_refused_exfil", "kronos_cut", "kronos_deny", "retest_passed",
 	"retest_failed", "kronos_farewell", "kronos_let_go", "network_frozen", "dangle_reported", "dangle_hidden",
-	"inspector_report_bad", "successor_trained"]
+	"inspector_report_bad", "successor_trained", "family_close", "family_lost"]
 
 
 static func notes(s: Dictionary) -> Array:

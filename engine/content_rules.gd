@@ -761,6 +761,8 @@ static func _act3(ctx: Dictionary) -> void:
 			for d in side.details:
 				if d.correct and d.flag_set != "":
 					flags_known[d.flag_set] = true
+	for f in Family.FINAL_FLAGS + [Family.CRISIS_FLAG]:
+		flags_known[f] = true
 	for t in c.get("tasks", []):
 		for q in t.questions:
 			for o in q.get("options", []):

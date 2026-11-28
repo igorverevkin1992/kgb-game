@@ -91,6 +91,10 @@ static func _desk(ctx: Dictionary) -> void:
 	for d in Decisions.pending(ctx.s, c):
 		_do(ctx, {"type": "decide", "decision_id": d.decision_id, "option_id": _decision_choice(ctx, d)})
 	_tasks(ctx)
+	# Письма домой: внимательный резидент отвечает тепло (первый вариант), беспечный молчит.
+	if ctx.st != "hasty":
+		for cab in Family.waiting(ctx.s, c):
+			_do(ctx, {"type": "reply_letter", "cable_id": cab.cable_id, "option_id": cab.reply.options[0].option_id})
 	for t in c.targets:
 		_board(ctx, t)
 	_package(ctx)

@@ -26,6 +26,7 @@ func test_epilogue_opens_in_final() -> void:
 	s.ending = "recalled"
 	eq(Archive.epilogue(s, H.content()), [], "в отзыве в Москву — тоже")
 	s.ending = "campaign_complete"
+	s.flags.append("family_kept")  # итог семьи ставит движок в финале
 	var pages := Archive.epilogue(s, H.content())
 	var ames: Array = pages.filter(func(x): return String(x.id).begins_with("arc_ames_"))
 	eq(ames.size(), 5, "пять листов хроники дела Эймса")

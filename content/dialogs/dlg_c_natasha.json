@@ -269,7 +269,8 @@
       "ru": "Вечер закончился тихо: Наташа уснула у вас на плече. Она рассказала о подходе в магазине — вовремя."
     },
     "moscow_pressure": -3,
-    "flag_set": "natasha_told"
+    "flag_set": "natasha_told",
+    "family": 10
   },
   "failure": {
     "text": {
@@ -277,6 +278,7 @@
     },
     "loyalty": 0,
     "sog_heat": 4,
-    "flag_set": "natasha_silent"
+    "flag_set": "natasha_silent",
+    "family": -8
   }
 }

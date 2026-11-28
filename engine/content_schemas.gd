@@ -96,6 +96,15 @@ static func _build() -> void:
 		"teaches": Schema.opt(Schema.e(["", "relay", "clothes", "aircraft"]), ""),
 		# Документ сюжетной линии: приходит, только когда поставлены эти флаги (и не раньше недели).
 		"requires_flags": Schema.opt(Schema.arr(flag), []),
+		# Письмо домой: варианты ответа и как они меняют «Отношения с семьёй».
+		"reply": Schema.opt(Schema.obj({
+			"options": Schema.arr(Schema.obj({
+				"option_id": Schema.s("^[a-z0-9_]+$"),
+				"label": text,
+				"family": delta,
+				"centre_trust": Schema.opt(delta, 0),
+			}), 2),
+		})),
 	})
 
 	# Вербовочная беседа (магнитофон «Тембр-2М»): реплики по тонам и козыри из досье.
@@ -133,8 +142,9 @@ static func _build() -> void:
 			"polygraph_slots": Schema.opt(Schema.i(0, 3), 0),
 			"moscow_pressure": Schema.opt(delta, 0), "fund_usd": Schema.opt(Schema.i(-1000000, 1000000), 0),
 			"loyalty_target": Schema.opt(Schema.s(), ""),
+			"family": Schema.opt(delta, 0),
 		})),
-		"failure": Schema.opt(Schema.obj({"text": text, "loyalty": Schema.opt(delta, 0),
+		"failure": Schema.opt(Schema.obj({"text": text, "loyalty": Schema.opt(delta, 0), "family": Schema.opt(delta, 0),
 			"flag_set": Schema.opt(Schema.s(), ""), "sog_heat": Schema.opt(delta, 0), "mole_hunt": Schema.opt(delta, 0),
 			"centre_trust": Schema.opt(delta, 0), "moscow_pressure": Schema.opt(delta, 0)})),
 		"title": text,
@@ -211,10 +221,13 @@ static func _build() -> void:
 		"weekly_sog_heat": Schema.opt(delta, 0),
 		# Лояльность агента (loyalty_target) после решения.
 		"loyalty": Schema.opt(delta, 0), "loyalty_target": Schema.opt(Schema.s(), ""),
+		# Отношения с семьёй (письма домой).
+		"family": Schema.opt(delta, 0),
 	})
 	_cache["decision"] = Schema.obj({
 		"decision_id": Schema.s("^dec_[a-z0-9_]+$", "id решения: dec_ и латиница"),
 		"act": act,
+		"any_act": Schema.opt({"type": "bool"}, false),
 		"trigger": Schema.obj({"week": Schema.opt(Schema.i(0, 80), 0), "clue_id": Schema.opt(Schema.s(), ""), "flag": Schema.opt(Schema.s(), "")}),
 		"sender": text,
 		"title": text,
@@ -523,6 +536,11 @@ static func _build() -> void:
 			"loyalty_per_1000_extra": Schema.n(0, 10), "escrow_min_loyalty": scale, "reports_min_loyalty": scale,
 			"coerced_loyalty_penalty": Schema.i(0, 100), "loyalty_coerced_week": Schema.i(0, 100),
 		}),
+		# Письма домой: шкала «Отношения с семьёй», срок ответа, кризис и итог в финале.
+		"family": Schema.opt(Schema.obj({
+			"start": scale, "reply_weeks": Schema.i(1, 8), "no_reply": delta,
+			"crisis_below": scale, "close_from": scale, "lost_below": scale,
+		}), {"start": 60, "reply_weeks": 2, "no_reply": -4, "crisis_below": 25, "close_from": 70, "lost_below": 30}),
 		# Задания Центра: Доверие за верный ответ, штрафы за ошибку и просрочку.
 		"tasks": Schema.opt(Schema.obj({
 			"done_trust": delta, "wrong_trust": delta, "wrong_pressure": delta,

@@ -25,7 +25,8 @@
       "effects": {
         "sog_heat": -4,
         "centre_trust": 2,
-        "flag_set": "natasha_sent"
+        "flag_set": "natasha_sent",
+        "family": -6
       }
     },
     {
@@ -39,7 +40,8 @@
       "effects": {
         "sog_heat": 5,
         "moscow_pressure": -2,
-        "flag_set": "natasha_stayed"
+        "flag_set": "natasha_stayed",
+        "family": 8
       }
     }
   ]

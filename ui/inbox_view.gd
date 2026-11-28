@@ -49,6 +49,8 @@ static func build() -> Control:
 			n += Decisions.arrived(s, Game.content).filter(func(x): return not s.decisions.has(x.decision_id)).size()
 		if f in ["all", "new", "tasks"]:
 			n += CentreTasks.open_tasks(s, Game.content).size()
+		if f == "letters":
+			n = maxi(n, Family.waiting(s, Game.content).size())
 		var on: bool = f == folder
 		var label := T.t("inbox.folder." + f) + (" · %d" % n if n > 0 else "")
 		var tb := Style.button(label, "inbox-folder-" + f, Style.INK if on else Style.PAPER, Style.PAPER if on else Color(0, 0, 0, 0.25), Color(Style.PAPER, 0.5), 13)

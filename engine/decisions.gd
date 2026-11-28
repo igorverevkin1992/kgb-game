@@ -21,7 +21,8 @@ static func option(d: Dictionary, option_id: String) -> Dictionary:
 static func triggered(s: Dictionary, d: Dictionary) -> bool:
 	var t: Dictionary = d.trigger
 	# Решение относится к своей фазе операции: после неё оно уже не актуально.
-	if int(d.act) != int(s.act):
+	# any_act — решение может понадобиться в любой фазе начиная с act (семейный кризис).
+	if int(d.act) != int(s.act) and not (d.get("any_act", false) and int(s.act) > int(d.act)):
 		return false
 	if int(t.week) > 0 and int(s.week) < int(t.week):
 		return false

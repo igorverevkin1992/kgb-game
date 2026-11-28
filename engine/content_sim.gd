@@ -45,6 +45,9 @@ static func run(content: Dictionary, opts := {}) -> Dictionary:
 		# Любой исход проверки достижим — пятая фаза ветвится по нему.
 		for f in [Polygraph.PASS_FLAG, Polygraph.INCONCLUSIVE_FLAG, Polygraph.FAIL_FLAG, Polygraph.ABSENT_FLAG]:
 			st.flags[f] = true
+	# Отношения с семьёй зависят от ответов: любой итог и кризис достижимы.
+	for f in Family.FINAL_FLAGS + [Family.CRISIS_FLAG]:
+		st.flags[f] = true
 	var changed := true
 	while changed:
 		changed = false

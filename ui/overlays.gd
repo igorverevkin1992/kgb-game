@@ -58,6 +58,7 @@ static func analyst() -> Control:
 	for r in Campaign.RISKS:
 		v.add_child(_bar("risk-" + r, T.t("risk." + r), s.risks[r], Campaign.risk_level(s.risks[r], Game.content), T.t("risk.%s.at100" % r)))
 	v.add_child(_bar("centre-trust", T.t("analyst.trust"), s.centre_trust, "trust", ""))
+	v.add_child(_bar("family", T.t("analyst.family"), int(s.get("family", 60)), "trust", ""))
 	v.add_child(Style.label(T.t("analyst.fund", {"usd": Fmt.usd(s.fund_usd)}), Style.mono(), 14, Style.INK))
 	v.add_child(_h3(T.t("analyst.journal")))
 	var journal := Style.vbox(3)

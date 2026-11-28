@@ -57,7 +57,7 @@ func test_fate_pages_by_flags() -> void:
 	var c := H.content()
 	var s := H.fresh()
 	s.ending = "clean_triumph"
-	s.flags.append_array(["kronos_farewell", "vargas_handed"])
+	s.flags.append_array(["kronos_farewell", "vargas_handed", "family_kept"])
 	var ids: Array = Archive.epilogue(s, c).map(func(p): return p.id)
 	ok(ids.has("arc_fate_kronos_rome") and ids.has("arc_fate_vargas") and ids.has("arc_fate_home"), "судьбы — по флагам финала")
 	ok(not ids.has("arc_fate_kronos_evacuated"), "чужих судеб нет")

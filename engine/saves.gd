@@ -78,6 +78,13 @@ static func deserialize(text: String, content: Dictionary) -> Dictionary:
 		data["version"] = VERSION
 	if data.get("version") != VERSION:
 		return {"ok": false, "error": "Сохранение от другой версии игры (формат %s)" % str(data.get("version"))}
+	# Сохранение до писем домой: уже пришедшие письма — «старые», без штрафа за молчание.
+	if typeof(data.get("state")) == TYPE_DICTIONARY and not data.state.has("replies"):
+		var old := {}
+		for id in data.state.get("delivered_cables", []):
+			if typeof(id) == TYPE_STRING and Campaign.cable_by_id(content, id).get("reply") != null:
+				old[id] = "old"
+		data.state["replies"] = old
 	var issues: Array = []
 	var state = Schema.check(data.get("state"), _state_spec(), "", "state", issues)
 	var errors: Array = issues.filter(func(x): return x.level == "error")
@@ -129,6 +136,8 @@ static func _state_spec() -> Dictionary:
 		"planned_ops": strs,
 		"routes": {"type": "dict", "of": Schema.obj({"stops": strs, "observations": Schema.arr(strs), "operative": Schema.opt(Schema.s(), "op_resident_player")})},
 		"decisions": Schema.opt({"type": "dict", "of": Schema.s()}, {}),
+		"family": Schema.opt(Schema.i(0, 100), 60),
+		"replies": Schema.opt({"type": "dict", "of": Schema.s()}, {}),
 		"evidence": Schema.opt({"type": "dict", "of": Schema.obj({"found": strs, "tried": strs})}, {}),
 		"tasks": Schema.opt({"type": "dict", "of": Schema.obj({"status": Schema.e(["open", "done", "partial", "failed", "withdrawn"]),
 			"week": Schema.i(0), "due": Schema.i(0), "wrong": Schema.opt(Schema.i(0), 0), "answered_week": Schema.opt(Schema.i(0), 0),
