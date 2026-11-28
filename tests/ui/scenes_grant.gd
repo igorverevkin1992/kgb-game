@@ -42,6 +42,7 @@ func scene_epilogue_after_phase_one() -> void:
 		{"type": "submit_report", "report": "truth"}])
 	# Финал всей операции (после последней фазы) — ставим его прямо, без прохождения второй фазы.
 	Game.state.ending = "clean_triumph"
+	Game.state.flags.append("family_kept")  # итог семьи ставит движок в финале
 	Game.phase_card = 0
 	Game.changed.emit()
 	await frames()
