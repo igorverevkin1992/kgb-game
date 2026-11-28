@@ -221,11 +221,14 @@ static func service() -> Control:
 	var close := Style.paper_button("%s  [Esc]" % T.t("desk.back"), "service-close")
 	close.pressed.connect(Game.close)
 	row.add_child(close)
+	var menu := Style.paper_button(T.t("service.menu"), "service-menu")
+	menu.pressed.connect(Game.open_menu)
+	row.add_child(menu)
 	# Выход: игра и так сохранена после последнего действия — об этом сказано рядом.
 	var quit := Style.paper_button(T.t("service.quit"), "service-quit")
 	quit.pressed.connect(Game.quit_game)
 	row.add_child(quit)
-	row.add_child(Style.para(T.t("service.quitHint"), 360, Style.mono(), 12, Color(Style.INK, 0.6)))
+	row.add_child(Style.para(T.t("service.quitHint"), 260, Style.mono(), 12, Color(Style.INK, 0.6)))
 	v.add_child(row)
 	return o[0]
 

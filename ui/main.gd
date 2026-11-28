@@ -19,6 +19,13 @@ func _render() -> void:
 		add_child(Style.label("Контент игры содержит ошибки — запустите tools/validate.sh", Style.form(true), 24, Style.STAMP_RED))
 		return
 	add_child(DeskView.build())
+	if Game.menu_open:
+		add_child(MainMenu.build())
+		if Game.settings.get("crt", true):
+			add_child(_crt())
+		if not scrolls.is_empty():
+			_restore_scrolls.call_deferred(scrolls)
+		return
 	if Game.view != "":
 		add_child(ModuleView.build(Game.view))
 	if Game.analyst_open:
@@ -130,6 +137,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if key == KEY_F8:
 		Game.mark_stuck()
 		get_viewport().set_input_as_handled()
+		return
+	if Game.menu_open:
+		# В меню: Esc закрывает открытый пункт; клавиши модулей не действуют.
+		if key == KEY_ESCAPE and Game.menu_page != "":
+			Game.set_menu_page("")
+			get_viewport().set_input_as_handled()
 		return
 	if key == KEY_ESCAPE:
 		if Game.view != "" or Game.analyst_open or Game.service_open or Game.epilogue_page >= 0:

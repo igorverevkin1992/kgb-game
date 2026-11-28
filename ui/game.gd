@@ -29,6 +29,11 @@ var telemetry: Telemetry = null
 var notice := ""
 var notice_at := 0
 
+## Главное меню: открыто ли и какой пункт справа ("", new, load, settings, about).
+var menu_open := false
+var menu_page := ""
+var menu_error := ""
+
 ## Обучение: записка наставника свёрнута; открытая памятка модуля ("" — нет).
 var tutorial_folded := false
 var help_open := ""
@@ -103,16 +108,20 @@ func _ready() -> void:
 			debug_act = clampi(int(a.trim_prefix("--act=")), 1, 4)
 	_load_settings()
 	sound.start_ambient()
-	if not args.has("--new"):
-		var loaded := Saves.load_slot(storage, Saves.AUTOSAVE, content)
-		if loaded.ok:
-			state = loaded.state
-			_start_telemetry()
-			return
+	if args.has("--new"):
+		new_game(false)  # отладка: сразу за стол
+		_start_telemetry()
+		return
+	# Запуск — с главного меню. За ним виден стол последней игры (или новой, ещё не начатой:
+	# она не сохраняется, пока игрок не выберет «Новая игра»).
+	menu_open = not args.has("--desk")
+	var loaded := Saves.load_slot(storage, Saves.AUTOSAVE, content)
+	if loaded.ok:
+		state = loaded.state
+	else:
 		if loaded.error != "Слот пуст":
-			push_warning("[сохранение] %s. Начинаем новую кампанию." % loaded.error)
-	state = Campaign.new_campaign(content).state
-	Saves.persist(storage, null, state, content)
+			push_warning("[сохранение] %s" % loaded.error)
+		state = Campaign.new_campaign(content).state
 	_start_telemetry()
 
 
@@ -142,6 +151,8 @@ func reset_for_test(new_state: Dictionary = {}, mem_storage = null) -> void:
 	debug_act = 0
 	demo_build = false
 	settings = DEFAULT_SETTINGS.duplicate(true)
+	menu_open = false
+	menu_page = ""
 	settings.instant_text = true
 	settings.tutorial = false  # старые сценарии без обучения; сценарии обучения включают его сами
 	settings.telemetry = false  # тесты не пишут журнал плейтеста
@@ -356,6 +367,54 @@ func close_help() -> void:
 		seen.append(help_open)
 	help_open = ""
 	set_setting("help_seen", seen)
+
+
+## Есть ли что продолжать: автосохранение на диске.
+func has_save() -> bool:
+	return storage != null and not Saves.slot_info(storage, Saves.AUTOSAVE, content).is_empty()
+
+
+func open_menu() -> void:
+	_clear_ui()
+	menu_open = true
+	menu_page = ""
+	menu_error = ""
+	changed.emit()
+
+
+func set_menu_page(page: String) -> void:
+	menu_page = page
+	menu_error = ""
+	sfx("paper")
+	changed.emit()
+
+
+func menu_continue() -> void:
+	var loaded := Saves.load_slot(storage, Saves.AUTOSAVE, content)
+	if loaded.ok:
+		state = loaded.state
+	menu_open = false
+	menu_page = ""
+	_clear_ui()
+	sfx("click")
+	changed.emit()
+
+
+func menu_new_game(ironman: bool) -> void:
+	menu_open = false
+	menu_page = ""
+	new_game(ironman)
+
+
+func menu_load(slot: String) -> void:
+	var err := load_game(slot)
+	if err != "":
+		menu_error = err
+		changed.emit()
+		return
+	menu_open = false
+	menu_page = ""
+	changed.emit()
 
 
 ## Служебная папка сразу на вкладке сохранений (кнопка «Сохранить игру» на календаре).

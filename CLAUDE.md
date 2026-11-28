@@ -201,6 +201,9 @@ tools/trailer.sh             # черновой трейлер (Movie Maker + ff
   с контроля, `H.with_tasks()` — с заданиями. Вещдоки — `engine/evidence.gd`, `content/evidence/`,
   `state.evidence`, действие `inspect_detail`, `ui/evidence_view.gd` (сейф на стене, клавиша 9).
   Новые поля состояния — `Schema.opt` с умолчанием в `saves.gd`: старые сохранения грузятся без переноса.
+  Главное меню — `ui/main_menu.gd` (`Game.menu_open`, `menu_page`: new/load/settings/about;
+  `menu_continue`, `menu_new_game`, `menu_load`, `open_menu`); игра стартует с меню (`--new` — сразу
+  новая игра, `--desk` — без меню), новая кампания пишется на диск только по «Новая игра».
 
 ## Договорённости
 - Пользователь немного программировал. Объясняй ключевые решения коротко и по-русски.
